@@ -10,6 +10,7 @@ import {
   Building2,
   Users,
   Zap,
+  ChevronLeft,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -67,5 +68,28 @@ export function Sidebar() {
         })}
       </nav>
     </aside>
+  );
+}
+
+export function PageLayout({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-screen bg-zinc-50 dark:bg-black">
+      <Sidebar />
+      <main className="ml-64 flex-1 p-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold text-black dark:text-white mb-2">
+            {title}
+          </h1>
+          <div className="h-1 w-20 bg-blue-600 rounded mb-8"></div>
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }
