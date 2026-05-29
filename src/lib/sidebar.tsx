@@ -41,10 +41,10 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-80 bg-zinc-900 text-white h-screen overflow-y-auto border-r border-zinc-800 fixed left-0 top-0 z-50">
+    <aside className="w-80 text-white h-screen overflow-y-auto border-r fixed left-0 top-0 z-50" style={{backgroundColor: 'var(--sabana-dark-navy)', borderColor: 'var(--sabana-navy)'}}>
       <div className="p-6">
         <h1 className="text-2xl font-bold tracking-tight">Alumni Sabana</h1>
-        <p className="text-sm text-zinc-400 mt-1">Observatorio Laboral</p>
+        <p className="text-sm mt-1" style={{color: 'var(--sabana-sky-blue)'}}>Observatorio Laboral</p>
       </div>
 
       <nav className="px-4 py-6 space-y-2">
@@ -56,9 +56,10 @@ export function Sidebar() {
               href={href}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 active
-                  ? 'bg-blue-600 text-white'
-                  : 'text-zinc-300 hover:bg-zinc-800'
+                  ? 'text-white'
+                  : 'text-gray-300 hover:bg-opacity-20'
               }`}
+              style={active ? {backgroundColor: 'var(--sabana-navy)'} : {}}
             >
               <Icon size={20} className="flex-shrink-0" />
               <span className="text-sm font-medium truncate">{label}</span>
@@ -82,10 +83,10 @@ export function PageLayout({
       <Sidebar />
       <main className="ml-80 flex-1 p-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-black dark:text-white mb-2">
+          <h1 className="text-4xl font-bold mb-2" style={{color: 'var(--sabana-dark-navy)'}}>
             {title}
           </h1>
-          <div className="h-1 w-20 bg-blue-600 rounded mb-8"></div>
+          <div className="h-1 w-20 rounded mb-8" style={{backgroundColor: 'var(--sabana-navy)'}}></div>
           {children}
         </div>
       </main>

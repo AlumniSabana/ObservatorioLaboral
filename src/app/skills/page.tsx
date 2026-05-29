@@ -13,8 +13,8 @@ export default function SkillsPage() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               💻 Competencias Técnicas
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2">
@@ -25,8 +25,8 @@ export default function SkillsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               🤝 Competencias Blandas
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2">
@@ -37,8 +37,8 @@ export default function SkillsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               🎯 Habilidades Emergentes
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2">
@@ -49,8 +49,8 @@ export default function SkillsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               📊 Competencias en Datos
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2">

@@ -13,8 +13,8 @@ export default function ConditionsPage() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               📍 Modalidades de Trabajo
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
@@ -25,8 +25,8 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               🎁 Beneficios y Prestaciones
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
@@ -37,8 +37,8 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               ⏰ Horarios de Trabajo
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
@@ -49,8 +49,8 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               📚 Desarrollo Profesional
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
@@ -61,8 +61,8 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               👥 Cultura Empresarial
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
@@ -73,8 +73,8 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               ⚖️ Estabilidad Laboral
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">

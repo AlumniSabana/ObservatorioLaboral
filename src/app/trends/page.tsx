@@ -13,8 +13,8 @@ export default function TrendsPage() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               📚 Formación Digital
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400">
@@ -22,8 +22,8 @@ export default function TrendsPage() {
             </p>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               🎓 Educación Continua
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400">
@@ -31,8 +31,8 @@ export default function TrendsPage() {
             </p>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               🤖 Inteligencia Artificial
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400">
@@ -40,8 +40,8 @@ export default function TrendsPage() {
             </p>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               💡 Soft Skills
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400">
