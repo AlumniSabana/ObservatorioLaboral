@@ -10,15 +10,14 @@ import {
   Building2,
   Users,
   Zap,
-  ChevronLeft,
 } from 'lucide-react';
 
 const navigationItems = [
   { href: '/', label: 'Inicio', icon: Home },
-  { href: '/trends', label: 'Tendencias en', icon: TrendingUp },
+  { href: '/trends', label: 'Tendencias en Formación', icon: TrendingUp },
   {
     href: '/skills',
-    label: 'Competencias y Habilidades apetecidas',
+    label: 'Competencias y Habilidades',
     icon: Briefcase,
   },
   { href: '/salaries', label: 'Análisis Salarial', icon: DollarSign },
@@ -42,7 +41,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-zinc-900 text-white h-screen overflow-y-auto border-r border-zinc-800 fixed left-0 top-0 z-50">
+    <aside className="w-80 bg-zinc-900 text-white h-screen overflow-y-auto border-r border-zinc-800 fixed left-0 top-0 z-50">
       <div className="p-6">
         <h1 className="text-2xl font-bold tracking-tight">Alumni Sabana</h1>
         <p className="text-sm text-zinc-400 mt-1">Observatorio Laboral</p>
@@ -81,7 +80,7 @@ export function PageLayout({
   return (
     <div className="flex min-h-screen bg-zinc-50 dark:bg-black">
       <Sidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="ml-80 flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-black dark:text-white mb-2">
             {title}

@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen bg-zinc-50 dark:bg-black">
       <Sidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="ml-87 flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-black dark:text-white mb-2">
             Bienvenido al Observatorio Laboral
@@ -20,10 +20,10 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
               <h2 className="text-xl font-semibold text-black dark:text-white mb-2">
-                📊 Tendencias en
+                📊 Tendencias en Formación
               </h2>
               <p className="text-zinc-600 dark:text-zinc-400">
-                Analiza las tendencias actuales del mercado laboral
+                Analiza las tendencias actuales en los modelos de formación y educación continua
               </p>
             </div>
 
