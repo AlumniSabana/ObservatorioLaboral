@@ -1,10 +1,12 @@
 'use client';
 
 import { PageLayout } from '@/lib/sidebar';
+import { FloatingChat } from '@/lib/floating-chat';
 
 export default function DemandPage() {
   return (
-    <PageLayout title="Mayor Demanda Actual">
+    <>
+      <PageLayout title="Mayor Demanda Actual">
       <div className="space-y-6">
         <p className="text-lg text-zinc-600 dark:text-zinc-400">
           Descubre los roles y competencias con mayor demanda en el mercado laboral actual.
@@ -90,6 +92,12 @@ export default function DemandPage() {
           </div>
         </div>
       </div>
-    </PageLayout>
+      </PageLayout>
+
+      <FloatingChat
+        pageTitle="Mayor Demanda Actual"
+        pageContent="Página sobre roles y competencias con mayor demanda incluyendo: Roles en Tecnología (Full Stack, Datos, Cloud, ML, Ciberseguridad), Roles en Negocios (PM, Analista, Marketing), Roles en Datos (Científico, BI, Analytics), Roles en Seguridad, Tendencias de Demanda (remotos, IA, transformación digital) y Competencias Prioritarias (adaptabilidad, habilidades digitales, pensamiento crítico)."
+      />
+    </>
   );
 }

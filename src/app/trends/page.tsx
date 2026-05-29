@@ -1,10 +1,12 @@
 'use client';
 
 import { PageLayout } from '@/lib/sidebar';
+import { FloatingChat } from '@/lib/floating-chat';
 
 export default function TrendsPage() {
   return (
-    <PageLayout title="Tendencias en Formación">
+    <>
+      <PageLayout title="Tendencias en Formación">
       <div className="space-y-6">
         <p className="text-lg text-zinc-600 dark:text-zinc-400">
           Explora las tendencias actuales en los modelos de formación y educación continua demandadas por el mercado laboral.
@@ -48,6 +50,12 @@ export default function TrendsPage() {
           </div>
         </div>
       </div>
-    </PageLayout>
+      </PageLayout>
+
+      <FloatingChat
+        pageTitle="Tendencias en Formación"
+        pageContent="Página sobre tendencias actuales en modelos de formación y educación continua. Contiene información sobre: Formación Digital, Educación Continua, Inteligencia Artificial y Soft Skills."
+      />
+    </>
   );
 }

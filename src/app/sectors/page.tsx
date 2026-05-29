@@ -1,10 +1,12 @@
 'use client';
 
 import { PageLayout } from '@/lib/sidebar';
+import { FloatingChat } from '@/lib/floating-chat';
 
 export default function SectorsPage() {
   return (
-    <PageLayout title="Sectores y Empresas">
+    <>
+      <PageLayout title="Sectores y Empresas">
       <div className="space-y-6">
         <p className="text-lg text-zinc-600 dark:text-zinc-400">
           Conoce los principales sectores económicos y empresas empleadoras del mercado laboral.
@@ -96,6 +98,12 @@ export default function SectorsPage() {
           </div>
         </div>
       </div>
-    </PageLayout>
+      </PageLayout>
+
+      <FloatingChat
+        pageTitle="Sectores y Empresas"
+        pageContent="Página sobre principales sectores económicos incluyendo: Sector Manufacturero (Automotriz, Alimentos, Textil), Sector Tecnológico (Software, Telecomunicaciones), Sector Financiero (Banca, Seguros, Fintech), Sector Salud (Hospitales, Farmacéutica), Sector Educación (Universidades, E-learning) y otros sectores como Energía y Consultoría."
+      />
+    </>
   );
 }

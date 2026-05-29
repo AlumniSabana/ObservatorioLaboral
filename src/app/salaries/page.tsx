@@ -1,10 +1,12 @@
 'use client';
 
 import { PageLayout } from '@/lib/sidebar';
+import { FloatingChat } from '@/lib/floating-chat';
 
 export default function SalariesPage() {
   return (
-    <PageLayout title="Análisis Salarial">
+    <>
+      <PageLayout title="Análisis Salarial">
       <div className="space-y-6">
         <p className="text-lg text-zinc-600 dark:text-zinc-400">
           Explora información sobre salarios en diferentes sectores, roles y niveles de experiencia.
@@ -72,6 +74,12 @@ export default function SalariesPage() {
           </div>
         </div>
       </div>
-    </PageLayout>
+      </PageLayout>
+
+      <FloatingChat
+        pageTitle="Análisis Salarial"
+        pageContent="Página de análisis salarial con información sobre: Salarios por Sector (Tecnología, Finanzas, Manufacturero), Salarios por Experiencia (Junior, Mid-level, Senior, Liderazgo), Salarios por Rol (Desarrollador, Analista, Gerente, Especialista) y Tendencias Salariales (crecimiento, comparativas regionales, beneficios)."
+      />
+    </>
   );
 }

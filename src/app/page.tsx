@@ -1,6 +1,7 @@
 'use client';
 
 import { Sidebar } from '@/lib/sidebar';
+import { FloatingChat } from '@/lib/floating-chat';
 
 export default function Home() {
   return (
@@ -60,6 +61,11 @@ export default function Home() {
           </p>
         </div>
       </main>
+
+      <FloatingChat
+        pageTitle="Bienvenido al Observatorio Laboral"
+        pageContent="Página principal del Observatorio Laboral con acceso a: Tendencias en Formación, Competencias y Habilidades Apetecidas, Análisis Salarial, Sectores y Empresas, Condiciones Laborales Actuales, y Mayor Demanda Actual."
+      />
     </div>
   );
 }

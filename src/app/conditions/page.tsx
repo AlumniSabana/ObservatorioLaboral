@@ -1,10 +1,12 @@
 'use client';
 
 import { PageLayout } from '@/lib/sidebar';
+import { FloatingChat } from '@/lib/floating-chat';
 
 export default function ConditionsPage() {
   return (
-    <PageLayout title="Condiciones Laborales Actuales">
+    <>
+      <PageLayout title="Condiciones Laborales Actuales">
       <div className="space-y-6">
         <p className="text-lg text-zinc-600 dark:text-zinc-400">
           Analiza las condiciones laborales actuales, beneficios y modalidades de trabajo en el mercado.
@@ -84,6 +86,12 @@ export default function ConditionsPage() {
           </div>
         </div>
       </div>
-    </PageLayout>
+      </PageLayout>
+
+      <FloatingChat
+        pageTitle="Condiciones Laborales Actuales"
+        pageContent="Página sobre condiciones laborales actuales incluyendo: Modalidades de Trabajo (Presencial, Remoto, Híbrido), Beneficios y Prestaciones, Horarios de Trabajo, Desarrollo Profesional, Cultura Empresarial y Estabilidad Laboral."
+      />
+    </>
   );
 }
