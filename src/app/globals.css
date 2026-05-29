@@ -1,6 +1,22 @@
 @import "tailwindcss";
 
+/* Universidad de La Sabana Color Palette */
 :root {
+  /* Primary Colors */
+  --sabana-dark-navy: #002058;
+  --sabana-navy: #003870;
+  --sabana-light-blue: #93aac9;
+  --sabana-sky-blue: #d9e1ef;
+  --sabana-cream: #f7e6d9;
+  
+  /* Neutral/Black Shades */
+  --sabana-black: #000000;
+  --sabana-black-90: #1a1a1a;
+  --sabana-black-70: #4d4d4d;
+  --sabana-black-50: #808080;
+  --sabana-black-30: #b3b3b3;
+  
+  /* Legacy */
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -8,6 +24,21 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  
+  /* Universidad de La Sabana Theme Colors */
+  --color-sabana: {
+    dark-navy: var(--sabana-dark-navy);
+    navy: var(--sabana-navy);
+    light-blue: var(--sabana-light-blue);
+    sky-blue: var(--sabana-sky-blue);
+    cream: var(--sabana-cream);
+    black: var(--sabana-black);
+    black-90: var(--sabana-black-90);
+    black-70: var(--sabana-black-70);
+    black-50: var(--sabana-black-50);
+    black-30: var(--sabana-black-30);
+  };
+  
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

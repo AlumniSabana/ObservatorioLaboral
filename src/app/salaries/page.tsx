@@ -13,8 +13,8 @@ export default function SalariesPage() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               💰 Salarios por Sector
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 mb-3">
@@ -28,8 +28,8 @@ export default function SalariesPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               📈 Salarios por Experiencia
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 mb-3">
@@ -43,8 +43,8 @@ export default function SalariesPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               🎓 Salarios por Rol
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 mb-3">
@@ -58,8 +58,8 @@ export default function SalariesPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+            <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
               🌍 Tendencias Salariales
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 mb-3">

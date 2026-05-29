@@ -92,7 +92,8 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all duration-200 flex items-center gap-2"
+          className="fixed bottom-6 right-6 z-40 text-white rounded-full p-4 shadow-lg transition-all duration-200 flex items-center gap-2 hover:shadow-xl"
+          style={{backgroundColor: 'var(--sabana-navy)'}}
           aria-label="Abrir chat"
         >
           <MessageCircle size={24} />
@@ -104,12 +105,12 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
       {isOpen && (
         <div className="fixed bottom-6 right-6 z-50 w-96 h-screen md:h-96 bg-white dark:bg-zinc-800 rounded-lg shadow-2xl flex flex-col border border-zinc-200 dark:border-zinc-700">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700">
+          <div className="flex items-center justify-between p-4 text-white" style={{backgroundColor: 'var(--sabana-dark-navy)', borderBottomColor: 'var(--sabana-navy)'}}>
             <div>
-              <h3 className="font-semibold text-black dark:text-white">
+              <h3 className="font-semibold">
                 Asistente Claude
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs" style={{color: 'var(--sabana-sky-blue)'}}>
                 {pageTitle}
               </p>
             </div>
@@ -118,7 +119,7 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
                 setIsOpen(false);
                 setMessages([]);
               }}
-              className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+              className="text-white hover:opacity-80 transition-opacity"
               aria-label="Cerrar chat"
             >
               <X size={20} />
@@ -145,9 +146,10 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
                 <div
                   className={`max-w-xs px-4 py-2 rounded-lg ${
                     message.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-none'
+                      ? 'text-white rounded-br-none'
                       : 'bg-zinc-200 dark:bg-zinc-700 text-black dark:text-white rounded-bl-none'
                   }`}
+                  style={message.role === 'user' ? {backgroundColor: 'var(--sabana-navy)'} : {}}
                 >
                   {message.role === 'assistant' ? (
                     <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
@@ -199,12 +201,16 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Escribe tu pregunta..."
               disabled={isLoading}
-              className="flex-1 px-3 py-2 rounded border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
+              className="flex-1 px-3 py-2 rounded border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white text-sm focus:outline-none focus:ring-2 disabled:opacity-50"
+              style={{
+                '--tw-ring-color': 'var(--sabana-navy)',
+              } as React.CSSProperties}
             />
             <button
               type="submit"
               disabled={isLoading || !inputValue.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-400 text-white rounded p-2 transition-colors"
+              className="text-white rounded p-2 transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{backgroundColor: 'var(--sabana-navy)'}}
               aria-label="Enviar mensaje"
             >
               <Send size={18} />

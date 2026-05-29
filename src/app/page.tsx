@@ -7,20 +7,20 @@ export default function Home() {
   return (
     <div className="flex min-h-screen bg-zinc-50 dark:bg-black">
       <Sidebar />
-      <main className="ml-87 flex-1 p-8">
+      <main className="ml-80 flex-1 p-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-black dark:text-white mb-2">
+          <h1 className="text-4xl font-bold mb-2" style={{color: 'var(--sabana-dark-navy)'}}>
             Bienvenido al Observatorio Laboral
           </h1>
-          <div className="h-1 w-20 bg-blue-600 rounded mb-8"></div>
+          <div className="h-1 w-20 rounded mb-8" style={{backgroundColor: 'var(--sabana-navy)'}}></div>
 
           <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
             Explora el mercado laboral, tendencias de empleo y competencias demandadas por las empresas.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-              <h2 className="text-xl font-semibold text-black dark:text-white mb-2">
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+              <h2 className="text-xl font-semibold mb-2" style={{color: 'var(--sabana-light-blue)'}}>
                 📊 Tendencias en Formación
               </h2>
               <p className="text-zinc-600 dark:text-zinc-400">
@@ -28,8 +28,8 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-              <h2 className="text-xl font-semibold text-black dark:text-white mb-2">
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+              <h2 className="text-xl font-semibold mb-2" style={{color: 'var(--sabana-light-blue)'}}>
                 💼 Competencias y Habilidades
               </h2>
               <p className="text-zinc-600 dark:text-zinc-400">
@@ -37,8 +37,8 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-              <h2 className="text-xl font-semibold text-black dark:text-white mb-2">
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+              <h2 className="text-xl font-semibold mb-2" style={{color: 'var(--sabana-light-blue)'}}>
                 💰 Análisis Salarial
               </h2>
               <p className="text-zinc-600 dark:text-zinc-400">
@@ -46,8 +46,8 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-              <h2 className="text-xl font-semibold text-black dark:text-white mb-2">
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+              <h2 className="text-xl font-semibold mb-2" style={{color: 'var(--sabana-light-blue)'}}>
                 🏢 Sectores y Empresas
               </h2>
               <p className="text-zinc-600 dark:text-zinc-400">
