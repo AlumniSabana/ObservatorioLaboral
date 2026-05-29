@@ -1,10 +1,12 @@
 'use client';
 
 import { PageLayout } from '@/lib/sidebar';
+import { FloatingChat } from '@/lib/floating-chat';
 
 export default function SkillsPage() {
   return (
-    <PageLayout title="Competencias y Habilidades Apetecidas">
+    <>
+      <PageLayout title="Competencias y Habilidades Apetecidas">
       <div className="space-y-6">
         <p className="text-lg text-zinc-600 dark:text-zinc-400">
           Descubre las competencias más apetecidas por los empleadores en el mercado laboral actual.
@@ -60,6 +62,12 @@ export default function SkillsPage() {
           </div>
         </div>
       </div>
-    </PageLayout>
+      </PageLayout>
+
+      <FloatingChat
+        pageTitle="Competencias y Habilidades Apetecidas"
+        pageContent="Página sobre competencias más apetecidas por empleadores. Incluye: Competencias Técnicas (Programación, Cloud Computing, Análisis de Datos, DevOps), Competencias Blandas (Liderazgo, Comunicación, Resolución de problemas), Habilidades Emergentes (IA, Ciberseguridad, Blockchain) y Competencias en Datos (Business Intelligence, Machine Learning)."
+      />
+    </>
   );
 }
