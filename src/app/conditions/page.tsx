@@ -1,0 +1,89 @@
+'use client';
+
+import { PageLayout } from '@/lib/sidebar';
+
+export default function ConditionsPage() {
+  return (
+    <PageLayout title="Condiciones Laborales Actuales">
+      <div className="space-y-6">
+        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+          Analiza las condiciones laborales actuales, beneficios y modalidades de trabajo en el mercado.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+              📍 Modalidades de Trabajo
+            </h3>
+            <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
+              <li>• <strong>Presencial:</strong> Trabajo en oficina tradicional</li>
+              <li>• <strong>Remoto:</strong> Trabajo desde casa o cualquier ubicación</li>
+              <li>• <strong>Híbrido:</strong> Combinación de presencial y remoto</li>
+              <li>• <strong>Flexible:</strong> Horarios y locaciones adaptables</li>
+            </ul>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+              🎁 Beneficios y Prestaciones
+            </h3>
+            <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
+              <li>• Seguro de salud completo</li>
+              <li>• Bonificación anual</li>
+              <li>• Planes de pensión</li>
+              <li>• Beneficios adicionales (transporte, comida)</li>
+            </ul>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+              ⏰ Horarios de Trabajo
+            </h3>
+            <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
+              <li>• Jornada de 40 horas semanales</li>
+              <li>• Horarios flexibles</li>
+              <li>• Tiempo flexible (flexitime)</li>
+              <li>• Opciones de medio tiempo</li>
+            </ul>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+              📚 Desarrollo Profesional
+            </h3>
+            <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
+              <li>• Programas de capacitación</li>
+              <li>• Becas para educación continua</li>
+              <li>• Mentoría profesional</li>
+              <li>• Planes de carrera</li>
+            </ul>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+              👥 Cultura Empresarial
+            </h3>
+            <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
+              <li>• Ambiente colaborativo</li>
+              <li>• Programas de bienestar</li>
+              <li>• Inclusión y diversidad</li>
+              <li>• Eventos y actividades de equipo</li>
+            </ul>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">
+              ⚖️ Estabilidad Laboral
+            </h3>
+            <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
+              <li>• Contratos indefinidos</li>
+              <li>• Seguridad en el empleo</li>
+              <li>• Protección legal</li>
+              <li>• Beneficios de jubilación</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </PageLayout>
+  );
+}
