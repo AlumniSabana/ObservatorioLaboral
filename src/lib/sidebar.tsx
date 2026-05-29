@@ -24,10 +24,10 @@ const navigationItems = [
   { href: '/sectors', label: 'Sectores y Empresas', icon: Building2 },
   {
     href: '/conditions',
-    label: 'Condiciones laborales actuales',
+    label: 'Condiciones Laborales',
     icon: Users,
   },
-  { href: '/demand', label: 'Mayor demanda actual', icon: Zap },
+  { href: '/demand', label: 'Mayor Demanda Actual', icon: Zap },
 ];
 
 export function Sidebar() {
