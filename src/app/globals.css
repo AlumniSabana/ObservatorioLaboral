@@ -19,6 +19,9 @@
   /* Legacy */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Light Background */
+  --white-background: #ffffff;
 }
 
 @theme inline {

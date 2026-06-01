@@ -6,16 +6,16 @@ import { FloatingChat } from '@/lib/floating-chat';
 export default function ConditionsPage() {
   return (
     <>
-      <PageLayout title="Condiciones Laborales Actuales">
+      <PageLayout title="Condiciones laborales actuales">
       <div className="space-y-6">
-        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+        <p className="text-lg text-zinc-600 dark:text-zinc-400" style={{color: 'var(--sabana-dark-navy)'}}>
           Analiza las condiciones laborales actuales, beneficios y modalidades de trabajo en el mercado.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              📍 Modalidades de Trabajo
+              📍 Modalidades de trabajo
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• <strong>Presencial:</strong> Trabajo en oficina tradicional</li>
@@ -25,9 +25,9 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🎁 Beneficios y Prestaciones
+              🎁 Beneficios y prestaciones
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Seguro de salud completo</li>
@@ -37,9 +37,9 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              ⏰ Horarios de Trabajo
+              ⏰ Horarios de trabajo
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Jornada de 40 horas semanales</li>
@@ -49,9 +49,9 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              📚 Desarrollo Profesional
+              📚 Desarrollo profesional
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Programas de capacitación</li>
@@ -61,9 +61,9 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              👥 Cultura Empresarial
+              👥 Cultura empresarial
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Ambiente colaborativo</li>
@@ -73,9 +73,9 @@ export default function ConditionsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              ⚖️ Estabilidad Laboral
+              ⚖️ Estabilidad laboral
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Contratos indefinidos</li>

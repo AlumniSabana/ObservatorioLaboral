@@ -6,16 +6,16 @@ import { FloatingChat } from '@/lib/floating-chat';
 export default function SkillsPage() {
   return (
     <>
-      <PageLayout title="Competencias y Habilidades Apetecidas">
+      <PageLayout title="Competencias y habilidades apetecidas">
       <div className="space-y-6">
-        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+        <p className="text-lg text-zinc-600 dark:text-zinc-400" style = {{color: 'var(--sabana-dark-navy)'}}>
           Descubre las competencias más apetecidas por los empleadores en el mercado laboral actual.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              💻 Competencias Técnicas
+              💻 Competencias técnicas
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2">
               <li>• Programación (Python, JavaScript, Java)</li>
@@ -25,9 +25,9 @@ export default function SkillsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🤝 Competencias Blandas
+              🤝 Competencias blandas
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2">
               <li>• Liderazgo y gestión de equipos</li>
@@ -37,9 +37,9 @@ export default function SkillsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🎯 Habilidades Emergentes
+              🎯 Habilidades emergentes
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2">
               <li>• Inteligencia Artificial</li>
@@ -49,9 +49,9 @@ export default function SkillsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              📊 Competencias en Datos
+              📊 Competencias en datos
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2">
               <li>• Business Intelligence</li>

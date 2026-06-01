@@ -6,16 +6,16 @@ import { FloatingChat } from '@/lib/floating-chat';
 export default function SalariesPage() {
   return (
     <>
-      <PageLayout title="Análisis Salarial">
+      <PageLayout title="Análisis salarial">
       <div className="space-y-6">
-        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+        <p className="text-lg text-zinc-600 dark:text-zinc-400" style={{color: 'var(--sabana-dark-navy)'}}>
           Explora información sobre salarios en diferentes sectores, roles y niveles de experiencia.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              💰 Salarios por Sector
+              💰 Salarios por sector
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 mb-3">
               Conoce los rangos salariales promedio en diferentes industrias.
@@ -28,9 +28,9 @@ export default function SalariesPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              📈 Salarios por Experiencia
+              📈 Salarios por experiencia
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 mb-3">
               Descubre cómo evolucionan los salarios con la experiencia profesional.
@@ -43,9 +43,9 @@ export default function SalariesPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🎓 Salarios por Rol
+              🎓 Salarios por rol
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 mb-3">
               Análisis salarial según el puesto de trabajo.
@@ -58,9 +58,9 @@ export default function SalariesPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🌍 Tendencias Salariales
+              🌍 Tendencias salariales
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 mb-3">
               Observa las variaciones y tendencias en el mercado salarial.

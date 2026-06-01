@@ -14,20 +14,20 @@ import {
 
 const navigationItems = [
   { href: '/', label: 'Inicio', icon: Home },
-  { href: '/trends', label: 'Tendencias en Formación', icon: TrendingUp },
+  { href: '/trends', label: 'Tendencias en formación', icon: TrendingUp },
   {
     href: '/skills',
-    label: 'Competencias y Habilidades',
+    label: 'Competencias y habilidades',
     icon: Briefcase,
   },
-  { href: '/salaries', label: 'Análisis Salarial', icon: DollarSign },
-  { href: '/sectors', label: 'Sectores y Empresas', icon: Building2 },
+  { href: '/salaries', label: 'Análisis salarial', icon: DollarSign },
+  { href: '/sectors', label: 'Sectores y empresas', icon: Building2 },
   {
     href: '/conditions',
-    label: 'Condiciones Laborales',
+    label: 'Condiciones laborales',
     icon: Users,
   },
-  { href: '/demand', label: 'Mayor Demanda Actual', icon: Zap },
+  { href: '/demand', label: 'Mayor demanda actual', icon: Zap },
 ];
 
 export function Sidebar() {
@@ -44,7 +44,7 @@ export function Sidebar() {
     <aside className="w-80 text-white h-screen overflow-y-auto border-r fixed left-0 top-0 z-50" style={{backgroundColor: 'var(--sabana-dark-navy)', borderColor: 'var(--sabana-navy)'}}>
       <div className="p-6">
         <h1 className="text-2xl font-bold tracking-tight">Alumni Sabana</h1>
-        <p className="text-sm mt-1" style={{color: 'var(--sabana-sky-blue)'}}>Observatorio Laboral</p>
+        <p className="text-sm mt-1" style={{color: 'var(--sabana-sky-blue)'}}>Observatorio laboral</p>
       </div>
 
       <nav className="px-4 py-6 space-y-2">
@@ -79,7 +79,7 @@ export function PageLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="flex min-h-screen bg-zinc-50 dark:bg-black" style={{backgroundColor: 'var(--white-background)'}}>
       <Sidebar />
       <main className="ml-80 flex-1 p-8">
         <div className="max-w-4xl mx-auto">
