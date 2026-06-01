@@ -6,16 +6,16 @@ import { FloatingChat } from '@/lib/floating-chat';
 export default function DemandPage() {
   return (
     <>
-      <PageLayout title="Mayor Demanda Actual">
+      <PageLayout title="Mayor demanda actual">
       <div className="space-y-6">
-        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+        <p className="text-lg text-zinc-600 dark:text-zinc-400" style={{color: 'var(--sabana-dark-navy)'}}>
           Descubre los roles y competencias con mayor demanda en el mercado laboral actual.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              👨‍💻 Roles en Tecnología
+              👨‍💻 Roles en tecnología
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Desarrollador Full Stack</li>
@@ -26,9 +26,9 @@ export default function DemandPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              💼 Roles en Negocios
+              💼 Roles en negocios
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Gerente de Proyectos</li>
@@ -39,9 +39,9 @@ export default function DemandPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              📊 Roles en Datos y Análisis
+              📊 Roles en datos y análisis
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Científico de Datos</li>
@@ -52,9 +52,9 @@ export default function DemandPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🔒 Roles en Seguridad
+              🔒 Roles en seguridad
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Analista de Ciberseguridad</li>
@@ -65,9 +65,9 @@ export default function DemandPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🌐 Tendencias de Demanda
+              🌐 Tendencias de demanda
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>↑ Roles remotos en aumento</li>
@@ -78,9 +78,9 @@ export default function DemandPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🎯 Competencias Prioritarias
+              🎯 Competencias prioritarias
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Adaptabilidad y flexibilidad</li>

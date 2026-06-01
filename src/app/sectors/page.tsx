@@ -6,16 +6,16 @@ import { FloatingChat } from '@/lib/floating-chat';
 export default function SectorsPage() {
   return (
     <>
-      <PageLayout title="Sectores y Empresas">
+      <PageLayout title="Sectores y empresas">
       <div className="space-y-6">
-        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+        <p className="text-lg text-zinc-600 dark:text-zinc-400" style={{color: 'var(--sabana-dark-navy)'}}>
           Conoce los principales sectores económicos y empresas empleadoras del mercado laboral.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🏭 Sector Manufacturero
+              🏭 Sector manufacturero
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-2">
               Producción industrial y manufactura de bienes.
@@ -27,9 +27,9 @@ export default function SectorsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              💻 Sector Tecnológico
+              💻 Sector tecnológico
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-2">
               Tecnología, software y servicios digitales.
@@ -41,9 +41,9 @@ export default function SectorsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🏦 Sector Financiero
+              🏦 Sector financiero
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-2">
               Banca, seguros y servicios financieros.
@@ -55,9 +55,9 @@ export default function SectorsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🏥 Sector Salud
+              🏥 Sector salud
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-2">
               Salud, farmacéutica y servicios médicos.
@@ -69,9 +69,9 @@ export default function SectorsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🎓 Sector Educación
+              🎓 Sector educación
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-2">
               Educación e instituciones académicas.
@@ -83,9 +83,9 @@ export default function SectorsPage() {
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-dark-navy)'}}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              ⚡ Otros Sectores
+              ⚡ Otros sectores
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-2">
               Energía, infraestructura y servicios.
