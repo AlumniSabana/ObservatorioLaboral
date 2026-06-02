@@ -10,10 +10,13 @@ import {
   Building2,
   Users,
   Zap,
+  Briefcase as JobIcon,
+  BarChart3,
 } from 'lucide-react';
 
 const navigationItems = [
   { href: '/', label: 'Inicio', icon: Home },
+  { href: '/analytics', label: 'Análisis de mercado', icon: BarChart3 },
   { href: '/trends', label: 'Tendencias en formación', icon: TrendingUp },
   {
     href: '/skills',
