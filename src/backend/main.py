@@ -5,7 +5,7 @@ FastAPI backend for AlumniSabana job listings and analytics
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Any
-from backend.Adzuna.adzuna_service import (
+from Adzuna.adzuna_service import (
     buscar_vacantes_adzuna,
     guardar_vacante,
     fetch_jobs_from_db,
