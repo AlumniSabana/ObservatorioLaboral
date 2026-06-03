@@ -51,17 +51,34 @@ export default function AnalyticsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchAnalytics();
+    fetchAnalytics(false);
   }, []);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (borrar: boolean = false) => {
     setLoading(true);
     setError(null);
+
+    const url = new URL(`${BACKEND_URL}/scrape`);
+    url.searchParams.append('borrar', borrar.toString());
+    
     try {
-      const response = await fetch(`${BACKEND_URL}/analytics`);
-      if (!response.ok) throw new Error('Error al cargar análisis');
-      const data = await response.json();
+      // Primero hacemos el scrape (actualiza los datos)
+      const scrapeResponse = await fetch(url, {
+        method: 'POST',
+      });
+      
+      if (!scrapeResponse.ok) {
+        console.warn("Error en scrape, pero continuamos con analytics...");
+      }
+
+      // Luego cargamos los nuevos analytics
+      const analyticsResponse = await fetch(`${BACKEND_URL}/analytics`);
+      if (!analyticsResponse.ok) throw new Error('Error al cargar análisis');
+      
+      const data = await analyticsResponse.json();
       setAnalytics(data);
+      
+      alert("✅ Datos actualizados correctamente desde Adzuna");
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -85,7 +102,7 @@ export default function AnalyticsPage() {
         <div className="bg-red-100 rounded-lg p-6">
           <p className="text-red-700">❌ {error || 'No se pudieron cargar los análisis'}</p>
           <button
-            onClick={fetchAnalytics}
+            onClick={() => fetchAnalytics(false)}
             className="mt-4 px-4 py-2 rounded-lg font-semibold transition-colors"
             style={{ backgroundColor: 'var(--sabana-light-blue)', color: 'white' }}
           >
@@ -332,7 +349,7 @@ export default function AnalyticsPage() {
           {/* Refresh Button */}
           <div className="flex justify-center">
             <button
-              onClick={fetchAnalytics}
+              onClick={() => fetchAnalytics(true)}
               className="px-6 py-2 rounded-lg font-semibold transition-colors"
               style={{
                 backgroundColor: 'var(--sabana-light-blue)',
