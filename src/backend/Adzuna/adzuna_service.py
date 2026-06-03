@@ -11,43 +11,67 @@ from config import ADZUNA_APP_ID, ADZUNA_APP_KEY, SUPABASE_URL, SUPABASE_SERVICE
 supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 
-def buscar_vacantes_adzuna(keyword: str, num_pages: int = 1) -> List[Dict[str, Any]]:
+def buscar_vacantes_adzuna(keyword: str, num_pages: int = 1, country: str = 'us') -> List[Dict[str, Any]]:
     """
     Search for jobs on Adzuna API.
     
     Args:
         keyword: Job title or keyword to search
-        num_pages: Number of pages to retrieve (20 results per page)
+        num_pages: Number of pages to retrieve (50 results per page)
+        country: Country code (us, uk, ca, etc.)
     
     Returns:
         List of job listings
     """
     all_results = []
     
+    # Codificar el keyword para la URL
+    encoded_keyword = keyword.replace(' ', '+')
+    
     for page in range(1, num_pages + 1):
         try:
+            # Construir la URL correctamente
+            url = f"https://api.adzuna.com/v1/api/jobs/{country}/search/{page}"
+            
+            params = {
+                "app_id": ADZUNA_APP_ID,
+                "app_key": ADZUNA_APP_KEY,
+                "what": keyword,
+                "results_per_page": 50,
+                "sort_by": "date"
+            }
+            
+            print(f"Consultando API para '{keyword}' - Página {page}...")
+            
             response = requests.get(
-                "https://api.adzuna.com/v1/api/jobs/us/search/1",
-                params={
-                    "app_id": ADZUNA_APP_ID,
-                    "app_key": ADZUNA_APP_KEY,
-                    "what": keyword,
-                    "results_per_page": 50,
-                    "page": page,
-                    "sort_by": "date"
-                },
+                url,
+                params=params,
                 timeout=30,
             )
+            
+            # Verificar respuesta
+            if response.status_code == 400:
+                print(f"Error 400 para '{keyword}': Verifica tus credenciales de API")
+                print(f"URL: {response.url}")
+                print(f"Respuesta: {response.text}")
+                break
+                
             response.raise_for_status()
             data = response.json()
             results = data.get("results", [])
             all_results.extend(results)
             
+            print(f"  Encontrados {len(results)} resultados en página {page}")
+            
+            # Si no hay más resultados o es la última página
             if not results or len(results) < 50:
                 break
                 
+        except requests.exceptions.RequestException as e:
+            print(f"Error buscando en Adzuna para '{keyword}' página {page}: {str(e)}")
+            continue
         except Exception as e:
-            print(f"Error searching Adzuna for '{keyword}' page {page}: {str(e)}")
+            print(f"Error inesperado para '{keyword}': {str(e)}")
             continue
     
     return all_results
@@ -65,6 +89,11 @@ def guardar_vacante(job: Dict[str, Any], programa: str) -> bool:
         True if successful, False otherwise
     """
     try:
+        # Verificar que el job tenga ID
+        if 'id' not in job:
+            print(f"Job sin ID: {job.get('title', 'Unknown')}")
+            return False
+            
         location_data = job.get("location", {})
         area = location_data.get("area", [])
         country = area[0] if len(area) > 0 else None
@@ -93,8 +122,37 @@ def guardar_vacante(job: Dict[str, Any], programa: str) -> bool:
         return True
 
     except Exception as e:
-        print(f"Error saving job listing: {str(e)}")
+        print(f"Error guardando vacante: {str(e)}")
         return False
+
+
+def procesar_todas_vacantes():
+    """
+    Procesa todas las vacantes para los programas definidos
+    """
+    resultados = {}
+    
+    for programa, keywords in PROGRAMAS_KEYWORDS.items():
+        print(f"\n=== Procesando {programa} ===")
+        vacantes_programa = []
+        
+        for keyword in keywords:
+            print(f"  Buscando: {keyword}")
+            vacantes = buscar_vacantes_adzuna(keyword, num_pages=2)
+            vacantes_programa.extend(vacantes)
+            
+            # Guardar cada vacante en Supabase
+            for vacante in vacantes:
+                guardar_vacante(vacante, programa)
+        
+        resultados[programa] = {
+            "total_encontradas": len(vacantes_programa),
+            "keywords_utilizadas": keywords
+        }
+        
+        print(f"  Total encontradas para {programa}: {len(vacantes_programa)}")
+    
+    return resultados
 
 
 def fetch_jobs_from_db() -> List[Dict[str, Any]]:
@@ -165,7 +223,7 @@ def get_analytics() -> Dict[str, Any]:
         salary_max = max(j["salary_max"] for j in jobs_with_salary)
         
         # Create salary bins
-        bin_size = (salary_max - salary_min) / 5
+        bin_size = (salary_max - salary_min) / 5 if salary_max > salary_min else 10000
         for i in range(5):
             bin_start = salary_min + (i * bin_size)
             bin_end = bin_start + bin_size
@@ -272,3 +330,11 @@ def get_salary_by_category(category: str) -> Dict[str, Any]:
         "avg_min": round(avg_min, 2),
         "avg_max": round(avg_max, 2),
     }
+
+
+# Ejecutar el proceso si se llama directamente
+if __name__ == "__main__":
+    resultados = procesar_todas_vacantes()
+    print("\n=== RESUMEN FINAL ===")
+    for programa, data in resultados.items():
+        print(f"{programa}: {data['total_encontradas']} vacantes encontradas")
