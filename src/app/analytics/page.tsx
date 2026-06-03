@@ -71,9 +71,9 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <PageLayout title="Análisis de Empleos">
+      <PageLayout title="Análisis de mercado (Adzuna)">
         <div className="flex items-center justify-center py-12">
-          <p className="text-lg text-zinc-600">⏳ Cargando análisis...</p>
+          <p className="text-lg text-zinc-600 font-bold">⏳ Cargando análisis...</p>
         </div>
       </PageLayout>
     );
@@ -81,7 +81,7 @@ export default function AnalyticsPage() {
 
   if (error || !analytics) {
     return (
-      <PageLayout title="Análisis de Empleos">
+      <PageLayout title="Análisis de mercado (Adzuna)">
         <div className="bg-red-100 rounded-lg p-6">
           <p className="text-red-700">❌ {error || 'No se pudieron cargar los análisis'}</p>
           <button
@@ -98,7 +98,7 @@ export default function AnalyticsPage() {
 
   return (
     <>
-      <PageLayout title="Análisis de Empleos">
+      <PageLayout title="Análisis de mercado (Adzuna)">
         <div className="space-y-8">
           {/* Header Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -106,24 +106,24 @@ export default function AnalyticsPage() {
               className="rounded-lg p-6 text-white"
               style={{ backgroundColor: 'var(--sabana-light-blue)' }}
             >
-              <p className="text-sm opacity-90">Total de Ofertas</p>
-              <p className="text-4xl font-bold mt-2">{analytics.total_jobs}</p>
+              <p className="text-sm opacity-90 font-bold" style = {{color: 'var(--sabana-dark-navy)'}}>Total de Ofertas</p>
+              <p className="text-4xl font-bold mt-2 font-bold" style = {{color: 'var(--sabana-dark-navy)'}}>{analytics.total_jobs}</p>
             </div>
             <div
               className="rounded-lg p-6 text-white"
               style={{ backgroundColor: 'var(--sabana-navy)' }}
             >
-              <p className="text-sm opacity-90">Con Información de Salario</p>
-              <p className="text-4xl font-bold mt-2">{analytics.jobs_with_salary}</p>
+              <p className="text-sm opacity-90 font-bold">Con Información de Salario</p>
+              <p className="text-4xl font-bold mt-2 font-bold" >{analytics.jobs_with_salary}</p>
             </div>
           </div>
 
           {/* 1. Cargos más demandados */}
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-light-blue)' }}>
               💼 Cargos Más Demandados
             </h3>
-            <p className="text-sm text-zinc-600 mb-4">
+            <p className="text-sm text-zinc-600 mb-4" style ={{ color: 'var(--white-background)' }}>
               Los 20 títulos de empleos con mayor frecuencia en el mercado laboral
             </p>
             <ResponsiveContainer width="100%" height={400}>
@@ -136,12 +136,15 @@ export default function AnalyticsPage() {
                   dataKey="title"
                   angle={-45}
                   textAnchor="end"
-                  height={120}
+                  height={100}
                   interval={0}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 10, fill: 'var(--white-background)' }}
                 />
                 <YAxis />
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--sabana-dark-navy)', borderColor: 'var(--sabana-dark-navy)', borderRadius: '8px' }}
+                  itemStyle={{ color: 'var(--white-background)' }}
+                />
                 <Bar dataKey="count" fill="var(--sabana-light-blue)" />
               </BarChart>
             </ResponsiveContainer>
@@ -149,18 +152,21 @@ export default function AnalyticsPage() {
 
           {/* 2. Sectores con mayor actividad */}
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-light-blue)' }}>
               🏢 Sectores con Mayor Actividad de Contratación
             </h3>
-            <p className="text-sm text-zinc-600 mb-4">
+            <p className="text-sm text-zinc-600 mb-4" style={{ color: 'var(--white-background)' }}>
               Distribución de empleos por categoría laboral
             </p>
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={analytics.categories} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
-                <YAxis dataKey="category" type="category" width={150} tick={{ fontSize: 12 }} />
-                <Tooltip />
+                <YAxis dataKey="category" type="category" width={150} tick={{ fontSize: 12, fill: 'var(--white-background)' }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--sabana-dark-navy)', color: 'var(--white-background)', borderColor: 'var(--sabana-dark-navy)', borderRadius: '8px' }}
+                  itemStyle={{ color: 'var(--white-background)' }}
+                />
                 <Bar dataKey="count" fill="var(--sabana-navy)" />
               </BarChart>
             </ResponsiveContainer>
@@ -340,8 +346,8 @@ export default function AnalyticsPage() {
       </PageLayout>
 
       <FloatingChat
-        pageTitle="Análisis de Empleos"
-        pageContent="Dashboard de análisis de empleos con gráficos de cargos demandados, salarios, sectores, empresas, modalidades de trabajo y programas académicos relacionados."
+        pageTitle="Análisis de mercado (Adzuna)"
+        pageContent="Dashboard de Análisis de mercado (Adzuna) con gráficos de cargos demandados, salarios, sectores, empresas, modalidades de trabajo y programas académicos relacionados."
       />
     </>
   );
