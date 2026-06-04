@@ -45,6 +45,21 @@ const COLORS = [
   '#27AE60',
 ];
 
+// Función para obtener colores de la paleta de La Sabana
+const getSabanaColor = (index) => {
+  const sabanaColors = [
+    'var(--sabana-dark-navy)',    // #002058
+    'var(--sabana-navy)',          // #003870
+    'var(--sabana-light-blue)',    // #93aac9
+    'var(--sabana-sky-blue)',      // #d9e1ef
+    'var(--sabana-cream)',         // #f7e6d9
+    'var(--sabana-black-70)',      // #4d4d4d
+    'var(--sabana-black-50)',      // #808080
+    'var(--sabana-black-30)',      // #b3b3b3
+  ];
+  return sabanaColors[index % sabanaColors.length];
+};
+
 export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -140,26 +155,25 @@ export default function AnalyticsPage() {
             <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-light-blue)' }}>
               💼 Cargos Más Demandados
             </h3>
-            <p className="text-sm text-zinc-600 mb-4" style ={{ color: 'var(--white-background)' }}>
+            <p className="text-sm text-zinc-600 mb-4" style={{ color: 'var(--white-background)' }}>
               Los 20 títulos de empleos con mayor frecuencia en el mercado laboral
             </p>
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={600}>
               <BarChart
                 data={analytics.job_titles}
-                margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
+                layout="vertical"
+                margin={{ top: 0, right: 30, left: -80, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="title"
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  interval={0}
+                <XAxis type="number" />
+                <YAxis 
+                  dataKey="title" 
+                  type="category" 
+                  width={400} 
                   tick={{ fontSize: 10, fill: 'var(--white-background)' }}
                 />
-                <YAxis />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--sabana-dark-navy)', borderColor: 'var(--sabana-dark-navy)', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: 'var(--sabana-dark-navy)', color: 'var(--white-background)', borderColor: 'var(--sabana-dark-navy)', borderRadius: '8px' }}
                   itemStyle={{ color: 'var(--white-background)' }}
                 />
                 <Bar dataKey="count" fill="var(--sabana-light-blue)" />
@@ -184,17 +198,17 @@ export default function AnalyticsPage() {
                   contentStyle={{ backgroundColor: 'var(--sabana-dark-navy)', color: 'var(--white-background)', borderColor: 'var(--sabana-dark-navy)', borderRadius: '8px' }}
                   itemStyle={{ color: 'var(--white-background)' }}
                 />
-                <Bar dataKey="count" fill="var(--sabana-navy)" />
+                <Bar dataKey="count" fill="var(--sabana-light-blue)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* 3. Modalidades de trabajo prevalentes */}
+          {/* 3. Modalidades de trabajo prevalente */}
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-light-blue)' }}>
               ⏰ Modalidades de Trabajo Prevalentes
             </h3>
-            <p className="text-sm text-zinc-600 mb-4">
+            <p className="text-sm text-zinc-600 mb-4" style={{ color: 'var(--white-background)' }}>
               Distribución de tipos de contrato (tiempo completo, parcial, etc.)
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -205,16 +219,30 @@ export default function AnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ type, count }) => `${type}: ${count}`}
+                    label={(entry) => `${entry.type}: ${entry.count}`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="count"
+                    nameKey="type"
                   >
                     {analytics.contract_types.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={getSabanaColor(index)} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    formatter={(value, name, props) => {
+                      return [`${value} ofertas`, props.payload.type || 'Desconocido'];
+                    }}
+                    contentStyle={{ 
+                      backgroundColor: 'var(--sabana-light-blue)', 
+                      color: 'var(--white-background)', 
+                      borderColor: 'var(--sabana-dark-navy)', 
+                      borderRadius: '8px',
+                      fontWeight: 'bold', 
+                    }}
+                    itemStyle={{ color: 'var(--white-background)' }}
+                    labelStyle={{ color: 'var(--sabana-light-blue)', fontWeight: 'bold' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex flex-col justify-center space-y-2">
@@ -222,9 +250,9 @@ export default function AnalyticsPage() {
                   <div key={index} className="flex items-center gap-2">
                     <div
                       className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      style={{ backgroundColor: getSabanaColor(index) }}
                     />
-                    <span className="text-sm">
+                    <span className="text-sm" style={{ color: 'var(--white-background)' }}>
                       <strong>{item.type || 'Desconocido'}</strong>: {item.count} ofertas
                     </span>
                   </div>
@@ -233,9 +261,18 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
+          <style jsx>{`
+            /* Asegurar que los labels del pie chart sean blancos */
+            :global(.recharts-pie-label-text) {
+              fill: white !important;
+              font-weight: bold !important;
+              font-size: 15px !important;
+            }
+          `}</style>
+
           {/* 4. Rangos salariales */}
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-light-blue)' }}>
               💰 Rangos Salariales por Frecuencia
             </h3>
             <p className="text-sm text-zinc-600 mb-4">
@@ -352,8 +389,9 @@ export default function AnalyticsPage() {
               onClick={() => fetchAnalytics(true)}
               className="px-6 py-2 rounded-lg font-semibold transition-colors"
               style={{
-                backgroundColor: 'var(--sabana-light-blue)',
+                backgroundColor: 'var(--sabana-navy)',
                 color: 'white',
+                cursor: 'pointer',
               }}
             >
               🔄 Actualizar Análisis

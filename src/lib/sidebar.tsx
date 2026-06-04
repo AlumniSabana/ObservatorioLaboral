@@ -16,7 +16,7 @@ import {
 
 const navigationItems = [
   { href: '/', label: 'Inicio', icon: Home },
-  { href: '/analytics', label: 'Análisis de mercado', icon: BarChart3 },
+  { href: '/analytics', label: 'Análisis de mercado (Adzuna)', icon: BarChart3 },
   { href: '/trends', label: 'Tendencias en formación', icon: TrendingUp },
   {
     href: '/skills',
