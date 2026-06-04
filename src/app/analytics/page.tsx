@@ -15,7 +15,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
@@ -32,21 +31,8 @@ interface Analytics {
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
-const COLORS = [
-  '#0076ba', // sabana-light-blue
-  '#003366', // sabana-navy
-  '#4A90E2',
-  '#F39C12',
-  '#E74C3C',
-  '#9B59B6',
-  '#1ABC9C',
-  '#34495E',
-  '#D35400',
-  '#27AE60',
-];
-
 // Función para obtener colores de la paleta de La Sabana
-const getSabanaColor = (index) => {
+const getSabanaColor = (index: number) => {
   const sabanaColors = [
     'var(--sabana-dark-navy)',    // #002058
     'var(--sabana-navy)',          // #003870
@@ -234,7 +220,7 @@ export default function AnalyticsPage() {
                       return [`${value} ofertas`, props.payload.type || 'Desconocido'];
                     }}
                     contentStyle={{ 
-                      backgroundColor: 'var(--sabana-light-blue)', 
+                      backgroundColor: 'var(--sabana-dark-navy)', 
                       color: 'var(--white-background)', 
                       borderColor: 'var(--sabana-dark-navy)', 
                       borderRadius: '8px',
@@ -275,7 +261,7 @@ export default function AnalyticsPage() {
             <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-light-blue)' }}>
               💰 Rangos Salariales por Frecuencia
             </h3>
-            <p className="text-sm text-zinc-600 mb-4">
+            <p className="text-sm text-zinc-600 mb-4" style={{ color: 'var(--white-background)' }}>
               Distribución de empleos en diferentes franjas salariales anuales
             </p>
             {analytics.salary_ranges.length > 0 ? (
@@ -284,13 +270,18 @@ export default function AnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="range"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: 'var(--white-background)' }}
                     angle={-45}
                     textAnchor="end"
                     height={100}
                   />
-                  <YAxis />
-                  <Tooltip />
+                  <YAxis 
+                  tick={{ fontSize: 12, fill: 'var(--white-background)' }}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: 'var(--sabana-dark-navy)', color: 'var(--white-background)', borderColor: 'var(--sabana-dark-navy)', borderRadius: '8px' }}
+                    itemStyle={{ color: 'var(--white-background)' }}
+                  />
                   <Line
                     type="monotone"
                     dataKey="count"
@@ -308,40 +299,49 @@ export default function AnalyticsPage() {
 
           {/* 5. Empresas líderes por sector */}
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-light-blue)' }}>
               🏆 Empresas con Mayor Actividad de Contratación
             </h3>
-            <p className="text-sm text-zinc-600 mb-4">
+            <p className="text-sm text-zinc-600 mb-4" style={{ color: 'var(--white-background)' }}>
               Las 15 empresas con más ofertas de empleo activas
             </p>
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={500}>
               <BarChart
                 data={analytics.companies}
-                margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
+                layout="vertical"
+                margin={{ top: 15, right: 30, left: -30, bottom: 15 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
+                <YAxis
                   dataKey="company"
-                  angle={-45}
+                  type="category"
                   textAnchor="end"
-                  height={120}
+                  width={300}
                   interval={0}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 12, fill: 'var(--white-background)' }}
+                  tickMargin={10}
                 />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="var(--sabana-navy)" />
+                <XAxis 
+                  tick={{ fontSize: 12, fill: 'var(--white-background)' }}
+                  type="number"
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--sabana-dark-navy)', color: 'var(--white-background)', borderColor: 'var(--sabana-dark-navy)', borderRadius: '8px' }}
+                  itemStyle={{ color: 'var(--white-background)' }}
+                  formatter={(value) => [`${value}`, 'Vacantes']}
+                />
+                <Bar dataKey="count" fill="var(--sabana-light-blue)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* 6. Universidades demandadas (Programs) */}
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--sabana-light-blue)' }}>
               🎓 Programas Académicos Relacionados con Mayor Demanda
             </h3>
-            <p className="text-sm text-zinc-600 mb-4">
-              Distribución de ofertas por programa académico de origen
+            <p className="text-sm text-zinc-600 mb-4" style={{ color: 'var(--white-background)' }}>
+              Distribución de ofertas por programa académico relacionado
             </p>
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={analytics.programas} layout="vertical">
@@ -350,10 +350,14 @@ export default function AnalyticsPage() {
                 <YAxis
                   dataKey="programa"
                   type="category"
-                  width={200}
-                  tick={{ fontSize: 11 }}
+                  width={300}
+                  tick={{ fontSize: 11, fill: 'var(--white-background)' }}
                 />
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--sabana-dark-navy)', color: 'var(--white-background)', borderColor: 'var(--sabana-dark-navy)', borderRadius: '8px' }}
+                  itemStyle={{ color: 'var(--white-background)' }}
+                  formatter={(value) => [`${value}`, 'Vacantes']}
+                />
                 <Bar dataKey="count" fill="var(--sabana-light-blue)" />
               </BarChart>
             </ResponsiveContainer>
@@ -361,9 +365,11 @@ export default function AnalyticsPage() {
 
           {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-lg p-4 border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-              <p className="text-sm text-zinc-600">Promedio de Empleos por Título</p>
-              <p className="text-2xl font-bold mt-2">
+            <div className="rounded-lg p-4 border-l-4" style={{ fontWeight: 'bold', borderColor: 'var(--sabana-light-blue)' }}>
+              <p className="text-sm text-zinc-600" style={{ fontWeight: 'bold', color: 'var(--sabana-dark-navy)' }}>
+                Promedio de Empleos por Título
+              </p>
+              <p className="text-2xl font-bold mt-2" style={{ fontWeight: 'bold', color: 'var(--sabana-dark-navy)' }}>
                 {analytics.job_titles.length > 0
                   ? (
                       analytics.total_jobs /
@@ -373,13 +379,21 @@ export default function AnalyticsPage() {
                   : 'N/A'}
               </p>
             </div>
-            <div className="rounded-lg p-4 border-l-4" style={{ borderColor: 'var(--sabana-navy)' }}>
-              <p className="text-sm text-zinc-600">Número de Sectores</p>
-              <p className="text-2xl font-bold mt-2">{analytics.categories.length}</p>
+            <div className="rounded-lg p-4 border-l-4" style={{ fontWeight: 'bold', borderColor: 'var(--sabana-light-blue)' }}>
+              <p className="text-sm text-zinc-600" style={{ fontWeight: 'bold', color: 'var(--sabana-dark-navy)' }}>
+                Número de Sectores
+              </p>
+              <p className="text-2xl font-bold mt-2" style={{ fontWeight: 'bold', color: 'var(--sabana-dark-navy)' }}>
+                {analytics.categories.length}
+              </p>
             </div>
-            <div className="rounded-lg p-4 border-l-4" style={{ borderColor: '#1ABC9C' }}>
-              <p className="text-sm text-zinc-600">Empresas Únicas</p>
-              <p className="text-2xl font-bold mt-2">{analytics.companies.length}</p>
+            <div className="rounded-lg p-4 border-l-4" style={{ fontWeight: 'bold', borderColor: 'var(--sabana-light-blue)' }}>
+              <p className="text-sm text-zinc-600" style={{ fontWeight: 'bold', color: 'var(--sabana-dark-navy)' }}>
+                Empresas Únicas
+              </p>
+              <p className="text-2xl font-bold mt-2" style={{ fontWeight: 'bold', color: 'var(--sabana-dark-navy)' }}>
+                {analytics.companies.length}
+              </p>
             </div>
           </div>
 
@@ -402,7 +416,7 @@ export default function AnalyticsPage() {
 
       <FloatingChat
         pageTitle="Análisis de mercado (Adzuna)"
-        pageContent="Dashboard de Análisis de mercado (Adzuna) con gráficos de cargos demandados, salarios, sectores, empresas, modalidades de trabajo y programas académicos relacionados."
+        pageContent="Dashboard de Análisis de mercado (Adzuna) con gráficos de cargos demandados, salarios, sectores, empresas, modalidades de trabajo y programas académicos relacionados. Estas vacantes son extraídas del mercado de ESTADOS UNIDOS a través de la API de Adzuna, proporcionando insights sobre tendencias laborales actuales."
       />
     </>
   );

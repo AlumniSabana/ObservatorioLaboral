@@ -10,7 +10,6 @@ import {
   Building2,
   Users,
   Zap,
-  Briefcase as JobIcon,
   BarChart3,
 } from 'lucide-react';
 
