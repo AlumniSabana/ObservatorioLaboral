@@ -169,8 +169,10 @@ def fetch_jobs_from_db() -> List[Dict[str, Any]]:
         
         # Bucle para traer todas las páginas
         while True:
+            # CORRECCIÓN: .order("id") sin parámetro ascending
             response = supabase.table("vacantes")\
                 .select("*")\
+                .order("id")\
                 .range(start, start + page_size - 1)\
                 .execute()
             
@@ -195,8 +197,68 @@ def fetch_jobs_from_db() -> List[Dict[str, Any]]:
         return []
 
 
+def normalize_title(title: str) -> str:
+    """Normaliza títulos de cargos para agrupar variantes similares"""
+    if not title:
+        return "Sin título"
+    
+    title = title.lower()
+    
+    # Eliminar niveles de seniority
+    title = re.sub(r'\b(sr\.?|senior|s\.r\.?|jr\.?|junior|lead|principal|staff|associate|entry\s*level|entry-level|entry)\b', '', title, flags=re.IGNORECASE)
+    
+    # Eliminar números romanos y niveles
+    title = re.sub(r'\b(i{1,3}|iv|v|vi|vii|viii|ix|x|level\s*\d+|nivel\s*\d+)\b', '', title, flags=re.IGNORECASE)
+    
+    # Eliminar palabras comunes que no afectan el significado principal
+    title = re.sub(r'\b(and|&|de|del|la|las|los|el|en|para|por|con|sin|sobre|tras|ante|bajo|cabe|contra|desde|durante|entre|hacia|hasta|mediante|según|vía|vs|versus)\b', '', title, flags=re.IGNORECASE)
+    
+    # Eliminar caracteres especiales y espacios extra
+    title = re.sub(r'[^\w\s]', ' ', title)
+    title = re.sub(r'\s+', ' ', title).strip()
+    
+    # Estandarizar términos comunes
+    title = re.sub(r'\b(software\s+)?develop(er|ment|ing)\b', 'developer', title)
+    title = re.sub(r'\b(software\s+)?engine(er|eering)\b', 'engineer', title)
+    title = re.sub(r'\bdata\s+(scientist|analyst|engineer)\b', lambda m: f"data {m.group(1)}", title)
+    title = re.sub(r'\bweb\s+develop(er|ment)\b', 'web developer', title)
+    title = re.sub(r'\bmobile\s+develop(er|ment)\b', 'mobile developer', title)
+    title = re.sub(r'\bfull[- ]stack\s+develop(er|ment)\b', 'full stack developer', title)
+    title = re.sub(r'\bfront[- ]?end\s+develop(er|ment)\b', 'frontend developer', title)
+    title = re.sub(r'\bback[- ]?end\s+develop(er|ment)\b', 'backend developer', title)
+    title = re.sub(r'\bdevops\s+engineer\b', 'devops engineer', title)
+    title = re.sub(r'\bcloud\s+engineer\b', 'cloud engineer', title)
+    title = re.sub(r'\bproduct\s+manager\b', 'product manager', title)
+    title = re.sub(r'\bproject\s+manager\b', 'project manager', title)
+    title = re.sub(r'\bbusiness\s+analyst\b', 'business analyst', title)
+    title = re.sub(r'\bquality\s+assurance\b', 'qa engineer', title)
+    title = re.sub(r'\buta\s+analyst\b', 'data analyst', title)
+    
+    return title.strip()
+
+
+def get_job_titles_with_normalization(jobs: List[Dict[str, Any]], top_n: int = 20) -> List[Dict[str, Any]]:
+    """Cuenta títulos normalizados y retorna los más comunes"""
+    title_counter = Counter()
+    
+    for job in jobs:
+        original_title = job.get("title", "Sin título")
+        normalized_title = normalize_title(original_title)
+        title_counter[normalized_title] += 1
+    
+    # Mostrar estadísticas de normalización (debug)
+    print(f"📊 Títulos originales únicos: {len(set(job.get('title', 'Sin título') for job in jobs))}")
+    print(f"📊 Títulos normalizados únicos: {len(title_counter)}")
+    
+    # Retornar top N títulos normalizados
+    return [
+        {"title": title, "count": count}
+        for title, count in title_counter.most_common(top_n)
+    ]
+
+
 def get_analytics() -> Dict[str, Any]:
-    """Genera analytics completos"""
+    """Genera analytics completos con normalización de títulos"""
     jobs = fetch_jobs_from_db()
     
     if not jobs:
@@ -211,12 +273,8 @@ def get_analytics() -> Dict[str, Any]:
             "programas": [],
         }
 
-    # Most in-demand job titles
-    title_count = {}
-    for job in jobs:
-        title = job.get("title", "Unknown")
-        title_count[title] = title_count.get(title, 0) + 1
-    top_titles = sorted(title_count.items(), key=lambda x: x[1], reverse=True)[:20]
+    # Most in-demand job titles (NORMALIZADOS)
+    top_titles = get_job_titles_with_normalization(jobs, top_n=20)
 
     # Categories
     category_count = {}
@@ -232,24 +290,33 @@ def get_analytics() -> Dict[str, Any]:
         contract_count[contract] = contract_count.get(contract, 0) + 1
     top_contracts = sorted(contract_count.items(), key=lambda x: x[1], reverse=True)
 
-    # Salary ranges
-    salary_ranges = []
+    # Salary ranges (MEJORADO: usando rangos más realistas)
     jobs_with_salary = [j for j in jobs if j.get("salary_min") and j.get("salary_max")]
     
     if jobs_with_salary:
-        salary_min = min(j["salary_min"] for j in jobs_with_salary)
-        salary_max = max(j["salary_max"] for j in jobs_with_salary)
-        bin_size = (salary_max - salary_min) / 5 if salary_max > salary_min else 10000
+        # Usar rangos predefinidos más útiles visualmente
+        salary_buckets = [
+            (0, 30000, "Menos de $30k"),
+            (30000, 50000, "$30k - $50k"),
+            (50000, 70000, "$50k - $70k"),
+            (70000, 90000, "$70k - $90k"),
+            (90000, 120000, "$90k - $120k"),
+            (120000, 150000, "$120k - $150k"),
+            (150000, 200000, "$150k - $200k"),
+            (200000, float('inf'), "Más de $200k")
+        ]
         
-        for i in range(5):
-            bin_start = salary_min + (i * bin_size)
-            bin_end = bin_start + bin_size
+        salary_ranges = []
+        for min_val, max_val, label in salary_buckets:
             count = len([j for j in jobs_with_salary 
-                        if bin_start <= j["salary_min"] <= bin_end])
-            salary_ranges.append({
-                "range": f"${bin_start:,.0f} - ${bin_end:,.0f}",
-                "count": count
-            })
+                        if min_val <= j["salary_min"] <= max_val])
+            if count > 0:
+                salary_ranges.append({
+                    "range": label,
+                    "count": count
+                })
+    else:
+        salary_ranges = []
 
     # Top companies
     company_count = {}
@@ -265,16 +332,23 @@ def get_analytics() -> Dict[str, Any]:
         programa_count[programa] = programa_count.get(programa, 0) + 1
     top_programas = sorted(programa_count.items(), key=lambda x: x[1], reverse=True)[:15]
 
-    return {
+    analytics_data = {
         "total_jobs": len(jobs),
         "jobs_with_salary": len(jobs_with_salary),
-        "job_titles": [{"title": t, "count": c} for t, c in top_titles],
+        "job_titles": top_titles,
         "categories": [{"category": c, "count": co} for c, co in top_categories],
         "contract_types": [{"type": t, "count": c} for t, c in top_contracts],
         "salary_ranges": salary_ranges,
         "companies": [{"company": c, "count": co} for c, co in top_companies],
         "programas": [{"programa": p, "count": co} for p, co in top_programas],
     }
+    
+    # Mostrar top títulos para debug
+    print("\n📊 TOP 10 CARGOS NORMALIZADOS:")
+    for i, title_data in enumerate(top_titles[:10], 1):
+        print(f"  {i}. {title_data['title']}: {title_data['count']} ocurrencias")
+    
+    return analytics_data
 
 
 def get_salary_by_title(title: str) -> Dict[str, Any]:
