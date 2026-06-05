@@ -6,6 +6,9 @@ import requests
 from typing import List, Dict, Any
 from supabase import create_client
 from config import ADZUNA_APP_ID, ADZUNA_APP_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY, PROGRAMAS_KEYWORDS
+import re
+from collections import Counter
+from typing import List, Dict, Any
 
 # Initialize Supabase
 supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
@@ -151,12 +154,42 @@ def procesar_todas_vacantes(borrar: bool = False):
         fetch_jobs_from_db()
         return {"status": "no_borrar", "message": "No se borraron vacantes, solo se obtuvieron de la base de datos"}
 
-
 def fetch_jobs_from_db() -> List[Dict[str, Any]]:
-    """Obtiene todas las vacantes de la base de datos"""
+    """Obtiene TODAS las vacantes de la base de datos usando paginación"""
+    all_jobs = []
+    page_size = 1000
+    start = 0
+    total_fetched = 0
+    
     try:
-        response = supabase.table("vacantes").select("*").execute()
-        return response.data if response.data else []
+        # Primero, obtenemos el conteo total (opcional pero recomendado)
+        count_response = supabase.table("vacantes").select("*", count="exact", head=True).execute()
+        total_records = count_response.count
+        print(f"Total de registros en BD: {total_records}")
+        
+        # Bucle para traer todas las páginas
+        while True:
+            response = supabase.table("vacantes")\
+                .select("*")\
+                .range(start, start + page_size - 1)\
+                .execute()
+            
+            if not response.data or len(response.data) == 0:
+                break
+                
+            all_jobs.extend(response.data)
+            total_fetched += len(response.data)
+            print(f"Página {start//page_size + 1}: {len(response.data)} registros (acumulado: {total_fetched})")
+            
+            # Si obtuvimos menos de page_size, es la última página
+            if len(response.data) < page_size:
+                break
+                
+            start += page_size
+            
+        print(f"✅ Total de registros obtenidos: {len(all_jobs)}")
+        return all_jobs
+        
     except Exception as e:
         print(f"Error fetching jobs from database: {str(e)}")
         return []
