@@ -10,10 +10,12 @@ import {
   Building2,
   Users,
   Zap,
+  BarChart3,
 } from 'lucide-react';
 
 const navigationItems = [
   { href: '/', label: 'Inicio', icon: Home },
+  { href: '/analytics', label: 'Análisis de mercado (Adzuna)', icon: BarChart3 },
   { href: '/trends', label: 'Tendencias en formación', icon: TrendingUp },
   {
     href: '/skills',
