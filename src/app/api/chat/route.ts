@@ -1,3 +1,20 @@
+/**
+ * Ruta API del asistente de IA (proxy hacia Claude / Anthropic).
+ *
+ * Recibe del frontend (floating-chat.tsx) la pregunta del usuario más el contexto
+ * de la página actual (pageTitle + pageContent), arma un "system prompt" que
+ * obliga a Claude a responder SOLO con base en ese contexto, y devuelve la
+ * respuesta en texto.
+ *
+ * La API key se lee de la variable de entorno CLAUDE_API_KEY (nunca se expone al
+ * navegador, porque este código corre del lado del servidor).
+ *
+ * NOTA: el proyecto se exporta como sitio estático (next.config.ts -> output:
+ * 'export'), modo en el que las rutas API de Next no se ejecutan como servidor.
+ * Para que el chat funcione en producción se requiere un entorno que sí ejecute
+ * esta ruta (verificar el hosting al desplegar).
+ */
+
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -62,6 +79,8 @@ export async function POST(req: NextRequest) {
     `;
 
     console.log("Enviando solicitud a Claude...");
+    // Llamada al modelo. `system` define el rol/reglas; `messages` lleva la
+    // pregunta del usuario. Para cambiar de modelo, ajusta el campo `model`.
     const message_response = await client.messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 8192,

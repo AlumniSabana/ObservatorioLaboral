@@ -1,5 +1,22 @@
 'use client';
 
+/**
+ * Dashboard "Análisis de mercado" (ruta '/analytics').
+ *
+ * Es la ÚNICA página que muestra datos REALES traídos del backend. Permite elegir
+ * la FUENTE de los datos con un combo box (ver objeto FUENTES más abajo):
+ *   - 'adzuna'      -> vacantes de Estados Unidos
+ *   - 'google_jobs' -> vacantes de Colombia
+ *
+ * Flujo:
+ *   - Al cargar la página o cambiar de fuente -> loadAnalytics() hace
+ *     GET /analytics?fuente=... (solo LEE lo que ya hay en la BD).
+ *   - El botón "Actualizar Análisis" -> fetchAnalytics() hace
+ *     POST /scrape?fuente=...&borrar=true (RECOLECTA datos nuevos) y luego recarga.
+ *
+ * Los gráficos se dibujan con la librería recharts.
+ */
+
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 import { useState, useEffect } from 'react';
@@ -18,20 +35,45 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
+// Forma exacta del JSON que devuelve el endpoint GET /analytics del backend.
+// Cada campo alimenta un gráfico/sección del dashboard.
 interface Analytics {
-  total_jobs: number;
-  jobs_with_salary: number;
-  job_titles: Array<{ title: string; count: number }>;
-  categories: Array<{ category: string; count: number }>;
-  contract_types: Array<{ type: string; count: number }>;
-  salary_ranges: Array<{ range: string; count: number }>;
-  companies: Array<{ company: string; count: number }>;
-  programas: Array<{ programa: string; count: number }>;
+  total_jobs: number;                                          // total de vacantes
+  jobs_with_salary: number;                                    // cuántas traen salario
+  job_titles: Array<{ title: string; count: number }>;        // cargos más demandados
+  categories: Array<{ category: string; count: number }>;     // sectores
+  contract_types: Array<{ type: string; count: number }>;     // modalidades (full/part time)
+  salary_ranges: Array<{ range: string; count: number }>;     // distribución salarial
+  companies: Array<{ company: string; count: number }>;       // empresas con más ofertas
+  programas: Array<{ programa: string; count: number }>;      // programas académicos
 }
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
-// Función para obtener colores de la paleta de La Sabana
+type Fuente = 'adzuna' | 'google_jobs';
+
+// Metadatos de cada fuente de datos disponible
+const FUENTES: Record<Fuente, {
+  label: string;
+  title: string;
+  chatContent: string;
+}> = {
+  adzuna: {
+    label: 'Adzuna — Estados Unidos',
+    title: 'Análisis de mercado — Adzuna (Estados Unidos)',
+    chatContent:
+      'Dashboard de Análisis de mercado con gráficos de cargos demandados, salarios, sectores, empresas, modalidades de trabajo y programas académicos relacionados. Estas vacantes son extraídas del mercado de ESTADOS UNIDOS a través de la API de Adzuna, proporcionando insights sobre tendencias laborales actuales.',
+  },
+  google_jobs: {
+    label: 'Google Jobs — Colombia',
+    title: 'Análisis de mercado — Google Jobs (Colombia)',
+    chatContent:
+      'Dashboard de Análisis de mercado con gráficos de cargos demandados, salarios, sectores, empresas, modalidades de trabajo y programas académicos relacionados. Estas vacantes son extraídas del mercado de COLOMBIA a través de Google Jobs (SerpApi), proporcionando insights sobre tendencias laborales actuales.',
+  },
+};
+
+// Devuelve un color de la paleta de La Sabana según un índice, rotando de forma
+// cíclica. Se usa para pintar los segmentos de los gráficos (ej. el pie chart).
 const getSabanaColor = (index: number) => {
   const sabanaColors = [
     'var(--sabana-dark-navy)',    // #002058
@@ -50,36 +92,22 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fuente, setFuente] = useState<Fuente>('adzuna');
 
-  useEffect(() => {
-    fetchAnalytics(false);
-  }, []);
-
-  const fetchAnalytics = async (borrar: boolean = false) => {
+  // Solo consulta los analytics ya almacenados para la fuente indicada
+  const loadAnalytics = async (fuenteSel: Fuente) => {
     setLoading(true);
     setError(null);
 
-    const url = new URL(`${BACKEND_URL}/scrape`);
-    url.searchParams.append('borrar', borrar.toString());
-    
     try {
-      // Primero hacemos el scrape (actualiza los datos)
-      const scrapeResponse = await fetch(url, {
-        method: 'POST',
-      });
-      
-      if (!scrapeResponse.ok) {
-        console.warn("Error en scrape, pero continuamos con analytics...");
-      }
+      const url = new URL(`${BACKEND_URL}/analytics`);
+      url.searchParams.append('fuente', fuenteSel);
 
-      // Luego cargamos los nuevos analytics
-      const analyticsResponse = await fetch(`${BACKEND_URL}/analytics`);
+      const analyticsResponse = await fetch(url);
       if (!analyticsResponse.ok) throw new Error('Error al cargar análisis');
-      
+
       const data = await analyticsResponse.json();
       setAnalytics(data);
-      
-      alert("✅ Datos actualizados correctamente desde Adzuna");
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -87,9 +115,83 @@ export default function AnalyticsPage() {
     }
   };
 
+  // Re-ejecuta la recolección (scrape) de la fuente actual y recarga los datos
+  const fetchAnalytics = async (borrar: boolean = false) => {
+    setLoading(true);
+    setError(null);
+
+    const url = new URL(`${BACKEND_URL}/scrape`);
+    url.searchParams.append('borrar', borrar.toString());
+    url.searchParams.append('fuente', fuente);
+
+    try {
+      // Primero hacemos el scrape (actualiza los datos de la fuente seleccionada)
+      const scrapeResponse = await fetch(url, {
+        method: 'POST',
+      });
+
+      if (!scrapeResponse.ok) {
+        console.warn("Error en scrape, pero continuamos con analytics...");
+      }
+
+      // Luego cargamos los nuevos analytics de esa fuente
+      const analyticsUrl = new URL(`${BACKEND_URL}/analytics`);
+      analyticsUrl.searchParams.append('fuente', fuente);
+
+      const analyticsResponse = await fetch(analyticsUrl);
+      if (!analyticsResponse.ok) throw new Error('Error al cargar análisis');
+
+      const data = await analyticsResponse.json();
+      setAnalytics(data);
+
+      alert(`✅ Datos actualizados correctamente desde ${FUENTES[fuente].label}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Carga los analytics desde el backend cada vez que cambia la fuente seleccionada
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAnalytics(fuente);
+  }, [fuente]);
+
+  // Combo box para elegir la fuente de los datos (siempre visible)
+  const SourceSelector = (
+    <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-2">
+      <label
+        htmlFor="fuente-select"
+        className="text-sm font-bold"
+        style={{ color: 'var(--sabana-dark-navy)' }}
+      >
+        Fuente de datos:
+      </label>
+      <select
+        id="fuente-select"
+        value={fuente}
+        onChange={(e) => setFuente(e.target.value as Fuente)}
+        className="rounded-lg px-4 py-2 font-semibold border cursor-pointer"
+        style={{
+          backgroundColor: 'var(--sabana-sky-blue)',
+          color: 'var(--sabana-dark-navy)',
+          borderColor: 'var(--sabana-light-blue)',
+        }}
+      >
+        {(Object.keys(FUENTES) as Fuente[]).map((key) => (
+          <option key={key} value={key}>
+            {FUENTES[key].label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
   if (loading) {
     return (
-      <PageLayout title="Análisis de mercado (Adzuna)">
+      <PageLayout title={FUENTES[fuente].title}>
+        {SourceSelector}
         <div className="flex items-center justify-center py-12">
           <p className="text-lg text-zinc-600 font-bold">⏳ Cargando análisis...</p>
         </div>
@@ -99,11 +201,12 @@ export default function AnalyticsPage() {
 
   if (error || !analytics) {
     return (
-      <PageLayout title="Análisis de mercado (Adzuna)">
+      <PageLayout title={FUENTES[fuente].title}>
+        {SourceSelector}
         <div className="bg-red-100 rounded-lg p-6">
           <p className="text-red-700">❌ {error || 'No se pudieron cargar los análisis'}</p>
           <button
-            onClick={() => fetchAnalytics(false)}
+            onClick={() => loadAnalytics(fuente)}
             className="mt-4 px-4 py-2 rounded-lg font-semibold transition-colors"
             style={{ backgroundColor: 'var(--sabana-light-blue)', color: 'white' }}
           >
@@ -114,9 +217,34 @@ export default function AnalyticsPage() {
     );
   }
 
+  // Sin datos para la fuente seleccionada (ej. Google Jobs aún sin recolectar)
+  if (analytics.total_jobs === 0) {
+    return (
+      <PageLayout title={FUENTES[fuente].title}>
+        {SourceSelector}
+        <div className="bg-white dark:bg-zinc-800 rounded-lg p-8 shadow text-center space-y-4">
+          <p className="text-lg font-bold" style={{ color: 'var(--sabana-light-blue)' }}>
+            Aún no hay vacantes recolectadas para {FUENTES[fuente].label}.
+          </p>
+          <p className="text-sm text-zinc-500">
+            Usa el botón para recolectar los datos de esta fuente.
+          </p>
+          <button
+            onClick={() => fetchAnalytics(true)}
+            className="px-6 py-2 rounded-lg font-semibold transition-colors"
+            style={{ backgroundColor: 'var(--sabana-navy)', color: 'white', cursor: 'pointer' }}
+          >
+            🔄 Recolectar datos
+          </button>
+        </div>
+      </PageLayout>
+    );
+  }
+
   return (
     <>
-      <PageLayout title="Análisis de mercado (Adzuna)">
+      <PageLayout title={FUENTES[fuente].title}>
+        {SourceSelector}
         <div className="space-y-8">
           {/* Header Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -415,8 +543,8 @@ export default function AnalyticsPage() {
       </PageLayout>
 
       <FloatingChat
-        pageTitle="Análisis de mercado (Adzuna)"
-        pageContent="Dashboard de Análisis de mercado (Adzuna) con gráficos de cargos demandados, salarios, sectores, empresas, modalidades de trabajo y programas académicos relacionados. Estas vacantes son extraídas del mercado de ESTADOS UNIDOS a través de la API de Adzuna, proporcionando insights sobre tendencias laborales actuales."
+        pageTitle={FUENTES[fuente].title}
+        pageContent={FUENTES[fuente].chatContent}
       />
     </>
   );

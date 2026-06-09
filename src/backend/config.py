@@ -1,14 +1,35 @@
+"""
+Configuración central del backend.
+
+Aquí se cargan todas las variables de entorno (credenciales de Supabase, Adzuna
+y SerpApi) y se define el diccionario PROGRAMAS_KEYWORDS, que es el "mapa" que
+relaciona cada programa académico de La Sabana con los términos de búsqueda que
+se usan para recolectar vacantes en las APIs externas.
+
+Las variables se leen desde el archivo src/backend/.env (no versionado).
+"""
+
 import os
 from dotenv import load_dotenv
 
+# Lee el archivo .env y expone sus valores como variables de entorno
 load_dotenv()
 
+# --- Credenciales de servicios externos ---
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID")
 ADZUNA_APP_KEY = os.getenv("ADZUNA_APP_KEY")
+# SerpApi key para recolectar vacantes de Google Jobs (Colombia)
+SERPAPI_KEY = os.getenv("SERPAPI_KEY")
 
-# Mapeo completo de programas
+# Mapeo completo de programas académicos -> términos de búsqueda.
+#
+# Por cada programa, el scraper recorre esta lista de keywords y busca cada una
+# en la API externa (Adzuna / Google Jobs). Las vacantes encontradas se asocian
+# a ese programa mediante la columna `programa_relacionado` en Supabase.
+#
+# Para afinar la recolección de un programa, agrega o ajusta sus keywords aquí.
 PROGRAMAS_KEYWORDS = {
     "Administración de Empresas": ["business administration", "business manager", "operations manager", "management trainee"],
     "Administración & Servicio": ["customer service manager", "service operations", "customer experience"],

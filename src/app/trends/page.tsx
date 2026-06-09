@@ -1,5 +1,14 @@
 'use client';
 
+/**
+ * Página "Tendencias en formación" (ruta '/trends').
+ *
+ * ⚠️ Contenido ESTÁTICO de ejemplo: las tarjetas están escritas a mano y NO
+ * consumen el backend. Es una página informativa/placeholder. Si en el futuro
+ * se quiere mostrar datos reales, este es uno de los lugares a conectar con la
+ * API (ver cómo lo hace src/app/analytics/page.tsx).
+ */
+
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 

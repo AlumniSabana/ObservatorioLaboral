@@ -1,5 +1,13 @@
 'use client';
 
+/**
+ * Página "Sectores y empresas" (ruta '/sectors').
+ *
+ * ⚠️ Contenido ESTÁTICO de ejemplo (sectores económicos escritos a mano). NO
+ * consume el backend; es informativa/placeholder. El dashboard de /analytics sí
+ * muestra sectores y empresas reales a partir de las vacantes recolectadas.
+ */
+
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 

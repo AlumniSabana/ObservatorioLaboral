@@ -1,6 +1,16 @@
+/*
+ * Estilos globales de la aplicación.
+ *
+ * - Importa Tailwind CSS (el sistema de utilidades usado en todo el frontend).
+ * - Define la PALETA DE COLORES de la Universidad de La Sabana como variables
+ *   CSS (--sabana-*). En los componentes se usan así:
+ *       style={{ color: 'var(--sabana-dark-navy)' }}
+ *   Cambiar un color aquí lo actualiza en toda la app.
+ */
+
 @import "tailwindcss";
 
-/* Universidad de La Sabana Color Palette */
+/* Paleta de colores de la Universidad de La Sabana (variables reutilizables) */
 :root {
   /* Primary Colors */
   --sabana-dark-navy: #002058;

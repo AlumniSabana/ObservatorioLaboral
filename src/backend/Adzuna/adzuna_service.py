@@ -1,5 +1,21 @@
 """
-Adzuna API Service for job data extraction and aggregation
+Servicio de Adzuna: recolección de vacantes (Estados Unidos) Y cálculo de analíticas.
+
+Este módulo cumple DOS roles:
+
+1. Recolección específica de Adzuna:
+   buscar_vacantes_adzuna(), guardar_vacante(), procesar_todas_vacantes().
+
+2. Funciones COMPARTIDAS por todas las fuentes (viven aquí por razones
+   históricas, pero no son exclusivas de Adzuna):
+   - supabase: el cliente de base de datos (lo reutiliza GoogleJobs).
+   - borrar_vacantes_por_fuente(): borrado selectivo por fuente.
+   - fetch_jobs_from_db(): lectura paginada de la tabla `vacantes`.
+   - get_analytics(): agrega las métricas que consume el dashboard.
+   - normalize_title(): normaliza títulos de cargos para agruparlos.
+
+El frontend nunca llama estas funciones directamente; lo hace a través de los
+endpoints definidos en main.py.
 """
 
 import requests
@@ -27,9 +43,25 @@ def borrar_todas_vacantes():
         return False
 
 
+def borrar_vacantes_por_fuente(fuente: str):
+    """Borra únicamente las vacantes de una fuente específica (ej. 'adzuna', 'google_jobs')"""
+    try:
+        response = supabase.table("vacantes").delete().eq("fuente", fuente).execute()
+        count = len(response.data) if response.data else 0
+        print(f"🗑️ Se eliminaron {count} registros anteriores de la fuente '{fuente}'.")
+        return True
+    except Exception as e:
+        print(f"❌ Error al borrar vacantes de '{fuente}': {str(e)}")
+        return False
+
+
 def buscar_vacantes_adzuna(keyword: str, num_pages: int = 2, country: str = 'us') -> List[Dict[str, Any]]:
     """
-    Search for jobs on Adzuna API.
+    Busca vacantes en la API de Adzuna para una keyword.
+
+    Recorre hasta `num_pages` páginas (50 resultados por página). `country='us'`
+    define el mercado: actualmente Adzuna se usa solo para Estados Unidos.
+    Devuelve la lista cruda de resultados (aún sin transformar para la BD).
     """
     all_results = []
     
@@ -59,7 +91,8 @@ def buscar_vacantes_adzuna(keyword: str, num_pages: int = 2, country: str = 'us'
             all_results.extend(results)
             
             print(f"   ✅ Encontrados {len(results)} resultados")
-            
+
+            # Si la página vino incompleta (<50), ya no hay más resultados: paramos.
             if not results or len(results) < 50:
                 break
                 
@@ -71,11 +104,18 @@ def buscar_vacantes_adzuna(keyword: str, num_pages: int = 2, country: str = 'us'
 
 
 def guardar_vacante(job: Dict[str, Any], programa: str) -> bool:
-    """Guarda o actualiza una vacante en Supabase"""
+    """Guarda o actualiza una vacante de Adzuna en Supabase.
+
+    Transforma el JSON crudo de Adzuna al esquema de la tabla `vacantes` y hace
+    un upsert por `id`, de modo que volver a recolectar la misma vacante la
+    actualiza en lugar de duplicarla.
+    """
     try:
         if 'id' not in job:
             return False
-            
+
+        # En Adzuna la ubicación viene como un objeto con una jerarquía de áreas;
+        # tomamos la más general (el primer elemento) como "país".
         location_data = job.get("location", {})
         area = location_data.get("area", [])
         country = area[0] if len(area) > 0 else None
@@ -109,12 +149,18 @@ def guardar_vacante(job: Dict[str, Any], programa: str) -> bool:
 
 
 def procesar_todas_vacantes(borrar: bool = False):
-    """Procesa todas las vacantes usando TODAS las keywords de cada programa"""
+    """Recolecta vacantes de Adzuna para todos los programas y sus keywords.
+
+    - borrar=True : borra primero las vacantes de Adzuna y vuelve a recolectar
+                    todo desde cero (recolección "limpia").
+    - borrar=False: no recolecta nada nuevo; solo confirma lo que ya hay en BD.
+                    (El frontend usa este modo en la carga inicial.)
+    """
     print("🚀 Iniciando proceso completo de recolección de vacantes...\n")
     
-    # 1. Borrar datos anteriores si se indica
+    # 1. Borrar datos anteriores si se indica (solo los de Adzuna)
     if borrar:
-        borrar_todas_vacantes()
+        borrar_vacantes_por_fuente("adzuna")
         total_vacantes = 0
         total_guardadas = 0
 
@@ -154,27 +200,36 @@ def procesar_todas_vacantes(borrar: bool = False):
         fetch_jobs_from_db()
         return {"status": "no_borrar", "message": "No se borraron vacantes, solo se obtuvieron de la base de datos"}
 
-def fetch_jobs_from_db() -> List[Dict[str, Any]]:
-    """Obtiene TODAS las vacantes de la base de datos usando paginación"""
+def fetch_jobs_from_db(fuente: str = None) -> List[Dict[str, Any]]:
+    """Obtiene las vacantes de la base de datos usando paginación.
+
+    Si se indica `fuente` (ej. 'adzuna', 'google_jobs') solo devuelve las
+    vacantes de esa fuente; si es None devuelve todas.
+    """
     all_jobs = []
     page_size = 1000
     start = 0
     total_fetched = 0
-    
+
     try:
         # Primero, obtenemos el conteo total (opcional pero recomendado)
-        count_response = supabase.table("vacantes").select("*", count="exact", head=True).execute()
+        count_query = supabase.table("vacantes").select("*", count="exact", head=True)
+        if fuente:
+            count_query = count_query.eq("fuente", fuente)
+        count_response = count_query.execute()
         total_records = count_response.count
-        print(f"Total de registros en BD: {total_records}")
-        
+        print(f"Total de registros en BD (fuente={fuente or 'todas'}): {total_records}")
+
         # Bucle para traer todas las páginas
         while True:
             # CORRECCIÓN: .order("id") sin parámetro ascending
-            response = supabase.table("vacantes")\
+            query = supabase.table("vacantes")\
                 .select("*")\
                 .order("id")\
-                .range(start, start + page_size - 1)\
-                .execute()
+                .range(start, start + page_size - 1)
+            if fuente:
+                query = query.eq("fuente", fuente)
+            response = query.execute()
             
             if not response.data or len(response.data) == 0:
                 break
@@ -198,7 +253,13 @@ def fetch_jobs_from_db() -> List[Dict[str, Any]]:
 
 
 def normalize_title(title: str) -> str:
-    """Normaliza títulos de cargos para agrupar variantes similares"""
+    """Normaliza títulos de cargos para agrupar variantes similares.
+
+    Sin esto, "Senior Software Engineer", "Software Engineer II" y "Software
+    Engineer" se contarían como cargos distintos. Esta función quita niveles de
+    seniority, números, palabras vacías y estandariza términos para que esas
+    variantes caigan en un mismo grupo en la gráfica de "Cargos más demandados".
+    """
     if not title:
         return "Sin título"
     
@@ -257,9 +318,13 @@ def get_job_titles_with_normalization(jobs: List[Dict[str, Any]], top_n: int = 2
     ]
 
 
-def get_analytics() -> Dict[str, Any]:
-    """Genera analytics completos con normalización de títulos"""
-    jobs = fetch_jobs_from_db()
+def get_analytics(fuente: str = None) -> Dict[str, Any]:
+    """Genera analytics completos con normalización de títulos.
+
+    Si se indica `fuente` los analytics se calculan solo sobre las vacantes
+    de esa fuente (ej. 'adzuna' = Estados Unidos, 'google_jobs' = Colombia).
+    """
+    jobs = fetch_jobs_from_db(fuente=fuente)
     
     if not jobs:
         return {

@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * Página "Mayor demanda actual" (ruta '/demand').
+ *
+ * ⚠️ Contenido ESTÁTICO de ejemplo (roles y competencias con más demanda escritos
+ * a mano). NO consume el backend; es informativa/placeholder.
+ */
+
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 

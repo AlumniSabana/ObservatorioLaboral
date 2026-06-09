@@ -1,14 +1,32 @@
 'use client';
 
+/**
+ * Widget de chat flotante ("Preguntar a Claude").
+ *
+ * Aparece como un botón en la esquina inferior derecha de cada página. Al abrirlo,
+ * el usuario puede preguntar sobre lo que está viendo. Cada página le pasa dos
+ * props que sirven de CONTEXTO para la IA:
+ *   - pageTitle:   el título de la sección actual.
+ *   - pageContent: una descripción del contenido visible en esa página.
+ *
+ * El componente envía la pregunta + ese contexto a la ruta /api/chat (ver
+ * src/app/api/chat/route.ts), que consulta a Claude y limita su respuesta a
+ * interpretar únicamente ese contexto.
+ *
+ * El historial de mensajes es local y efímero: se borra al cerrar el chat.
+ */
+
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, MessageCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
+// Props: el contexto de la página donde se monta el chat.
 interface FloatingChatProps {
   pageTitle: string;
   pageContent: string;
 }
 
+// Un mensaje del chat (del usuario o de la IA).
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -20,16 +38,19 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // Referencia al final de la lista de mensajes, para auto-scrollear hacia abajo.
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Cada vez que llega un mensaje nuevo, baja la vista al último.
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  // Envía la pregunta del usuario al backend de chat y agrega la respuesta.
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -41,11 +62,15 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
       content: inputValue,
     };
 
+    // Pintamos de inmediato el mensaje del usuario y mostramos el indicador "..."
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
 
     try {
+      // El '/ObservatorioLaboral' es el basePath configurado en next.config.ts.
+      // En producción (GitHub Pages) el sitio vive bajo esa subruta, por eso la
+      // URL de la ruta API se prefija manualmente aquí.
       const response = await fetch('/ObservatorioLaboral/api/chat', {
         method: 'POST',
         headers: {
