@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * Página "Condiciones laborales actuales" (ruta '/conditions').
+ *
+ * ⚠️ Contenido ESTÁTICO de ejemplo (modalidades de trabajo, beneficios, horarios,
+ * etc. escritos a mano). NO consume el backend; es informativa/placeholder.
+ */
+
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 

@@ -1,5 +1,13 @@
 'use client';
 
+/**
+ * Página de inicio (ruta '/').
+ *
+ * Es la portada del Observatorio: muestra un mensaje de bienvenida y unas tarjetas
+ * que describen las secciones disponibles. El contenido es estático (no consume
+ * el backend); la navegación real se hace desde la barra lateral.
+ */
+
 import { Sidebar } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 

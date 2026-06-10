@@ -1,5 +1,14 @@
 'use client';
 
+/**
+ * Página "Análisis salarial" (ruta '/salaries').
+ *
+ * ⚠️ Contenido ESTÁTICO de ejemplo (salarios por sector, experiencia, rol y
+ * tendencias escritos a mano). NO consume el backend; es informativa/placeholder.
+ * Nota: el dashboard de /analytics sí calcula rangos salariales reales a partir
+ * de las vacantes recolectadas.
+ */
+
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 

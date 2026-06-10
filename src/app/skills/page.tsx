@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * Página "Competencias y habilidades apetecidas" (ruta '/skills').
+ *
+ * ⚠️ Contenido ESTÁTICO de ejemplo (competencias técnicas, blandas, emergentes
+ * y en datos escritas a mano). NO consume el backend; es informativa/placeholder.
+ */
+
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 

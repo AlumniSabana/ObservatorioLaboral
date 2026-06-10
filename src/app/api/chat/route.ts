@@ -1,3 +1,20 @@
+/**
+ * Ruta API del asistente de IA (proxy hacia Claude / Anthropic).
+ *
+ * Recibe del frontend (floating-chat.tsx) la pregunta del usuario más el contexto
+ * de la página actual (pageTitle + pageContent), arma un "system prompt" que
+ * obliga a Claude a responder SOLO con base en ese contexto, y devuelve la
+ * respuesta en texto.
+ *
+ * La API key se lee de la variable de entorno CLAUDE_API_KEY (nunca se expone al
+ * navegador, porque este código corre del lado del servidor).
+ *
+ * NOTA: el proyecto se exporta como sitio estático (next.config.ts -> output:
+ * 'export'), modo en el que las rutas API de Next no se ejecutan como servidor.
+ * Para que el chat funcione en producción se requiere un entorno que sí ejecute
+ * esta ruta (verificar el hosting al desplegar).
+ */
+
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -38,6 +55,8 @@ export async function POST(req: NextRequest) {
 
       Normas de respuesta obligatorias:
       - No uses fuentes externas, estimaciones fuera de este contexto ni busques información en internet. Limítate estrictamente a interpretar, estructurar y dar contexto a la información que se te ha proporcionado arriba. Si el contexto no contiene datos suficientes para responder algo, indícalo con amabilidad.
+      - El contexto puede incluir DATOS NUMÉRICOS reales (conteos por cargo, sector, ciudad, empresa, rangos salariales, etc.). Cuando existan, ÚSALOS: cita cifras concretas, nombra los valores más altos y bajos, y haz cálculos derivados de esos números (porcentajes, proporciones, totales, comparaciones entre categorías). No inventes números que no estén en el contexto.
+      - Recuerda que las cifras son valores AGREGADOS (por ejemplo, los 15-20 cargos más frecuentes), no la totalidad de las vacantes; no afirmes que representan el 100% del mercado.
       - Responde siempre en español, con un lenguaje claro, sencillo y profesional.
       - No uses palabras complejas ni técnicas innecesarias. Explica todo de forma que cualquier persona pueda entenderlo fácilmente a la primera lectura.
       - Sé preciso, concreto y directo. Evita el relleno y las repeticiones.
@@ -59,10 +78,14 @@ export async function POST(req: NextRequest) {
 
       Reglas adicionales:
       - Los títulos deben ser claros, directos y en lenguaje cotidiano.
+      - Formato Markdown: usa encabezados (##), negritas y listas para que la respuesta sea fácil de leer. Si usas una tabla, ESCRIBE CADA FILA EN SU PROPIA LÍNEA, incluida la fila separadora (| --- | --- |), nunca todo en un mismo renglón. Como el panel de chat es angosto, prefiere tablas de pocas columnas (2-3); si hay muchos datos, usa listas en lugar de tablas anchas.
     `;
 
-    console.log("Enviando solicitud a Claude...");
-    const message_response = await client.messages.create({
+    console.log("Enviando solicitud a Claude (streaming)...");
+    // Usamos streaming para devolver el texto a medida que el modelo lo genera,
+    // en vez de esperar la respuesta completa. `system` define el rol/reglas;
+    // `messages` lleva la pregunta. Para cambiar de modelo, ajusta `model`.
+    const claudeStream = client.messages.stream({
       model: "claude-sonnet-4-5",
       max_tokens: 8192,
       system: systemPrompt,
@@ -74,13 +97,33 @@ export async function POST(req: NextRequest) {
       ],
     });
 
-    const responseText =
-      message_response.content[0]?.type === "text"
-        ? message_response.content[0].text
-        : "No response generated";
+    // Reempaquetamos los eventos del SDK en un stream de TEXTO PLANO: solo los
+    // fragmentos de texto, que es lo que el frontend va concatenando y mostrando.
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          for await (const event of claudeStream) {
+            if (
+              event.type === "content_block_delta" &&
+              event.delta.type === "text_delta"
+            ) {
+              controller.enqueue(encoder.encode(event.delta.text));
+            }
+          }
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      },
+    });
 
-    return NextResponse.json({
-      response: responseText,
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        // Evita que proxies/buffers retengan el stream antes de mostrarlo.
+        "Cache-Control": "no-cache, no-transform",
+      },
     });
   } catch (error) {
     console.error("Error calling Claude API:", error);

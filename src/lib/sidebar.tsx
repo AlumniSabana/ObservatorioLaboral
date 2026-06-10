@@ -1,5 +1,15 @@
 'use client';
 
+/**
+ * Componentes de navegación compartidos por todas las páginas:
+ *
+ *  - <Sidebar />    : la barra lateral fija con los enlaces a cada sección.
+ *  - <PageLayout /> : envoltura estándar de página (sidebar + título + contenido).
+ *
+ * Casi todas las páginas usan <PageLayout> para mantener una estructura visual
+ * consistente. Los íconos vienen de la librería lucide-react.
+ */
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -13,9 +23,11 @@ import {
   BarChart3,
 } from 'lucide-react';
 
+// Lista única de enlaces de la barra lateral. Para agregar/quitar una sección,
+// edita este arreglo (href = ruta, label = texto visible, icon = ícono).
 const navigationItems = [
   { href: '/', label: 'Inicio', icon: Home },
-  { href: '/analytics', label: 'Análisis de mercado (Adzuna)', icon: BarChart3 },
+  { href: '/analytics', label: 'Análisis de mercado', icon: BarChart3 },
   { href: '/trends', label: 'Tendencias en formación', icon: TrendingUp },
   {
     href: '/skills',
@@ -33,8 +45,11 @@ const navigationItems = [
 ];
 
 export function Sidebar() {
+  // Ruta actual: sirve para resaltar el enlace activo.
   const pathname = usePathname();
 
+  // Un enlace está "activo" si coincide con la ruta actual. Para '/' exigimos
+  // coincidencia exacta (si usáramos startsWith, '/' marcaría todo como activo).
   const isActive = (href: string) => {
     if (href === '/') {
       return pathname === '/';
@@ -73,6 +88,11 @@ export function Sidebar() {
   );
 }
 
+/**
+ * Envoltura estándar de una página: pinta la barra lateral, un título grande y
+ * debajo el contenido (`children`). Úsala así:
+ *   <PageLayout title="Mi sección"> ...contenido... </PageLayout>
+ */
 export function PageLayout({
   title,
   children,
