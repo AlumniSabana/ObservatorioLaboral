@@ -106,6 +106,79 @@ const getSabanaColor = (index: number) => {
   return sabanaColors[index % sabanaColors.length];
 };
 
+// Construye un resumen en TEXTO de los datos reales que se están visualizando,
+// para dárselo como contexto al asistente de chat. Así Claude puede citar cifras
+// concretas (y calcular porcentajes/comparaciones) en lugar de hablar en términos
+// genéricos. Son los mismos valores agregados que pintan las gráficas.
+function buildChatContext(
+  fuente: Fuente,
+  analytics: AdzunaAnalytics | GoogleAnalytics,
+): string {
+  // Formatea una lista "- nombre: conteo" a partir de los datos de un gráfico.
+  const fmtList = <T extends { count: number }>(
+    items: T[],
+    label: (it: T) => string,
+  ) => items.map((it) => `  - ${label(it) || 'Desconocido'}: ${it.count}`).join('\n');
+
+  const intro = [
+    FUENTES[fuente].chatContent,
+    '',
+    'DATOS ACTUALES EN PANTALLA (son valores AGREGADOS — los mismos que muestran las gráficas —, no la lista completa de vacantes):',
+  ];
+
+  if (fuente === 'adzuna') {
+    const a = analytics as AdzunaAnalytics;
+    return [
+      ...intro,
+      `Total de ofertas: ${a.total_jobs}`,
+      `Ofertas con información de salario: ${a.jobs_with_salary}`,
+      '',
+      'Cargos más demandados (cargo: número de ofertas):',
+      fmtList(a.job_titles, (it) => it.title),
+      '',
+      'Sectores con mayor actividad:',
+      fmtList(a.categories, (it) => it.category),
+      '',
+      'Modalidades de trabajo:',
+      fmtList(a.contract_types, (it) => it.type),
+      '',
+      'Rangos salariales (franja: número de ofertas):',
+      fmtList(a.salary_ranges, (it) => it.range),
+      '',
+      'Empresas con más ofertas:',
+      fmtList(a.companies, (it) => it.company),
+      '',
+      'Programas académicos relacionados:',
+      fmtList(a.programas, (it) => it.programa),
+    ].join('\n');
+  }
+
+  const g = analytics as GoogleAnalytics;
+  return [
+    ...intro,
+    `Total de ofertas: ${g.total_jobs}`,
+    `Vacantes remotas: ${g.remote_count}`,
+    '',
+    'Cargos más demandados (cargo: número de ofertas):',
+    fmtList(g.job_titles, (it) => it.title),
+    '',
+    'Ciudades con más vacantes:',
+    fmtList(g.cities, (it) => it.city),
+    '',
+    'Modalidades de trabajo:',
+    fmtList(g.contract_types, (it) => it.type),
+    '',
+    'Plataformas de origen (portal: número de ofertas):',
+    fmtList(g.sources, (it) => it.source),
+    '',
+    'Empresas con más ofertas:',
+    fmtList(g.companies, (it) => it.company),
+    '',
+    'Programas académicos relacionados:',
+    fmtList(g.programas, (it) => it.programa),
+  ].join('\n');
+}
+
 // Estilos comunes de tooltips/ejes para no repetirlos en cada gráfico.
 const TOOLTIP_STYLE = {
   backgroundColor: 'var(--sabana-dark-navy)',
@@ -295,7 +368,7 @@ export default function AnalyticsPage() {
 
       <FloatingChat
         pageTitle={FUENTES[fuente].title}
-        pageContent={FUENTES[fuente].chatContent}
+        pageContent={buildChatContext(fuente, analytics)}
       />
     </>
   );
