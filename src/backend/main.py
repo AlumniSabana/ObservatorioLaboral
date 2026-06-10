@@ -19,7 +19,10 @@ from Adzuna.adzuna_service import (
     get_salary_by_title,
     get_salary_by_category,
 )
-from GoogleJobs.google_jobs_service import procesar_vacantes_google
+from GoogleJobs.google_jobs_service import (
+    procesar_vacantes_google,
+    get_analytics_google,
+)
 from config import PROGRAMAS_KEYWORDS
 
 app = FastAPI(title="AlumniSabana Job API")
@@ -69,11 +72,17 @@ async def get_vacantes():
 
 
 @app.get("/analytics")
-async def get_job_analytics(fuente: str = None):
-    """Analytics filtrados por fuente. Si no se indica, agrega todas las fuentes."""
+async def get_job_analytics(fuente: str = "adzuna"):
+    """Analíticas según la fuente. Cada fuente tiene su propia tabla y su propia
+    forma de analíticas (Google Jobs no incluye salario/sector; Adzuna sí).
+
+    fuente='adzuna'      -> analíticas desde la tabla `vacantes`
+    fuente='google_jobs' -> analíticas desde la tabla `vacantes_google`
+    """
     try:
-        analytics = get_analytics(fuente=fuente)
-        return analytics
+        if fuente == "google_jobs":
+            return get_analytics_google()
+        return get_analytics(fuente="adzuna")
     except Exception as e:
         return {"error": str(e)}, 500
 

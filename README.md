@@ -44,8 +44,9 @@ El proyecto tiene **dos partes independientes** que se despliegan por separado:
 - **Backend**: API REST en FastAPI (Python). Se encarga de recolectar las vacantes
   (scraping vía APIs externas) y de calcular las analíticas. Guarda todo en
   Supabase (PostgreSQL gestionado).
-- **Base de datos**: una sola tabla `vacantes` en Supabase. El campo `fuente`
-  distingue de dónde vino cada registro (`adzuna` = EE.UU., `google_jobs` = Colombia).
+- **Base de datos**: Supabase (PostgreSQL). **Una tabla por fuente**, porque cada
+  fuente entrega campos distintos y mezclarlas obligaba a columnas en NULL:
+  `vacantes` (Adzuna, EE.UU.) y `vacantes_google` (Google Jobs, Colombia).
 
 ---
 
@@ -139,21 +140,41 @@ Documentación interactiva de la API (Swagger) en `http://localhost:8000/docs`.
 
 ---
 
-## 6. Base de datos: tabla `vacantes`
+## 6. Base de datos: una tabla por fuente
 
-Todas las vacantes (de cualquier fuente) viven en una única tabla en Supabase.
-Columnas relevantes:
+Cada fuente tiene su propia tabla con exactamente los campos que esa fuente
+entrega (así evitamos columnas en NULL forzadas y dashboards "rotos").
 
+### `vacantes` — Adzuna (Estados Unidos)
 | Columna               | Notas                                                          |
 |-----------------------|----------------------------------------------------------------|
-| `id` (bigint, PK)     | Para Adzuna es el id real. Para Google Jobs es un hash estable del `job_id` (ver `google_jobs_service.py`). |
+| `id` (bigint, PK)     | Id real de la vacante en Adzuna.                              |
 | `title`, `company`    | Cargo y empresa.                                               |
-| `location`, `country` | Ubicación.                                                     |
-| `category`            | Sector (lo da Adzuna; Google Jobs lo deja vacío).             |
+| `category`            | Sector.                                                        |
 | `contract_time`       | `full_time` / `part_time` / etc.                              |
-| `salary_min/max`      | Salario (Adzuna; Google Jobs lo deja en null).                |
-| `fuente`              | `adzuna` o `google_jobs`. **Clave para filtrar por fuente.**  |
+| `salary_min/max`      | Salario anual.                                                 |
 | `programa_relacionado`| Programa académico de La Sabana al que se asoció la vacante.   |
+| `fuente`              | Histórico (siempre `'adzuna'`); ya no se usa para filtrar.    |
+
+### `vacantes_google` — Google Jobs (Colombia)
+Definida en `src/backend/migrations/001_vacantes_google.sql` (ejecutar ese script
+en el SQL Editor de Supabase para crearla). Guarda TODO lo que Google Jobs provee:
+
+| Columna                          | Notas                                              |
+|----------------------------------|----------------------------------------------------|
+| `job_id` (text, PK)              | Id real de Google Jobs (no requiere hash).         |
+| `title`, `company`               | Cargo y empresa.                                   |
+| `location`, `city`               | Ubicación cruda y ciudad ya separada.              |
+| `via`                            | Plataforma de origen (LinkedIn, Computrabajo…).    |
+| `schedule_type`, `work_from_home`| Modalidad/jornada y si es remoto.                  |
+| `salary_raw`                     | Salario en TEXTO (cuando viene); sin estructurar.  |
+| `qualifications`/`responsibilities`/`benefits` | Secciones destacadas (insumo para extracción con IA). |
+| `description`                    | Texto completo de la oferta.                       |
+| `keyword`, `programa_relacionado`| Trazabilidad de la recolección.                    |
+
+> Importante: Google Jobs **no** entrega salario ni sector estructurados; por eso
+> su dashboard no incluye esas gráficas (se abordarán con un paso de extracción
+> con IA en una fase posterior).
 
 ---
 
@@ -176,6 +197,13 @@ Columnas relevantes:
   cuenta que en modo exportación estática (`output: 'export'`) las rutas API de
   Next no se ejecutan como servidor; verifica el entorno donde corre el chat en
   producción.
-- Para **agregar una nueva fuente** de vacantes: crea un servicio análogo a
-  `GoogleJobs/google_jobs_service.py`, guarda con un valor nuevo de `fuente`, y
-  añade la opción en el objeto `FUENTES` de `src/app/analytics/page.tsx`.
+- Para **agregar una nueva fuente** de vacantes:
+  1. Crea su tabla con un script en `src/backend/migrations/`.
+  2. Crea un servicio análogo a `GoogleJobs/google_jobs_service.py` (recolección
+     + su propia función `get_analytics_*`).
+  3. Enruta la fuente en los endpoints `/scrape` y `/analytics` de `main.py`.
+  4. Añade la opción en `FUENTES` y un dashboard propio en
+     `src/app/analytics/page.tsx`.
+- Sobre el `id` de Google Jobs: usamos el `job_id` real (texto) como clave
+  primaria de `vacantes_google`. (En `vacantes`/Adzuna el id es el numérico de
+  Adzuna.) Cada fuente maneja su propia clave en su propia tabla.
