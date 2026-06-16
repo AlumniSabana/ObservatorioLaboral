@@ -5,13 +5,16 @@ Este archivo es el punto de entrada de la API: define todos los endpoints HTTP
 que consume el frontend (Next.js). La lógica real vive en los servicios:
   - Adzuna/adzuna_service.py     -> recolección Adzuna + cálculo de analíticas
   - GoogleJobs/google_jobs_service.py -> recolección Google Jobs (SerpApi)
+  - Documentos/document_service.py -> lectura de PDFs subidos por el usuario (Claude)
 
 Para correrlo en local:  uvicorn main:app --reload --port 8000
 Documentación interactiva: http://localhost:8000/docs
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse, JSONResponse
+from pydantic import BaseModel
 from Adzuna.adzuna_service import (
     procesar_todas_vacantes,
     fetch_jobs_from_db,
@@ -23,6 +26,7 @@ from GoogleJobs.google_jobs_service import (
     procesar_vacantes_google,
     get_analytics_google,
 )
+from Documentos.document_service import subir_documento, stream_respuesta
 from config import PROGRAMAS_KEYWORDS
 
 app = FastAPI(title="AlumniSabana Job API")
@@ -116,6 +120,58 @@ async def get_programas():
             for programa, keywords in PROGRAMAS_KEYWORDS.items()
         ]
     }
+
+
+# ---------------------------------------------------------------------------
+# Lector de documentos (PDF) con Claude
+# ---------------------------------------------------------------------------
+
+class DocChatRequest(BaseModel):
+    file_id: str   # id devuelto por /documento/subir
+    message: str   # pregunta del usuario (o el prompt inicial de insights)
+
+
+@app.post("/documento/subir")
+async def documento_subir(file: UploadFile = File(...)):
+    """Recibe un PDF, lo sube a la Files API de Claude y devuelve su file_id.
+
+    No se guarda nada en la base de datos: el archivo vive temporalmente en el
+    almacenamiento de Anthropic y el frontend conserva el file_id solo en sesión.
+    """
+    try:
+        contenido = await file.read()
+        file_id = subir_documento(
+            contenido,
+            file.filename or "documento.pdf",
+            file.content_type or "application/pdf",
+        )
+        return {"file_id": file_id, "filename": file.filename}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.post("/documento/chat")
+def documento_chat(req: DocChatRequest):
+    """Responde (en streaming) sobre el documento previamente subido.
+
+    Sirve tanto para el resumen inicial de insights como para preguntas de
+    seguimiento; en ambos casos referencia el documento por su file_id.
+    """
+    try:
+        generador = stream_respuesta(req.file_id, req.message)
+        # Forzamos el primer fragmento para capturar errores tempranos (key
+        # inválida, dependencia faltante, file_id inexistente) y responder un
+        # error limpio en vez de cortar el stream a la mitad.
+        primero = next(generador, "")
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+    def cuerpo():
+        if primero:
+            yield primero
+        yield from generador
+
+    return StreamingResponse(cuerpo(), media_type="text/plain; charset=utf-8")
 
 
 if __name__ == "__main__":

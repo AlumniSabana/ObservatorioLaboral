@@ -22,6 +22,9 @@ ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID")
 ADZUNA_APP_KEY = os.getenv("ADZUNA_APP_KEY")
 # SerpApi key para recolectar vacantes de Google Jobs (Colombia)
 SERPAPI_KEY = os.getenv("SERPAPI_KEY")
+# API key de Anthropic (Claude) para el lector de documentos del backend.
+# Puede ser la misma key que usa el chat del frontend (CLAUDE_API_KEY).
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 # Mapeo completo de programas académicos -> términos de búsqueda.
 #

@@ -22,6 +22,7 @@
 
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
+import { DocumentReader } from '@/lib/document-reader';
 import { useState, useEffect } from 'react';
 import {
   BarChart,
@@ -68,7 +69,7 @@ interface GoogleAnalytics {
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
-type Fuente = 'adzuna' | 'google_jobs';
+type Fuente = 'adzuna' | 'google_jobs' | 'documento';
 
 // Metadatos de cada fuente de datos disponible
 const FUENTES: Record<Fuente, {
@@ -87,6 +88,12 @@ const FUENTES: Record<Fuente, {
     title: 'Análisis de mercado — Google Jobs (Colombia)',
     chatContent:
       'Dashboard de Análisis de mercado con gráficos de cargos demandados, ciudades, empresas, modalidades de trabajo, plataformas de origen y programas académicos relacionados. Estas vacantes son extraídas del mercado de COLOMBIA a través de Google Jobs (SerpApi). Nota: esta fuente no entrega salario ni sector de forma estructurada.',
+  },
+  documento: {
+    // Modo especial: no consulta /analytics; el usuario sube un PDF y Claude lo lee.
+    label: 'Lector de documentos',
+    title: 'Lector de documentos',
+    chatContent: '',
   },
 };
 
@@ -253,10 +260,17 @@ export default function AnalyticsPage() {
     }
   };
 
-  // Carga los analytics desde el backend cada vez que cambia la fuente seleccionada
+  // Carga los analytics desde el backend cada vez que cambia la fuente seleccionada.
+  // En modo 'documento' no se consultan analíticas (el usuario sube un PDF).
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (fuente === 'documento') {
+      setLoading(false);
+      setError(null);
+      return;
+    }
     loadAnalytics(fuente);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [fuente]);
 
   // Combo box para elegir la fuente de los datos (siempre visible)
@@ -294,6 +308,16 @@ export default function AnalyticsPage() {
       </select>
     </div>
   );
+
+  // Modo "Leer un documento": no hay dashboard de datos, sino el lector de PDFs.
+  if (fuente === 'documento') {
+    return (
+      <PageLayout title={FUENTES.documento.title}>
+        {SourceSelector}
+        <DocumentReader backendUrl={BACKEND_URL} />
+      </PageLayout>
+    );
+  }
 
   if (loading) {
     return (
@@ -678,9 +702,7 @@ function GoogleDashboard({
         className="rounded-lg p-4 border-l-4 text-sm"
         style={{ borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)' }}
       >
-        ℹ️ Google Jobs no entrega salario ni sector de forma estructurada. Esas
-        métricas (y seniority, competencias y experiencia) se obtendrán en una fase
-        posterior, extrayéndolas de las descripciones con IA.
+        ℹ️ Google Jobs no entrega salario ni sector de forma estructurada.
       </div>
 
       {/* 1. Cargos más demandados */}
