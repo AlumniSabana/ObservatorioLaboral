@@ -26,6 +26,16 @@ SERPAPI_KEY = os.getenv("SERPAPI_KEY")
 # Puede ser la misma key que usa el chat del frontend (CLAUDE_API_KEY).
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
+# --- Agregador que NUTRE la tabla vacantes_google (mercado Colombia) ---
+# Careerjet: API pública gratuita; requiere un Affiliate ID (cuenta de partner en
+# https://www.careerjet.com/partners/api/). `locale_code` define el país/idioma
+# del índice: es_CO = Colombia. Sin el Affiliate ID, el adaptador se omite.
+CAREERJET_AFFILIATE_ID = os.getenv("CAREERJET_AFFILIATE_ID")
+CAREERJET_LOCALE = os.getenv("CAREERJET_LOCALE", "es_CO")
+# Talent.com y WhatJobs: programas de "publisher" (opcionales, endpoint propio de tu cuenta).
+TALENT_PUBLISHER_ID = os.getenv("TALENT_PUBLISHER_ID")
+WHATJOBS_PUBLISHER_ID = os.getenv("WHATJOBS_PUBLISHER_ID")
+
 # Mapeo completo de programas académicos -> términos de búsqueda.
 #
 # Por cada programa, el scraper recorre esta lista de keywords y busca cada una
