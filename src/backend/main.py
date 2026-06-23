@@ -26,7 +26,6 @@ from GoogleJobs.google_jobs_service import (
     procesar_vacantes_google,
     get_analytics_google,
 )
-from Agregadores.aggregator_service import procesar_colombia
 from Documentos.document_service import subir_documento, stream_respuesta
 from config import PROGRAMAS_KEYWORDS
 
@@ -54,12 +53,12 @@ async def scrape_jobs(borrar: bool = False, fuente: str = "adzuna"):
     """Recolecta vacantes de la fuente indicada (todo hacia su tabla).
 
     fuente='adzuna'      -> Adzuna (Estados Unidos) -> tabla `vacantes`
-    fuente='google_jobs' -> Colombia: Google Jobs (SerpApi) + agregadores
-                            (Careerjet/Talent/WhatJobs), deduplicado -> tabla `vacantes_google`
+    fuente='google_jobs' -> Google Jobs (Colombia, SerpApi con round-robin
+                            dentro del presupuesto) -> tabla `vacantes_google`
     """
     try:
         if fuente == "google_jobs":
-            resultado = procesar_colombia(borrar=borrar)
+            resultado = procesar_vacantes_google(borrar=borrar)
         else:
             resultado = procesar_todas_vacantes(borrar=borrar)
         return {"status": "completed", "fuente": fuente, **resultado}
