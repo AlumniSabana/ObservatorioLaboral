@@ -28,12 +28,12 @@ import {
 const navigationItems = [
   { href: '/', label: 'Inicio', icon: Home },
   { href: '/analytics', label: 'Análisis de mercado', icon: BarChart3 },
-  { href: '/trends', label: 'Tendencias en formación', icon: TrendingUp },
   {
     href: '/skills',
     label: 'Competencias y habilidades',
     icon: Briefcase,
   },
+  { href: '/trends', label: 'Tendencias en formación', icon: TrendingUp },
   { href: '/salaries', label: 'Análisis salarial', icon: DollarSign },
   { href: '/sectors', label: 'Sectores y empresas', icon: Building2 },
   {

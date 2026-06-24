@@ -27,6 +27,7 @@ from GoogleJobs.google_jobs_service import (
     get_analytics_google,
 )
 from Documentos.document_service import subir_documento, stream_respuesta
+from ONet.onet_service import obtener_competencias, listar_programas
 from config import PROGRAMAS_KEYWORDS
 
 app = FastAPI(title="AlumniSabana Job API")
@@ -130,6 +131,24 @@ async def get_programas():
 class DocChatRequest(BaseModel):
     file_id: str   # id devuelto por /documento/subir
     message: str   # pregunta del usuario (o el prompt inicial de insights)
+
+
+@app.get("/competencias/programas")
+def competencias_programas():
+    """Lista los programas que tienen mapeo a una ocupación O*NET (para el selector)."""
+    return {"programas": listar_programas()}
+
+
+@app.get("/competencias")
+def competencias(programa: str):
+    """Competencias y tecnologías (de O*NET) para un programa académico.
+
+    Devuelve {"programa", "habilidades": [...], "tecnologias": [...]}. Si O*NET no
+    está configurado o no devuelve datos, las listas vienen vacías y el frontend
+    muestra un aviso.
+    """
+    datos = obtener_competencias(programa)
+    return {"programa": programa, **datos}
 
 
 @app.post("/documento/subir")

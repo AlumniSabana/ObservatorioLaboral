@@ -34,6 +34,11 @@ except ValueError:
 # Puede ser la misma key que usa el chat del frontend (CLAUDE_API_KEY).
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
+# API key de O*NET Web Services para la sección "Competencias y habilidades".
+# Regístrate (gratis) en https://services.onetcenter.org/developer/signup
+# Sin ella, la sección de competencias muestra un aviso de "no configurado".
+ONET_API_KEY = os.getenv("ONET_API_KEY")
+
 
 # Mapeo de programas académicos -> términos de búsqueda EN INGLÉS.
 # Se usa para ADZUNA (mercado de Estados Unidos), donde las vacantes están en inglés.
