@@ -6,8 +6,10 @@ A diferencia de Adzuna, Google Jobs tiene su PROPIA tabla en Supabase
 poder guardar TODOS los campos que la API entrega, sin forzar columnas en NULL.
 
 Este módulo hace dos cosas:
-  1. Recolección: buscar_vacantes_google() + guardar_vacante_google() +
-     procesar_vacantes_google().
+  1. Recolección: _buscar_pagina_google() (1 página = 1 búsqueda SerpApi) +
+     guardar_vacante_google() + procesar_vacantes_google(), que reparte el
+     presupuesto de búsquedas entre todas las keywords (en español, ver
+     PROGRAMAS_KEYWORDS_CO) con estrategia round-robin para maximizar vacantes.
   2. Analíticas propias de Google Jobs: get_analytics_google(), con la forma de
      datos adecuada a los campos que SÍ trae esta fuente (ciudades, plataforma de
      origen, modalidad, etc.). NO incluye salario/categoría porque Google Jobs no
@@ -20,7 +22,7 @@ import requests
 from typing import List, Dict, Any
 from collections import Counter
 
-from config import SERPAPI_KEY, PROGRAMAS_KEYWORDS
+from config import SERPAPI_KEY, PROGRAMAS_KEYWORDS_CO, SERPAPI_MAX_BUSQUEDAS
 # Reutilizamos el cliente de Supabase y el normalizador de títulos ya existentes
 from Adzuna.adzuna_service import supabase, normalize_title
 
@@ -120,55 +122,40 @@ def borrar_vacantes_google():
         return False
 
 
-def buscar_vacantes_google(keyword: str, num_pages: int = 3, location: str = "Colombia") -> List[Dict[str, Any]]:
-    """Busca vacantes en Google Jobs (vía SerpApi) para una keyword dada."""
-    if not SERPAPI_KEY:
-        print("   ❌ SERPAPI_KEY no configurada; se omite la búsqueda en Google Jobs.")
-        return []
+def _buscar_pagina_google(keyword: str, next_page_token: str = None, location: str = "Colombia"):
+    """Hace UNA sola petición a Google Jobs (= 1 búsqueda de SerpApi).
 
-    all_results = []
-    next_page_token = None
+    Devuelve la tupla (results, next_token): la lista de vacantes de esa página y
+    el token para la siguiente página (None si ya no hay más). La orquestación
+    (procesar_vacantes_google) decide cuántas páginas pedir según el presupuesto.
+    """
+    params = {
+        "engine": "google_jobs",
+        "q": keyword,
+        "location": location,
+        "gl": "co",
+        "hl": "es",
+        "api_key": SERPAPI_KEY,
+    }
+    if next_page_token:
+        params["next_page_token"] = next_page_token
 
-    for page in range(1, num_pages + 1):
-        try:
-            params = {
-                "engine": "google_jobs",
-                "q": keyword,
-                "location": location,
-                "gl": "co",
-                "hl": "es",
-                "api_key": SERPAPI_KEY,
-            }
-            if next_page_token:
-                params["next_page_token"] = next_page_token
-
-            print(f"   🔍 [Google Jobs] Consultando '{keyword}' - Página {page}...")
-
-            response = requests.get(SERPAPI_URL, params=params, timeout=30)
-            response.raise_for_status()
-            data = response.json()
-
-            if data.get("error"):
-                print(f"   ❌ SerpApi error para '{keyword}': {data['error']}")
-                break
-
-            results = data.get("jobs_results", [])
-            all_results.extend(results)
-            print(f"   ✅ Encontrados {len(results)} resultados")
-
-            # Token de paginación de Google Jobs (puede venir en dos lugares).
-            next_page_token = (
-                data.get("serpapi_pagination", {}).get("next_page_token")
-                or data.get("next_page_token")
-            )
-            if not results or not next_page_token:
-                break
-
-        except Exception as e:
-            print(f"   ❌ Error buscando '{keyword}' página {page} en Google Jobs: {str(e)}")
-            break
-
-    return all_results
+    try:
+        response = requests.get(SERPAPI_URL, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        if data.get("error"):
+            print(f"   ❌ SerpApi error para '{keyword}': {data['error']}")
+            return [], None
+        results = data.get("jobs_results", [])
+        token = (
+            data.get("serpapi_pagination", {}).get("next_page_token")
+            or data.get("next_page_token")
+        )
+        return results, token
+    except Exception as e:
+        print(f"   ❌ Error buscando '{keyword}' en Google Jobs: {str(e)}")
+        return [], None
 
 
 def guardar_vacante_google(job: Dict[str, Any], programa: str, keyword: str) -> bool:
@@ -214,7 +201,16 @@ def guardar_vacante_google(job: Dict[str, Any], programa: str, keyword: str) -> 
 
 
 def procesar_vacantes_google(borrar: bool = False):
-    """Recolecta todas las vacantes de Google Jobs (Colombia) por programa/keyword."""
+    """Recolecta vacantes de Google Jobs (Colombia) MAXIMIZANDO dentro del presupuesto.
+
+    Estrategia round-robin (amplitud primero): se reparte el presupuesto de
+    búsquedas (SERPAPI_MAX_BUSQUEDAS) entre TODAS las keywords. Primero se pide la
+    página 1 de cada keyword, luego la página 2 de las que aún tengan resultados,
+    y así sucesivamente hasta agotar el presupuesto. Así:
+      - todos los programas quedan cubiertos antes de profundizar en cualquiera,
+      - se maximiza la diversidad (cada keyword aporta vacantes distintas),
+      - nunca se exceden las búsquedas disponibles de SerpApi.
+    """
     print("🚀 Iniciando recolección de vacantes desde Google Jobs (Colombia)...\n")
 
     if not SERPAPI_KEY:
@@ -226,40 +222,56 @@ def procesar_vacantes_google(borrar: bool = False):
     if borrar:
         borrar_vacantes_google()
 
+    # Una "unidad" = un (programa, keyword) con su propio estado de paginación.
+    unidades = [
+        {"programa": programa, "keyword": kw, "token": None, "activa": True}
+        for programa, keywords in PROGRAMAS_KEYWORDS_CO.items()
+        for kw in keywords
+    ]
+
+    presupuesto = SERPAPI_MAX_BUSQUEDAS
+    busquedas = 0
     total_vacantes = 0
     total_guardadas = 0
+    ronda = 0
 
-    for programa, keywords in PROGRAMAS_KEYWORDS.items():
-        print(f"\n=== Procesando {programa} (Google Jobs) ===")
-        vacantes_programa = 0
+    print(f"📋 {len(unidades)} keywords | presupuesto: {presupuesto} búsquedas SerpApi\n")
 
-        for keyword in keywords:
-            print(f"  🔑 Keyword: '{keyword}'")
-            vacantes = buscar_vacantes_google(keyword, num_pages=3)
+    # Cada ronda pide UNA página a cada keyword que siga activa (round-robin).
+    while busquedas < presupuesto and any(u["activa"] for u in unidades):
+        ronda += 1
+        for u in unidades:
+            if busquedas >= presupuesto:
+                break
+            if not u["activa"]:
+                continue
 
-            vacantes_programa += len(vacantes)
-            total_vacantes += len(vacantes)
+            print(f"   🔍 [R{ronda}] '{u['keyword']}'  ({busquedas + 1}/{presupuesto})")
+            results, token = _buscar_pagina_google(u["keyword"], u["token"])
+            busquedas += 1
 
-            guardadas = 0
-            for vacante in vacantes:
-                if guardar_vacante_google(vacante, programa, keyword):
-                    guardadas += 1
+            total_vacantes += len(results)
+            for vacante in results:
+                if guardar_vacante_google(vacante, u["programa"], u["keyword"]):
                     total_guardadas += 1
 
-            print(f"     → {len(vacantes)} encontradas | {guardadas} guardadas")
-
-        print(f"  ✅ Total para {programa}: {vacantes_programa} vacantes procesadas")
+            # La keyword se "agota" si no hubo resultados o no hay más páginas.
+            u["token"] = token
+            if not results or not token:
+                u["activa"] = False
 
     print(f"\n🎉 === RESUMEN FINAL (Google Jobs) ===")
+    print(f"   Búsquedas SerpApi usadas: {busquedas} / {presupuesto}")
     print(f"   Total vacantes encontradas: {total_vacantes}")
-    print(f"   Total vacantes guardadas: {total_guardadas}")
-    print(f"   Programas procesados: {len(PROGRAMAS_KEYWORDS)}")
+    print(f"   Total vacantes guardadas (nuevas/actualizadas): {total_guardadas}")
+    print(f"   Programas procesados: {len(PROGRAMAS_KEYWORDS_CO)}")
 
     return {
         "status": "completed",
+        "busquedas_usadas": busquedas,
         "total_vacantes": total_vacantes,
         "total_guardadas": total_guardadas,
-        "programas_procesados": len(PROGRAMAS_KEYWORDS),
+        "programas_procesados": len(PROGRAMAS_KEYWORDS_CO),
     }
 
 
