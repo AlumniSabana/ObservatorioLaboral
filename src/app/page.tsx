@@ -29,10 +29,10 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
               <h2 className="text-xl font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-                📊 Tendencias en formación
+                🎓 Cursos y formación
               </h2>
               <p className="text-zinc-600 dark:text-zinc-400" style={{color: 'var(--white-background)'}}>
-                Analiza las tendencias actuales en los modelos de formación y educación continua
+                Busca un campo de estudio y explora cursos en Google Skills e IBM Training
               </p>
             </div>
 
@@ -72,7 +72,7 @@ export default function Home() {
 
       <FloatingChat
         pageTitle="Bienvenido al Observatorio Laboral"
-        pageContent="Página principal del Observatorio Laboral con acceso a: Tendencias en Formación, Competencias y Habilidades Apetecidas, Análisis Salarial, Sectores y Empresas, Condiciones Laborales Actuales, y Mayor Demanda Actual."
+        pageContent="Página principal del Observatorio Laboral con acceso a: Cursos y Formación (búsqueda en Google Skills e IBM Training), Competencias y Habilidades Apetecidas, Análisis Salarial, Sectores y Empresas, Condiciones Laborales Actuales, y Mayor Demanda Actual."
       />
     </div>
   );

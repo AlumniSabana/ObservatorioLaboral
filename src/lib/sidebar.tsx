@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home,
-  TrendingUp,
+  GraduationCap,
   Briefcase,
   DollarSign,
   Building2,
@@ -33,7 +33,7 @@ const navigationItems = [
     label: 'Competencias y habilidades',
     icon: Briefcase,
   },
-  { href: '/trends', label: 'Tendencias en formación', icon: TrendingUp },
+  { href: '/cursos', label: 'Cursos y formación', icon: GraduationCap },
   { href: '/salaries', label: 'Análisis salarial', icon: DollarSign },
   { href: '/sectors', label: 'Sectores y empresas', icon: Building2 },
   {

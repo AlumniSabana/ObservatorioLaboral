@@ -60,12 +60,12 @@ src/
 │   ├── page.tsx              # Página de inicio (/)
 │   ├── globals.css           # Estilos globales + paleta de colores de La Sabana
 │   ├── analytics/page.tsx    # ⭐ Dashboard principal: combo box de fuentes + lector de PDF
+│   ├── skills/page.tsx       # Competencias y habilidades (datos de O*NET)
+│   ├── cursos/page.tsx       # Buscador de cursos (abre Google Skills / IBM Training)
 │   ├── api/chat/route.ts     # Proxy (streaming) hacia Claude para el chat flotante
-│   ├── trends/               # ──┐
-│   ├── skills/               #   │ Páginas informativas con contenido ESTÁTICO
-│   ├── salaries/             #   │ (placeholders, aún no conectadas al backend)
-│   ├── sectors/              #   │
-│   ├── conditions/           #   │
+│   ├── salaries/             # ──┐
+│   ├── sectors/              #   │ Páginas informativas con contenido ESTÁTICO
+│   ├── conditions/           #   │ (placeholders, aún no conectadas al backend)
 │   └── demand/               # ──┘
 ├── lib/
 │   ├── sidebar.tsx           # Barra lateral de navegación + PageLayout reutilizable
@@ -82,6 +82,8 @@ src/
     │   └── adzuna_service.py            # Recolección de Adzuna + analíticas (compartido)
     ├── GoogleJobs/
     │   └── google_jobs_service.py       # Recolección de Google Jobs (SerpApi) + analíticas CO
+    ├── ONet/
+    │   └── onet_service.py              # Competencias por programa (O*NET) para la página /skills
     └── Documentos/
         └── document_service.py          # Lectura de PDFs con Claude (Files API)
 ```
@@ -134,6 +136,7 @@ temporalmente en la Files API de Claude). Ver `src/backend/Documentos/`.
 | `SERPAPI_KEY`           | Colombia   | API key de SerpApi (Google Jobs, mercado Colombia).  |
 | `SERPAPI_MAX_BUSQUEDAS` | Opcional   | Presupuesto de búsquedas por corrida (def. `240`). Ver §8. |
 | `ANTHROPIC_API_KEY`     | Documentos | API key de Anthropic para el lector de PDFs (puede ser la misma que `CLAUDE_API_KEY`). |
+| `ONET_API_KEY`          | Competencias | API key de O*NET Web Services (gratis) para la página de competencias (`/skills`). |
 
 > Los archivos `.env` están en `.gitignore` y **no** se versionan. Cada fuente es
 > independiente: si falta una credencial, esa fuente simplemente se omite y el
@@ -146,6 +149,7 @@ temporalmente en la Files API de Claude). Ver `src/backend/Documentos/`.
 | `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` | https://developer.adzuna.com/ → registrarse → crear app. |
 | `SERPAPI_KEY` | https://serpapi.com/manage-api-key (cuenta SerpApi; plan gratis ~250 búsquedas/mes). |
 | `ANTHROPIC_API_KEY` / `CLAUDE_API_KEY` | https://console.anthropic.com/ → Settings → API Keys → Create Key. |
+| `ONET_API_KEY` | https://services.onetcenter.org/developer/signup (gratis; sin costo de uso). |
 
 ---
 
@@ -240,9 +244,10 @@ Detalle importante para entender el costo y la cobertura:
 
 ## 9. Notas / pendientes para quien continúe
 
-- Las páginas `trends`, `skills`, `salaries`, `sectors`, `conditions` y `demand`
-  muestran **contenido estático de ejemplo**. Aún no consumen el backend; son
-  candidatas naturales para conectarse a datos reales en el futuro.
+- Las páginas `salaries`, `sectors`, `conditions` y `demand` muestran **contenido
+  estático de ejemplo**. Aún no consumen el backend; son candidatas naturales para
+  conectarse a datos reales en el futuro. (`skills` ya usa O*NET y `cursos` es un
+  buscador que abre Google Skills / IBM Training.)
 - El asistente de chat usa la ruta de Next `src/app/api/chat/route.ts`. En modo
   exportación estática (`output: 'export'`) las rutas API de Next no corren como
   servidor; verifica el entorno donde corre el chat en producción. (El **lector de
