@@ -46,7 +46,7 @@ export default function CursosPage() {
 
           {/* Buscador */}
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-            <label htmlFor="campo-input" className="block text-sm font-bold mb-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <label htmlFor="campo-input" className="block text-sm font-bold mb-2" style={{ color: 'var(--white)' }}>
               Campo de estudio o rama de interés
             </label>
 
