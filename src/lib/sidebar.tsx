@@ -11,6 +11,7 @@
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Home,
@@ -60,8 +61,8 @@ export function Sidebar() {
   return (
     <aside className="w-80 text-white h-screen overflow-y-auto border-r fixed left-0 top-0 z-50" style={{backgroundColor: 'var(--sabana-dark-navy)', borderColor: 'var(--sabana-navy)'}}>
       <div className="p-6">
-        <h1 className="text-2xl font-bold tracking-tight">Alumni Sabana</h1>
-        <p className="text-sm mt-1" style={{color: 'var(--sabana-sky-blue)'}}>Observatorio laboral</p>
+        <Image src="/ObservatorioLaboral/logo-alumni.jpeg" alt="Logo Alumni Sabana" className="w-32 mb-4 mx-auto" width={128} height={128} />
+        <p className="text-sm mt-1 text-center" style={{color: 'var(--sabana-sky-blue)'}}>Observatorio laboral</p>
       </div>
 
       <nav className="px-4 py-6 space-y-2">
@@ -88,11 +89,6 @@ export function Sidebar() {
   );
 }
 
-/**
- * Envoltura estándar de una página: pinta la barra lateral, un título grande y
- * debajo el contenido (`children`). Úsala así:
- *   <PageLayout title="Mi sección"> ...contenido... </PageLayout>
- */
 export function PageLayout({
   title,
   children,

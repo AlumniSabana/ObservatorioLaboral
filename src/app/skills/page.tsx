@@ -111,7 +111,7 @@ export default function SkillsPage() {
 
   return (
     <>
-      <PageLayout title="Competencias y habilidades apetecidas">
+      <PageLayout title="Top de competencias y habilidades por programa">
         {selector}
 
         <p className="text-sm mb-6" style={{ color: 'var(--sabana-navy)', fontWeight: 'bold' }}>
