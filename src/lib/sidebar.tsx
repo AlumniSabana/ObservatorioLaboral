@@ -61,7 +61,7 @@ export function Sidebar() {
   return (
     <aside className="w-80 text-white h-screen overflow-y-auto border-r fixed left-0 top-0 z-50" style={{backgroundColor: 'var(--sabana-dark-navy)', borderColor: 'var(--sabana-navy)'}}>
       <div className="p-6">
-        <Image src="/ObservatorioLaboral/logo-alumni.jpeg" alt="Logo Alumni Sabana" className="w-32 mb-4 mx-auto" width={128} height={128} />
+        <Image src="/ObservatorioLaboral/logo-alumni.png" alt="Logo Alumni Sabana" className="w-32 mb-4 mx-auto" width={128} height={128} />
         <p className="text-sm mt-1 text-center" style={{color: 'var(--sabana-sky-blue)'}}>Observatorio laboral</p>
       </div>
 
