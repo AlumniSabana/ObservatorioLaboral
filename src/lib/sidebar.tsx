@@ -60,19 +60,19 @@ export function Sidebar() {
 
   return (
     <aside className="w-80 text-white h-screen overflow-y-auto border-r fixed left-0 top-0 z-50" style={{backgroundColor: 'var(--sabana-dark-navy)', borderColor: 'var(--sabana-navy)'}}>
-      <div className="p-6">
-        <Image src="/ObservatorioLaboral/logo-alumni.png" alt="Logo Alumni Sabana" className="w-32 mb-4 mx-auto" width={128} height={128} />
-        <p className="text-sm mt-1 text-center" style={{color: 'var(--sabana-sky-blue)'}}>Observatorio laboral</p>
+      <div className="px-6 pt-6 pb-2">
+        <Image src="/ObservatorioLaboral/logo-alumni.png" alt="Logo Alumni Sabana" className="w-32 mb-2 mx-auto" width={128} height={128} />
+        <p className="text-sm text-center" style={{color: 'var(--sabana-sky-blue)'}}>Observatorio laboral</p>
       </div>
 
-      <nav className="px-4 py-6 space-y-2">
+      <nav className="px-4 pt-2 pb-4 space-y-1">
         {navigationItems.map(({ href, label, icon: Icon }) => {
           const active = isActive(href);
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
                 active
                   ? 'text-white'
                   : 'text-gray-300 hover:bg-opacity-20'
