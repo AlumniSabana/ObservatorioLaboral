@@ -78,17 +78,43 @@ async def get_vacantes():
 
 
 @app.get("/analytics")
-async def get_job_analytics(fuente: str = "adzuna"):
+async def get_job_analytics(
+    fuente: str = "adzuna",
+    seniority: str = None,
+    programa: str = None,
+    category: str = None,
+    contract_time: str = None,
+    salary_min: float = None,
+    salary_max: float = None,
+    city: str = None,
+    schedule_type: str = None,
+    remote: bool = None,
+):
     """Analíticas según la fuente. Cada fuente tiene su propia tabla y su propia
     forma de analíticas (Google Jobs no incluye salario/sector; Adzuna sí).
 
     fuente='adzuna'      -> analíticas desde la tabla `vacantes`
     fuente='google_jobs' -> analíticas desde la tabla `vacantes_google`
+
+    Los demás parámetros (opcionales) filtran las vacantes ANTES de agregar. Cada
+    fuente usa solo los que le aplican (Adzuna: category/contract_time/salario;
+    Google: city/schedule_type/remote); seniority y programa aplican a ambas.
     """
     try:
+        filtros = {
+            "seniority": seniority,
+            "programa": programa,
+            "category": category,
+            "contract_time": contract_time,
+            "salary_min": salary_min,
+            "salary_max": salary_max,
+            "city": city,
+            "schedule_type": schedule_type,
+            "remote": remote,
+        }
         if fuente == "google_jobs":
-            return get_analytics_google()
-        return get_analytics(fuente="adzuna")
+            return get_analytics_google(filtros=filtros)
+        return get_analytics(fuente="adzuna", filtros=filtros)
     except Exception as e:
         return {"error": str(e)}, 500
 

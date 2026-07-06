@@ -23,7 +23,7 @@
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 import { DocumentReader } from '@/lib/document-reader';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import {
   BarChart,
   Bar,
@@ -43,6 +43,18 @@ import {
 // Tipos de datos que devuelve el backend (uno por fuente, porque difieren)
 // ---------------------------------------------------------------------------
 
+// Opciones disponibles para poblar los dropdowns de filtros. Vienen calculadas
+// sobre el TOTAL sin filtrar (para que no se pierdan opciones al filtrar). Cada
+// fuente rellena solo las que le aplican.
+interface FilterOptions {
+  seniorities: string[];
+  programas: string[];
+  categories?: string[];       // solo Adzuna
+  contract_types?: string[];   // solo Adzuna
+  cities?: string[];           // solo Google
+  schedule_types?: string[];   // solo Google
+}
+
 // GET /analytics?fuente=adzuna  (tabla `vacantes`)
 interface AdzunaAnalytics {
   total_jobs: number;                                          // total de vacantes
@@ -53,6 +65,7 @@ interface AdzunaAnalytics {
   salary_ranges: Array<{ range: string; count: number }>;     // distribución salarial
   companies: Array<{ company: string; count: number }>;       // empresas con más ofertas
   programas: Array<{ programa: string; count: number }>;      // programas académicos
+  filter_options: FilterOptions;                               // opciones de los filtros
 }
 
 // GET /analytics?fuente=google_jobs  (tabla `vacantes_google`)
@@ -65,6 +78,7 @@ interface GoogleAnalytics {
   cities: Array<{ city: string; count: number }>;             // ciudades con más vacantes
   sources: Array<{ source: string; count: number }>;          // plataforma de origen (via)
   programas: Array<{ programa: string; count: number }>;      // programas académicos
+  filter_options: FilterOptions;                               // opciones de los filtros
 }
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -96,6 +110,63 @@ const FUENTES: Record<Fuente, {
     chatContent: '',
   },
 };
+
+// ---------------------------------------------------------------------------
+// Filtros (Fase 1). El filtrado es SERVER-SIDE: cada cambio re-consulta
+// /analytics con los parámetros y el backend recalcula los agregados.
+// ---------------------------------------------------------------------------
+
+// Estado de los filtros en el front. Cada fuente usa solo los que le aplican.
+interface Filtros {
+  seniority: string;
+  programa: string;
+  category: string;       // Adzuna: sector
+  contract_time: string;  // Adzuna: modalidad de contrato
+  salary_range: string;   // Adzuna: etiqueta de un rango de SALARY_BUCKETS
+  city: string;           // Google
+  schedule_type: string;  // Google: jornada
+  remote: string;         // Google: '' | 'true' | 'false'
+}
+
+const EMPTY_FILTROS: Filtros = {
+  seniority: '', programa: '', category: '', contract_time: '',
+  salary_range: '', city: '', schedule_type: '', remote: '',
+};
+
+// Rangos salariales (Adzuna). Mismos cortes que usa la gráfica de salarios, para
+// que el filtro y la visualización hablen el mismo idioma. Se traducen a los
+// parámetros numéricos salary_min/salary_max al llamar al backend.
+const SALARY_BUCKETS: Array<{ label: string; min: number; max: number | null }> = [
+  { label: 'Menos de $30k', min: 0, max: 30000 },
+  { label: '$30k - $50k', min: 30000, max: 50000 },
+  { label: '$50k - $70k', min: 50000, max: 70000 },
+  { label: '$70k - $90k', min: 70000, max: 90000 },
+  { label: '$90k - $120k', min: 90000, max: 120000 },
+  { label: '$120k - $150k', min: 120000, max: 150000 },
+  { label: '$150k - $200k', min: 150000, max: 200000 },
+  { label: 'Más de $200k', min: 200000, max: null },
+];
+
+// Agrega a la URL solo los filtros activos (los vacíos se omiten).
+function appendFiltros(url: URL, f: Filtros) {
+  if (f.seniority) url.searchParams.append('seniority', f.seniority);
+  if (f.programa) url.searchParams.append('programa', f.programa);
+  if (f.category) url.searchParams.append('category', f.category);
+  if (f.contract_time) url.searchParams.append('contract_time', f.contract_time);
+  if (f.city) url.searchParams.append('city', f.city);
+  if (f.schedule_type) url.searchParams.append('schedule_type', f.schedule_type);
+  if (f.remote) url.searchParams.append('remote', f.remote);
+  if (f.salary_range) {
+    const bucket = SALARY_BUCKETS.find((b) => b.label === f.salary_range);
+    if (bucket) {
+      url.searchParams.append('salary_min', String(bucket.min));
+      if (bucket.max !== null) url.searchParams.append('salary_max', String(bucket.max));
+    }
+  }
+}
+
+// True si hay al menos un filtro activo.
+const hayFiltrosActivos = (f: Filtros) => Object.values(f).some((v) => v !== '');
 
 // Devuelve un color de la paleta de La Sabana según un índice, rotando de forma
 // cíclica. Se usa para pintar los segmentos de los gráficos (ej. el pie chart).
@@ -201,15 +272,18 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fuente, setFuente] = useState<Fuente>('adzuna');
+  const [filtros, setFiltros] = useState<Filtros>(EMPTY_FILTROS);
 
-  // Solo consulta los analytics ya almacenados para la fuente indicada
-  const loadAnalytics = async (fuenteSel: Fuente) => {
+  // Solo consulta los analytics ya almacenados para la fuente indicada, aplicando
+  // los filtros activos (que el backend resuelve server-side).
+  const loadAnalytics = async (fuenteSel: Fuente, filtrosSel: Filtros = EMPTY_FILTROS) => {
     setLoading(true);
     setError(null);
 
     try {
       const url = new URL(`${BACKEND_URL}/analytics`);
       url.searchParams.append('fuente', fuenteSel);
+      appendFiltros(url, filtrosSel);
 
       const analyticsResponse = await fetch(url);
       if (!analyticsResponse.ok) throw new Error('Error al cargar análisis');
@@ -221,6 +295,19 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Cambia un filtro y recarga de inmediato con el nuevo valor.
+  const onFiltroChange = (campo: keyof Filtros, valor: string) => {
+    const nuevos = { ...filtros, [campo]: valor };
+    setFiltros(nuevos);
+    loadAnalytics(fuente, nuevos);
+  };
+
+  // Quita todos los filtros y recarga.
+  const limpiarFiltros = () => {
+    setFiltros(EMPTY_FILTROS);
+    loadAnalytics(fuente, EMPTY_FILTROS);
   };
 
   // Re-ejecuta la recolección (scrape) de la fuente actual y recarga los datos
@@ -242,9 +329,10 @@ export default function AnalyticsPage() {
         console.warn("Error en scrape, pero continuamos con analytics...");
       }
 
-      // Luego cargamos los nuevos analytics de esa fuente
+      // Luego cargamos los nuevos analytics de esa fuente (respetando filtros)
       const analyticsUrl = new URL(`${BACKEND_URL}/analytics`);
       analyticsUrl.searchParams.append('fuente', fuente);
+      appendFiltros(analyticsUrl, filtros);
 
       const analyticsResponse = await fetch(analyticsUrl);
       if (!analyticsResponse.ok) throw new Error('Error al cargar análisis');
@@ -269,7 +357,8 @@ export default function AnalyticsPage() {
       setError(null);
       return;
     }
-    loadAnalytics(fuente);
+    // Al cambiar de fuente arrancamos sin filtros (cada fuente tiene los suyos).
+    loadAnalytics(fuente, EMPTY_FILTROS);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [fuente]);
 
@@ -291,6 +380,8 @@ export default function AnalyticsPage() {
         // dashboard con datos de la otra forma. loadAnalytics() recargará al instante.
         onChange={(e) => {
           setLoading(true);
+          setAnalytics(null);        // oculta la barra de filtros de la fuente anterior
+          setFiltros(EMPTY_FILTROS); // y sus valores (no aplican a la nueva fuente)
           setFuente(e.target.value as Fuente);
         }}
         className="rounded-lg px-4 py-2 font-semibold border cursor-pointer"
@@ -319,56 +410,87 @@ export default function AnalyticsPage() {
     );
   }
 
+  // La barra de filtros se muestra en cuanto hay datos cargados (usa las opciones
+  // que vienen en la respuesta). Se mantiene visible mientras se recarga al
+  // filtrar, para que los controles no "salten".
+  const filterBar = analytics ? (
+    <FilterBar
+      fuente={fuente}
+      filtros={filtros}
+      options={analytics.filter_options}
+      onChange={onFiltroChange}
+      onClear={limpiarFiltros}
+      loading={loading}
+    />
+  ) : null;
+
+  // Contenido central: cambia según el estado, pero la cabecera y los filtros de
+  // alrededor permanecen fijos.
+  let content: ReactNode;
   if (loading) {
-    return (
-      <PageLayout title={FUENTES[fuente].title}>
-        {SourceSelector}
-        <div className="flex items-center justify-center py-12">
-          <p className="text-lg text-zinc-600 font-bold">⏳ Cargando análisis...</p>
-        </div>
-      </PageLayout>
+    content = (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-lg text-zinc-600 font-bold">⏳ Cargando análisis...</p>
+      </div>
     );
-  }
-
-  if (error || !analytics) {
-    return (
-      <PageLayout title={FUENTES[fuente].title}>
-        {SourceSelector}
-        <div className="bg-red-100 rounded-lg p-6">
-          <p className="text-red-700">❌ {error || 'No se pudieron cargar los análisis'}</p>
-          <button
-            onClick={() => loadAnalytics(fuente)}
-            className="mt-4 px-4 py-2 rounded-lg font-semibold transition-colors"
-            style={{ backgroundColor: 'var(--sabana-light-blue)', color: 'white' }}
-          >
-            Reintentar
-          </button>
-        </div>
-      </PageLayout>
+  } else if (error || !analytics) {
+    content = (
+      <div className="bg-red-100 rounded-lg p-6">
+        <p className="text-red-700">❌ {error || 'No se pudieron cargar los análisis'}</p>
+        <button
+          onClick={() => loadAnalytics(fuente, filtros)}
+          className="mt-4 px-4 py-2 rounded-lg font-semibold transition-colors"
+          style={{ backgroundColor: 'var(--sabana-light-blue)', color: 'white' }}
+        >
+          Reintentar
+        </button>
+      </div>
     );
-  }
-
-  // Sin datos para la fuente seleccionada (ej. Google Jobs aún sin recolectar)
-  if (analytics.total_jobs === 0) {
-    return (
-      <PageLayout title={FUENTES[fuente].title}>
-        {SourceSelector}
-        <div className="bg-white dark:bg-zinc-800 rounded-lg p-8 shadow text-center space-y-4">
-          <p className="text-lg font-bold" style={{ color: 'var(--sabana-light-blue)' }}>
-            Aún no hay vacantes recolectadas para {FUENTES[fuente].label}.
-          </p>
-          <p className="text-sm text-zinc-500">
-            Usa el botón para recolectar los datos de esta fuente.
-          </p>
-          <button
-            onClick={() => fetchAnalytics(true)}
-            className="px-6 py-2 rounded-lg font-semibold transition-colors"
-            style={{ backgroundColor: 'var(--sabana-navy)', color: 'white', cursor: 'pointer' }}
-          >
-            🔄 Recolectar datos
-          </button>
-        </div>
-      </PageLayout>
+  } else if (analytics.total_jobs === 0) {
+    // Distinguimos "no hay datos recolectados" de "los filtros no arrojan nada".
+    content = hayFiltrosActivos(filtros) ? (
+      <div className="bg-white dark:bg-zinc-800 rounded-lg p-8 shadow text-center space-y-4">
+        <p className="text-lg font-bold" style={{ color: 'var(--sabana-light-blue)' }}>
+          No hay vacantes que coincidan con los filtros seleccionados.
+        </p>
+        <button
+          onClick={limpiarFiltros}
+          className="px-6 py-2 rounded-lg font-semibold transition-colors"
+          style={{ backgroundColor: 'var(--sabana-navy)', color: 'white', cursor: 'pointer' }}
+        >
+          Limpiar filtros
+        </button>
+      </div>
+    ) : (
+      <div className="bg-white dark:bg-zinc-800 rounded-lg p-8 shadow text-center space-y-4">
+        <p className="text-lg font-bold" style={{ color: 'var(--sabana-light-blue)' }}>
+          Aún no hay vacantes recolectadas para {FUENTES[fuente].label}.
+        </p>
+        <p className="text-sm text-zinc-500">
+          Usa el botón para recolectar los datos de esta fuente.
+        </p>
+        <button
+          onClick={() => fetchAnalytics(true)}
+          className="px-6 py-2 rounded-lg font-semibold transition-colors"
+          style={{ backgroundColor: 'var(--sabana-navy)', color: 'white', cursor: 'pointer' }}
+        >
+          🔄 Recolectar datos
+        </button>
+      </div>
+    );
+  } else if (fuente === 'adzuna') {
+    content = (
+      <AdzunaDashboard
+        analytics={analytics as AdzunaAnalytics}
+        onRefresh={() => fetchAnalytics(true)}
+      />
+    );
+  } else {
+    content = (
+      <GoogleDashboard
+        analytics={analytics as GoogleAnalytics}
+        onRefresh={() => fetchAnalytics(true)}
+      />
     );
   }
 
@@ -376,25 +498,192 @@ export default function AnalyticsPage() {
     <>
       <PageLayout title={FUENTES[fuente].title}>
         {SourceSelector}
-        {/* Cada fuente renderiza su propio dashboard con los campos que sí tiene */}
-        {fuente === 'adzuna' ? (
-          <AdzunaDashboard
-            analytics={analytics as AdzunaAnalytics}
-            onRefresh={() => fetchAnalytics(true)}
-          />
-        ) : (
-          <GoogleDashboard
-            analytics={analytics as GoogleAnalytics}
-            onRefresh={() => fetchAnalytics(true)}
-          />
-        )}
+        {filterBar}
+        {content}
       </PageLayout>
 
-      <FloatingChat
-        pageTitle={FUENTES[fuente].title}
-        pageContent={buildChatContext(fuente, analytics)}
-      />
+      {analytics && analytics.total_jobs > 0 && (
+        <FloatingChat
+          pageTitle={FUENTES[fuente].title}
+          pageContent={buildChatContext(fuente, analytics)}
+        />
+      )}
     </>
+  );
+}
+
+// ===========================================================================
+// Barra de filtros (Fase 1). Muestra solo los controles que aplican a la fuente
+// activa. Cada cambio dispara una recarga server-side de /analytics.
+// ===========================================================================
+function FilterSelect({
+  label,
+  value,
+  options,
+  placeholder,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  placeholder: string;
+  disabled: boolean;
+  onChange: (valor: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-bold" style={{ color: 'var(--white-background)' }}>
+        {label}
+      </label>
+      <select
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        className="rounded-lg px-3 py-2 text-sm font-semibold border cursor-pointer disabled:opacity-60"
+        style={{
+          backgroundColor: 'var(--sabana-sky-blue)',
+          color: 'var(--sabana-dark-navy)',
+          borderColor: 'var(--sabana-light-blue)',
+        }}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function FilterBar({
+  fuente,
+  filtros,
+  options,
+  onChange,
+  onClear,
+  loading,
+}: {
+  fuente: Fuente;
+  filtros: Filtros;
+  options: FilterOptions;
+  onChange: (campo: keyof Filtros, valor: string) => void;
+  onClear: () => void;
+  loading: boolean;
+}) {
+  return (
+    <div className="mb-8 bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-xl font-semibold" style={{ color: 'var(--sabana-light-blue)' }}>
+            🔎 Filtrar Vacantes
+          </h3>
+          <p className="text-sm text-zinc-600 mt-1" style={{ color: 'var(--white-background)' }}>
+            Segmenta el análisis por seniority, programa y otros factores
+          </p>
+        </div>
+        {hayFiltrosActivos(filtros) && (
+          <button
+            onClick={onClear}
+            disabled={loading}
+            className="text-sm font-semibold underline disabled:opacity-60 shrink-0"
+            style={{ color: 'var(--sabana-light-blue)', cursor: 'pointer' }}
+          >
+            Limpiar filtros
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        {/* Comunes a ambas fuentes */}
+        <FilterSelect
+          label="Seniority"
+          value={filtros.seniority}
+          options={options.seniorities || []}
+          placeholder="Todos"
+          disabled={loading}
+          onChange={(v) => onChange('seniority', v)}
+        />
+        <FilterSelect
+          label="Programa"
+          value={filtros.programa}
+          options={options.programas || []}
+          placeholder="Todos"
+          disabled={loading}
+          onChange={(v) => onChange('programa', v)}
+        />
+
+        {fuente === 'adzuna' ? (
+          <>
+            <FilterSelect
+              label="Sector"
+              value={filtros.category}
+              options={options.categories || []}
+              placeholder="Todos"
+              disabled={loading}
+              onChange={(v) => onChange('category', v)}
+            />
+            <FilterSelect
+              label="Modalidad"
+              value={filtros.contract_time}
+              options={options.contract_types || []}
+              placeholder="Todas"
+              disabled={loading}
+              onChange={(v) => onChange('contract_time', v)}
+            />
+            <FilterSelect
+              label="Rango salarial"
+              value={filtros.salary_range}
+              options={SALARY_BUCKETS.map((b) => b.label)}
+              placeholder="Todos"
+              disabled={loading}
+              onChange={(v) => onChange('salary_range', v)}
+            />
+          </>
+        ) : (
+          <>
+            <FilterSelect
+              label="Ciudad"
+              value={filtros.city}
+              options={options.cities || []}
+              placeholder="Todas"
+              disabled={loading}
+              onChange={(v) => onChange('city', v)}
+            />
+            <FilterSelect
+              label="Modalidad"
+              value={filtros.schedule_type}
+              options={options.schedule_types || []}
+              placeholder="Todas"
+              disabled={loading}
+              onChange={(v) => onChange('schedule_type', v)}
+            />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold" style={{ color: 'var(--white-background)' }}>
+                Ubicación
+              </label>
+              <select
+                value={filtros.remote}
+                disabled={loading}
+                onChange={(e) => onChange('remote', e.target.value)}
+                className="rounded-lg px-3 py-2 text-sm font-semibold border cursor-pointer disabled:opacity-60"
+                style={{
+                  backgroundColor: 'var(--sabana-sky-blue)',
+                  color: 'var(--sabana-dark-navy)',
+                  borderColor: 'var(--sabana-light-blue)',
+                }}
+              >
+                <option value="">Todas</option>
+                <option value="true">Remoto</option>
+                <option value="false">Presencial</option>
+              </select>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 

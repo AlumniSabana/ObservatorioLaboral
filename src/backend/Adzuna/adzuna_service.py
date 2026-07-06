@@ -298,6 +298,81 @@ def normalize_title(title: str) -> str:
     return title.strip()
 
 
+# ---------------------------------------------------------------------------
+# Clasificación de SENIORITY y helpers de FILTRADO (Fase 1 de filtros)
+# ---------------------------------------------------------------------------
+# El seniority NO es una columna en la BD: se infiere del título de la vacante.
+# Es una heurística (no perfecta) pensada para funcionar con títulos en inglés
+# (Adzuna) y en español (Google Jobs). Una fase posterior podrá afinarla
+# extrayendo la experiencia requerida desde la descripción/cualificaciones.
+
+# Orden canónico (de menor a mayor responsabilidad) para mostrar en el dropdown.
+SENIORITY_ORDEN = [
+    "Practicante / Trainee",
+    "Junior",
+    "Mid-level / Sin especificar",
+    "Senior",
+    "Dirección / Liderazgo",
+]
+
+# (patrón, etiqueta) evaluados EN ESTE ORDEN: el primero que haga match gana.
+# Se priorizan señales explícitas de seniority (practicante/junior/senior) sobre
+# el rol de liderazgo, porque son la señal más clara de nivel.
+_SENIORITY_PATRONES = [
+    (r"\b(intern|internship|trainee|practicante|pasant\w*|aprendiz)\b", "Practicante / Trainee"),
+    (r"\b(junior|jr|entry[-\s]?level|entry|auxiliar|asistente|assistant)\b", "Junior"),
+    (r"\b(senior|sr|ssr)\b", "Senior"),
+    (r"\b(lead|principal|staff|head|chief|manager|director\w*|jefe|gerente|coordinador\w*|vp|vicepresident\w*)\b", "Dirección / Liderazgo"),
+]
+
+
+def clasificar_seniority(title: str) -> str:
+    """Infiere el nivel de seniority a partir del título de la vacante.
+
+    Heurística por palabras clave (bilingüe ES/EN). Los títulos sin ninguna
+    señal se agrupan como "Mid-level / Sin especificar".
+    """
+    t = (title or "").lower()
+    for patron, etiqueta in _SENIORITY_PATRONES:
+        if re.search(patron, t):
+            return etiqueta
+    return "Mid-level / Sin especificar"
+
+
+def _distinct_labels(jobs: List[Dict[str, Any]], campo: str, vacio: str) -> List[str]:
+    """Valores distintos de un campo, ordenados (para poblar los dropdowns)."""
+    valores = {(job.get(campo) or vacio) for job in jobs}
+    return sorted(valores, key=lambda s: s.lower())
+
+
+def _seniorities_presentes(jobs: List[Dict[str, Any]]) -> List[str]:
+    """Niveles de seniority presentes en los datos, en orden canónico."""
+    presentes = {clasificar_seniority(job.get("title")) for job in jobs}
+    return [s for s in SENIORITY_ORDEN if s in presentes]
+
+
+def _pasa_filtros_adzuna(job: Dict[str, Any], f: Dict[str, Any]) -> bool:
+    """True si la vacante de Adzuna cumple TODOS los filtros activos."""
+    if f.get("seniority") and clasificar_seniority(job.get("title")) != f["seniority"]:
+        return False
+    if f.get("programa") and (job.get("programa_relacionado") or "Unknown") != f["programa"]:
+        return False
+    if f.get("category") and (job.get("category") or "Unknown") != f["category"]:
+        return False
+    if f.get("contract_time") and (job.get("contract_time") or "Unknown") != f["contract_time"]:
+        return False
+    smin, smax = f.get("salary_min"), f.get("salary_max")
+    if smin is not None or smax is not None:
+        js_min, js_max = job.get("salary_min"), job.get("salary_max")
+        if js_min is None or js_max is None:
+            return False  # sin salario => no pasa cuando se filtra por salario
+        lo = smin if smin is not None else float("-inf")
+        hi = smax if smax is not None else float("inf")
+        if js_max < lo or js_min > hi:   # sin solapamiento con el rango pedido
+            return False
+    return True
+
+
 def get_job_titles_with_normalization(jobs: List[Dict[str, Any]], top_n: int = 20) -> List[Dict[str, Any]]:
     """Cuenta títulos normalizados y retorna los más comunes"""
     title_counter = Counter()
@@ -318,14 +393,22 @@ def get_job_titles_with_normalization(jobs: List[Dict[str, Any]], top_n: int = 2
     ]
 
 
-def get_analytics(fuente: str = None) -> Dict[str, Any]:
+def get_analytics(fuente: str = None, filtros: Dict[str, Any] = None) -> Dict[str, Any]:
     """Genera analytics completos con normalización de títulos.
 
     Si se indica `fuente` los analytics se calculan solo sobre las vacantes
     de esa fuente (ej. 'adzuna' = Estados Unidos, 'google_jobs' = Colombia).
+
+    `filtros` (opcional) aplica un filtrado server-side ANTES de agregar, de modo
+    que las gráficas se recalculan sobre el subconjunto elegido. Claves admitidas:
+    seniority, programa, category, contract_time, salary_min, salary_max. Las
+    opciones disponibles para cada filtro se devuelven en `filter_options`,
+    calculadas sobre el total (sin filtrar) para que los dropdowns no pierdan
+    opciones al filtrar.
     """
     jobs = fetch_jobs_from_db(fuente=fuente)
-    
+
+    _empty_options = {"seniorities": [], "programas": [], "categories": [], "contract_types": []}
     if not jobs:
         return {
             "total_jobs": 0,
@@ -336,7 +419,19 @@ def get_analytics(fuente: str = None) -> Dict[str, Any]:
             "salary_ranges": [],
             "companies": [],
             "programas": [],
+            "filter_options": _empty_options,
         }
+
+    # Opciones de filtro: se calculan sobre TODAS las vacantes (antes de filtrar).
+    filter_options = {
+        "seniorities": _seniorities_presentes(jobs),
+        "programas": _distinct_labels(jobs, "programa_relacionado", "Unknown"),
+        "categories": _distinct_labels(jobs, "category", "Unknown"),
+        "contract_types": _distinct_labels(jobs, "contract_time", "Unknown"),
+    }
+
+    # Aplicar filtros (si los hay) antes de agregar las métricas.
+    jobs = [job for job in jobs if _pasa_filtros_adzuna(job, filtros or {})]
 
     # Most in-demand job titles (NORMALIZADOS)
     top_titles = get_job_titles_with_normalization(jobs, top_n=20)
@@ -406,8 +501,9 @@ def get_analytics(fuente: str = None) -> Dict[str, Any]:
         "salary_ranges": salary_ranges,
         "companies": [{"company": c, "count": co} for c, co in top_companies],
         "programas": [{"programa": p, "count": co} for p, co in top_programas],
+        "filter_options": filter_options,
     }
-    
+
     # Mostrar top títulos para debug
     print("\n📊 TOP 10 CARGOS NORMALIZADOS:")
     for i, title_data in enumerate(top_titles[:10], 1):
