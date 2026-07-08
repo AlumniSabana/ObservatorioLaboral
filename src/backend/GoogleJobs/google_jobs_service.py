@@ -339,6 +339,28 @@ def _pasa_filtros_google(job: Dict[str, Any], f: Dict[str, Any]) -> bool:
     return True
 
 
+def get_vacantes_por_cargo_google(cargo: str, filtros: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    """Vacantes de Google Jobs cuyo título NORMALIZADO coincide con `cargo`.
+
+    Equivalente a get_vacantes_por_cargo pero sobre `vacantes_google`. Devuelve
+    título real, empresa y enlace de postulación (`apply_link`).
+    """
+    jobs = fetch_google_jobs_from_db()
+    resultado = []
+    for job in jobs:
+        if not _pasa_filtros_google(job, filtros or {}):
+            continue
+        if normalize_title(job.get("title")) != cargo:
+            continue
+        resultado.append({
+            "title": job.get("title") or "Sin título",
+            "company": job.get("company") or "Sin empresa",
+            "link": job.get("apply_link"),
+        })
+    resultado.sort(key=lambda v: v["company"].lower())
+    return resultado
+
+
 def get_analytics_google(filtros: Dict[str, Any] = None) -> Dict[str, Any]:
     """Genera las analíticas específicas de Google Jobs (Colombia).
 

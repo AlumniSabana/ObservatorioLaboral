@@ -512,6 +512,30 @@ def get_analytics(fuente: str = None, filtros: Dict[str, Any] = None) -> Dict[st
     return analytics_data
 
 
+def get_vacantes_por_cargo(cargo: str, fuente: str = "adzuna", filtros: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    """Vacantes individuales cuyo título NORMALIZADO coincide con `cargo`.
+
+    Alimenta la ventana emergente que aparece al hacer clic en una barra de
+    "Cargos más demandados" (que muestra títulos normalizados/agrupados). Respeta
+    los mismos filtros del dashboard y devuelve, por vacante, el título real, la
+    empresa y el enlace para postularse.
+    """
+    jobs = fetch_jobs_from_db(fuente=fuente)
+    resultado = []
+    for job in jobs:
+        if not _pasa_filtros_adzuna(job, filtros or {}):
+            continue
+        if normalize_title(job.get("title")) != cargo:
+            continue
+        resultado.append({
+            "title": job.get("title") or "Sin título",
+            "company": job.get("company") or "Sin empresa",
+            "link": job.get("redirect_url"),
+        })
+    resultado.sort(key=lambda v: v["company"].lower())
+    return resultado
+
+
 def get_salary_by_title(title: str) -> Dict[str, Any]:
     jobs = fetch_jobs_from_db()
     matching_jobs = [j for j in jobs if title.lower() in j.get("title", "").lower()]

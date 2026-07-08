@@ -23,6 +23,7 @@
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 import { DocumentReader } from '@/lib/document-reader';
+import { X, ExternalLink } from 'lucide-react';
 import { useState, useEffect, type ReactNode } from 'react';
 import {
   BarChart,
@@ -53,6 +54,22 @@ interface FilterOptions {
   contract_types?: string[];   // solo Adzuna
   cities?: string[];           // solo Google
   schedule_types?: string[];   // solo Google
+}
+
+// GET /vacantes/por-cargo -> vacantes individuales de un cargo (para el modal
+// que se abre al hacer clic en una barra de "Cargos más demandados").
+interface VacanteDetalle {
+  title: string;          // título real de la vacante
+  company: string;        // empresa que la ofrece
+  link: string | null;    // enlace para postularse (puede faltar)
+}
+
+// Estado de la ventana emergente de detalle por cargo.
+interface CargoModalState {
+  cargo: string;              // título normalizado sobre el que se hizo clic
+  loading: boolean;
+  error: string | null;
+  items: VacanteDetalle[];
 }
 
 // GET /analytics?fuente=adzuna  (tabla `vacantes`)
@@ -310,6 +327,35 @@ export default function AnalyticsPage() {
     loadAnalytics(fuente, EMPTY_FILTROS);
   };
 
+  // Estado de la ventana emergente que lista las vacantes de un cargo concreto.
+  const [cargoModal, setCargoModal] = useState<CargoModalState | null>(null);
+  const cerrarCargoModal = () => setCargoModal(null);
+
+  // Al hacer clic en una barra de "Cargos más demandados": abre el modal y trae
+  // las vacantes individuales de ese cargo (respetando los filtros activos).
+  const abrirCargoModal = async (cargo: string) => {
+    if (!cargo) return;
+    setCargoModal({ cargo, loading: true, error: null, items: [] });
+    try {
+      const url = new URL(`${BACKEND_URL}/vacantes/por-cargo`);
+      url.searchParams.append('fuente', fuente);
+      url.searchParams.append('cargo', cargo);
+      appendFiltros(url, filtros);
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Error al cargar las vacantes');
+      const data: VacanteDetalle[] = await res.json();
+      setCargoModal({ cargo, loading: false, error: null, items: data });
+    } catch (err) {
+      setCargoModal({
+        cargo,
+        loading: false,
+        error: err instanceof Error ? err.message : 'Error desconocido',
+        items: [],
+      });
+    }
+  };
+
   // Re-ejecuta la recolección (scrape) de la fuente actual y recarga los datos
   const fetchAnalytics = async (borrar: boolean = false) => {
     setLoading(true);
@@ -483,6 +529,7 @@ export default function AnalyticsPage() {
       <AdzunaDashboard
         analytics={analytics as AdzunaAnalytics}
         onRefresh={() => fetchAnalytics(true)}
+        onBarClick={abrirCargoModal}
       />
     );
   } else {
@@ -490,6 +537,7 @@ export default function AnalyticsPage() {
       <GoogleDashboard
         analytics={analytics as GoogleAnalytics}
         onRefresh={() => fetchAnalytics(true)}
+        onBarClick={abrirCargoModal}
       />
     );
   }
@@ -508,7 +556,95 @@ export default function AnalyticsPage() {
           pageContent={buildChatContext(fuente, analytics)}
         />
       )}
+
+      {cargoModal && <CargoModal estado={cargoModal} onClose={cerrarCargoModal} />}
     </>
+  );
+}
+
+// ===========================================================================
+// Ventana emergente con el detalle de vacantes de un cargo (nombre de la
+// vacante, empresa y enlace). Se abre al hacer clic en una barra de "Cargos
+// más demandados". Sigue la misma estética que el chat flotante: panel claro,
+// cabecera en azul oscuro de La Sabana y botones en navy.
+// ===========================================================================
+function CargoModal({ estado, onClose }: { estado: CargoModalState; onClose: () => void }) {
+  const { cargo, loading, error, items } = estado;
+  const resumen =
+    loading || error ? '' : ` · ${items.length} vacante${items.length === 1 ? '' : 's'}`;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0, 32, 88, 0.55)' }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-zinc-800 rounded-lg shadow-2xl border border-zinc-200 dark:border-zinc-700 w-[92vw] max-w-2xl max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between p-4 text-white rounded-t-lg"
+          style={{ backgroundColor: 'var(--sabana-dark-navy)' }}
+        >
+          <div className="min-w-0">
+            <h3 className="font-semibold text-lg">💼 Vacantes de este cargo</h3>
+            <p className="text-xs truncate" style={{ color: 'var(--sabana-sky-blue)' }}>
+              {cargo}
+              {resumen}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white hover:opacity-80 transition-opacity shrink-0 ml-3"
+            aria-label="Cerrar"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {loading ? (
+            <p className="text-center text-zinc-500 dark:text-zinc-400 py-8 font-semibold">
+              ⏳ Cargando vacantes...
+            </p>
+          ) : error ? (
+            <p className="text-center text-red-600 py-8">❌ {error}</p>
+          ) : items.length === 0 ? (
+            <p className="text-center text-zinc-500 dark:text-zinc-400 py-8">
+              No se encontraron vacantes para este cargo.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {items.map((v, i) => (
+                <li
+                  key={i}
+                  className="border-b border-zinc-200 dark:border-zinc-700 pb-3 last:border-b-0"
+                >
+                  <p className="font-semibold text-black dark:text-white">{v.title}</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">🏢 {v.company}</p>
+                  {v.link ? (
+                    <a
+                      href={v.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-white rounded px-3 py-1.5 mt-2 transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: 'var(--sabana-navy)' }}
+                    >
+                      Ver vacante <ExternalLink size={13} />
+                    </a>
+                  ) : (
+                    <span className="text-xs text-zinc-400">Sin enlace disponible</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -694,9 +830,11 @@ function FilterBar({
 function AdzunaDashboard({
   analytics,
   onRefresh,
+  onBarClick,
 }: {
   analytics: AdzunaAnalytics;
   onRefresh: () => void;
+  onBarClick: (cargo: string) => void;
 }) {
   return (
     <div className="space-y-8">
@@ -724,7 +862,8 @@ function AdzunaDashboard({
           💼 Cargos Más Demandados
         </h3>
         <p className="text-sm text-zinc-600 mb-4" style={{ color: 'var(--white-background)' }}>
-          Los 20 títulos de empleos con mayor frecuencia en el mercado laboral
+          Los 20 títulos de empleos con mayor frecuencia en el mercado laboral.
+          💡 Haz clic en una barra para ver las vacantes y sus enlaces.
         </p>
         <ResponsiveContainer width="100%" height={600}>
           <BarChart
@@ -741,7 +880,14 @@ function AdzunaDashboard({
               tick={{ fontSize: 10, fill: 'var(--white-background)' }}
             />
             <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: 'var(--white-background)' }} />
-            <Bar dataKey="count" fill="var(--sabana-light-blue)" />
+            <Bar
+              dataKey="count"
+              fill="var(--sabana-light-blue)"
+              cursor="pointer"
+              onClick={(d: { title?: string; payload?: { title?: string } }) =>
+                onBarClick(d?.payload?.title ?? d?.title ?? '')
+              }
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -968,9 +1114,11 @@ function AdzunaDashboard({
 function GoogleDashboard({
   analytics,
   onRefresh,
+  onBarClick,
 }: {
   analytics: GoogleAnalytics;
   onRefresh: () => void;
+  onBarClick: (cargo: string) => void;
 }) {
   return (
     <div className="space-y-8">
@@ -1000,7 +1148,8 @@ function GoogleDashboard({
           💼 Cargos Más Demandados
         </h3>
         <p className="text-sm text-zinc-600 mb-4" style={{ color: 'var(--white-background)' }}>
-          Los 20 títulos de empleos con mayor frecuencia
+          Los 20 títulos de empleos con mayor frecuencia.
+          💡 Haz clic en una barra para ver las vacantes y sus enlaces.
         </p>
         <ResponsiveContainer width="100%" height={600}>
           <BarChart data={analytics.job_titles} layout="vertical" margin={{ top: 0, right: 30, left: -80, bottom: 0 }}>
@@ -1008,7 +1157,14 @@ function GoogleDashboard({
             <XAxis type="number" />
             <YAxis dataKey="title" type="category" width={400} tick={{ fontSize: 10, fill: 'var(--white-background)' }} />
             <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: 'var(--white-background)' }} />
-            <Bar dataKey="count" fill="var(--sabana-light-blue)" />
+            <Bar
+              dataKey="count"
+              fill="var(--sabana-light-blue)"
+              cursor="pointer"
+              onClick={(d: { title?: string; payload?: { title?: string } }) =>
+                onBarClick(d?.payload?.title ?? d?.title ?? '')
+              }
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

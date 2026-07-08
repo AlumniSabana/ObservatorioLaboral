@@ -21,10 +21,12 @@ from Adzuna.adzuna_service import (
     get_analytics,
     get_salary_by_title,
     get_salary_by_category,
+    get_vacantes_por_cargo,
 )
 from GoogleJobs.google_jobs_service import (
     procesar_vacantes_google,
     get_analytics_google,
+    get_vacantes_por_cargo_google,
 )
 from Documentos.document_service import subir_documento, stream_respuesta
 from ONet.onet_service import obtener_competencias, listar_programas
@@ -115,6 +117,45 @@ async def get_job_analytics(
         if fuente == "google_jobs":
             return get_analytics_google(filtros=filtros)
         return get_analytics(fuente="adzuna", filtros=filtros)
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+@app.get("/vacantes/por-cargo")
+async def vacantes_por_cargo(
+    cargo: str,
+    fuente: str = "adzuna",
+    seniority: str = None,
+    programa: str = None,
+    category: str = None,
+    contract_time: str = None,
+    salary_min: float = None,
+    salary_max: float = None,
+    city: str = None,
+    schedule_type: str = None,
+    remote: bool = None,
+):
+    """Vacantes individuales para un cargo (título normalizado), con su enlace.
+
+    Alimenta la ventana emergente que aparece al hacer clic en una barra de
+    'Cargos más demandados'. Aplica los mismos filtros que el dashboard, para que
+    el detalle coincida con lo que se está viendo.
+    """
+    try:
+        filtros = {
+            "seniority": seniority,
+            "programa": programa,
+            "category": category,
+            "contract_time": contract_time,
+            "salary_min": salary_min,
+            "salary_max": salary_max,
+            "city": city,
+            "schedule_type": schedule_type,
+            "remote": remote,
+        }
+        if fuente == "google_jobs":
+            return get_vacantes_por_cargo_google(cargo, filtros=filtros)
+        return get_vacantes_por_cargo(cargo, fuente="adzuna", filtros=filtros)
     except Exception as e:
         return {"error": str(e)}, 500
 
