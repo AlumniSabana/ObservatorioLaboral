@@ -7,3 +7,4 @@ pydantic
 anthropic
 python-multipart
 beautifulsoup4
+pypdf

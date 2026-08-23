@@ -77,10 +77,7 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
     const assistantId = `${Date.now() + 1}`;
 
     try {
-      // El '/ObservatorioLaboral' es el basePath configurado en next.config.ts.
-      // En producción (GitHub Pages) el sitio vive bajo esa subruta, por eso la
-      // URL de la ruta API se prefija manualmente aquí.
-      const response = await fetch('/ObservatorioLaboral/api/chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

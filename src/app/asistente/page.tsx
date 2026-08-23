@@ -116,8 +116,7 @@ export default function AsistentePage() {
       // Espera a que el contexto del Observatorio esté disponible (ver contextoRef).
       const contexto = (await contextoRef.current) ?? '';
 
-      // '/ObservatorioLaboral' es el basePath (ver next.config.ts).
-      const respuesta = await fetch('/ObservatorioLaboral/api/chat', {
+      const respuesta = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -198,7 +197,7 @@ export default function AsistentePage() {
                 oscuro) para que el texto siga siendo legible sobre tantos logos. */}
             <div
               className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: 'url(/ObservatorioLaboral/empresas-logos-bg.jpg)' }}
+              style={{ backgroundImage: 'url(/empresas-logos-bg.jpg)' }}
               aria-hidden="true"
             />
             <div className="absolute inset-0 bg-white/85 dark:bg-zinc-900/85" aria-hidden="true" />
@@ -209,7 +208,7 @@ export default function AsistentePage() {
                 style={{ backgroundColor: 'var(--sabana-dark-navy)' }}
               >
                 <Image
-                  src="/ObservatorioLaboral/logo-alumni.png"
+                  src="/logo-alumni.png"
                   alt="Logo Alumni Sabana"
                   width={260}
                   height={100}

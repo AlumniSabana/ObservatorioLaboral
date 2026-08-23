@@ -1,0 +1,35 @@
+# Blueprint de Render para el backend (FastAPI). El frontend (Next.js) va
+# aparte, en Vercel — Vercel no necesita este archivo, detecta Next.js solo.
+#
+# Cómo usarlo: en Render, "New +" → "Blueprint" → conectar este repo. Render
+# lee este archivo y crea el servicio con el build/start command ya puestos;
+# las variables marcadas `sync: false` las pide una a una en el dashboard (son
+# secretos — nunca van committeados aquí).
+services:
+  - type: web
+    name: observatorio-laboral-backend
+    runtime: python
+    plan: free
+    rootDir: src/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: ADZUNA_APP_ID
+        sync: false
+      - key: ADZUNA_APP_KEY
+        sync: false
+      - key: SERPAPI_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ONET_API_KEY
+        sync: false
+      # Interruptor de aprobación de LinkedIn — 'false' hasta que la Dirección
+      # de Alumni / jurídica de la Universidad lo apruebe explícitamente.
+      - key: LINKEDIN_HABILITADO
+        value: "false"

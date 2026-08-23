@@ -1,23 +1,13 @@
 import type { NextConfig } from "next";
 
-// Configuración de Next.js orientada a desplegar el sitio en GitHub Pages.
-// (El workflow .github/workflows/nextjs.yml hace el build y publica la carpeta /out.)
-const nextConfig: NextConfig = {
-  // 'export' genera un sitio 100% estático (HTML/CSS/JS) en la carpeta /out.
-  // OJO: en este modo las rutas API de Next (src/app/api/*) NO corren como
-  // servidor; el frontend depende del backend FastAPI para los datos.
-  output: 'export',
-  // GitHub Pages sirve el sitio bajo la subruta /ObservatorioLaboral, así que
-  // todas las URLs internas se prefijan con este basePath. Por eso las llamadas
-  // fetch del frontend incluyen '/ObservatorioLaboral/...'.
-  basePath: '/ObservatorioLaboral',
-  images: {
-    // La optimización de imágenes de Next requiere un servidor; en exportación
-    // estática se desactiva para que las imágenes se sirvan tal cual.
-    unoptimized: true,
-  },
-  // Genera rutas con barra final (/ruta/) — recomendado para hosting estático.
-  trailingSlash: true,
-};
+// Configuración de Next.js orientada a desplegar el sitio en Vercel.
+//
+// Antes esto era una exportación 100% estática para GitHub Pages (output:
+// 'export' + basePath '/ObservatorioLaboral'), lo que dejaba las rutas API de
+// Next (src/app/api/chat) SIN correr como servidor — el chat no funcionaba en
+// producción. Vercel sirve Next.js nativo (SSR + funciones serverless), así
+// que ya no hace falta ni el export ni el basePath: el sitio vive en la raíz
+// de su propio dominio y /api/chat corre de verdad.
+const nextConfig: NextConfig = {};
 
 export default nextConfig;
