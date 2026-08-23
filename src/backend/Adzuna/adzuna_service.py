@@ -18,16 +18,27 @@ El frontend nunca llama estas funciones directamente; lo hace a través de los
 endpoints definidos en main.py.
 """
 
+import time as _time
 import requests
 from typing import List, Dict, Any
 from supabase import create_client
 from config import ADZUNA_APP_ID, ADZUNA_APP_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY, PROGRAMAS_KEYWORDS
+from traducciones import traducir_sector, traducir_modalidad, traducir_cargo
 import re
 from collections import Counter
 from typing import List, Dict, Any
 
 # Initialize Supabase
 supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+# Caché en memoria de fetch_jobs_from_db, por fuente: {fuente: (timestamp, filas)}.
+_CACHE_JOBS: Dict[Any, Any] = {}
+_CACHE_JOBS_TTL = 60  # segundos
+
+
+def invalidar_cache_jobs() -> None:
+    """Vacía el caché de vacantes (llamar tras recolectar/borrar para ver los cambios ya)."""
+    _CACHE_JOBS.clear()
 
 
 def borrar_todas_vacantes():
@@ -37,6 +48,7 @@ def borrar_todas_vacantes():
         response = supabase.table("vacantes").delete().neq("id", 0).execute()
         count = len(response.data) if response.data else 0
         print(f"🗑️ Se eliminaron {count} registros anteriores de la base de datos.")
+        invalidar_cache_jobs()
         return True
     except Exception as e:
         print(f"❌ Error al borrar vacantes: {str(e)}")
@@ -49,6 +61,7 @@ def borrar_vacantes_por_fuente(fuente: str):
         response = supabase.table("vacantes").delete().eq("fuente", fuente).execute()
         count = len(response.data) if response.data else 0
         print(f"🗑️ Se eliminaron {count} registros anteriores de la fuente '{fuente}'.")
+        invalidar_cache_jobs()
         return True
     except Exception as e:
         print(f"❌ Error al borrar vacantes de '{fuente}': {str(e)}")
@@ -205,7 +218,18 @@ def fetch_jobs_from_db(fuente: str = None) -> List[Dict[str, Any]]:
 
     Si se indica `fuente` (ej. 'adzuna', 'google_jobs') solo devuelve las
     vacantes de esa fuente; si es None devuelve todas.
+
+    Cachea el resultado por fuente durante `_CACHE_JOBS_TTL` segundos: leer las
+    ~7k filas son 9 viajes a Supabase (~3 s), y varias analíticas las piden en el
+    mismo request. La tabla solo cambia al recolectar (operación manual), así que
+    unos segundos de desfase no importan. Se devuelven COPIAS de cada fila para que
+    quien traduzca campos in-place (get_analytics) no altere el caché.
     """
+    ahora = _time.time()
+    hit = _CACHE_JOBS.get(fuente)
+    if hit and (ahora - hit[0]) < _CACHE_JOBS_TTL:
+        return [dict(j) for j in hit[1]]
+
     all_jobs = []
     page_size = 1000
     start = 0
@@ -245,8 +269,9 @@ def fetch_jobs_from_db(fuente: str = None) -> List[Dict[str, Any]]:
             start += page_size
             
         print(f"✅ Total de registros obtenidos: {len(all_jobs)}")
-        return all_jobs
-        
+        _CACHE_JOBS[fuente] = (ahora, all_jobs)
+        return [dict(j) for j in all_jobs]
+
     except Exception as e:
         print(f"Error fetching jobs from database: {str(e)}")
         return []
@@ -339,6 +364,21 @@ def clasificar_seniority(title: str) -> str:
     return "Mid-level / Sin especificar"
 
 
+def _traducir_adzuna_inplace(jobs: List[Dict[str, Any]]) -> None:
+    """
+    Traduce EN→ES el sector y la modalidad de cada vacante, IN-PLACE, apenas se
+    leen de la BD. Al hacerlo antes de opciones/filtros/agregación, el valor en
+    español es la identidad en todo el flujo: los dropdowns muestran español, el
+    frontend devuelve español y `_pasa_filtros_adzuna` compara español con español.
+    (Datos de Google Jobs ya vienen en español; el fallback los deja intactos.)
+    """
+    for job in jobs:
+        if job.get("category") is not None:
+            job["category"] = traducir_sector(job["category"])
+        if job.get("contract_time") is not None:
+            job["contract_time"] = traducir_modalidad(job["contract_time"])
+
+
 def _distinct_labels(jobs: List[Dict[str, Any]], campo: str, vacio: str) -> List[str]:
     """Valores distintos de un campo, ordenados (para poblar los dropdowns)."""
     valores = {(job.get(campo) or vacio) for job in jobs}
@@ -355,11 +395,11 @@ def _pasa_filtros_adzuna(job: Dict[str, Any], f: Dict[str, Any]) -> bool:
     """True si la vacante de Adzuna cumple TODOS los filtros activos."""
     if f.get("seniority") and clasificar_seniority(job.get("title")) != f["seniority"]:
         return False
-    if f.get("programa") and (job.get("programa_relacionado") or "Unknown") != f["programa"]:
+    if f.get("programa") and (job.get("programa_relacionado") or "Sin especificar") != f["programa"]:
         return False
-    if f.get("category") and (job.get("category") or "Unknown") != f["category"]:
+    if f.get("category") and (job.get("category") or "Sin especificar") != f["category"]:
         return False
-    if f.get("contract_time") and (job.get("contract_time") or "Unknown") != f["contract_time"]:
+    if f.get("contract_time") and (job.get("contract_time") or "Sin especificar") != f["contract_time"]:
         return False
     smin, smax = f.get("salary_min"), f.get("salary_max")
     if smin is not None or smax is not None:
@@ -376,11 +416,14 @@ def _pasa_filtros_adzuna(job: Dict[str, Any], f: Dict[str, Any]) -> bool:
 def get_job_titles_with_normalization(jobs: List[Dict[str, Any]], top_n: int = 20) -> List[Dict[str, Any]]:
     """Cuenta títulos normalizados y retorna los más comunes"""
     title_counter = Counter()
-    
+
     for job in jobs:
         original_title = job.get("title", "Sin título")
-        normalized_title = normalize_title(original_title)
-        title_counter[normalized_title] += 1
+        # Se agrupa por la traducción: además de mostrar español, une variantes
+        # ruidosas de EE.UU. (p. ej. distintas "class a ... delivery driver ...")
+        # bajo un mismo rol ("Conductor de reparto").
+        cargo = traducir_cargo(normalize_title(original_title))
+        title_counter[cargo] += 1
     
     # Mostrar estadísticas de normalización (debug)
     print(f"📊 Títulos originales únicos: {len(set(job.get('title', 'Sin título') for job in jobs))}")
@@ -407,6 +450,7 @@ def get_analytics(fuente: str = None, filtros: Dict[str, Any] = None) -> Dict[st
     opciones al filtrar.
     """
     jobs = fetch_jobs_from_db(fuente=fuente)
+    _traducir_adzuna_inplace(jobs)
 
     _empty_options = {"seniorities": [], "programas": [], "categories": [], "contract_types": []}
     if not jobs:
@@ -425,9 +469,9 @@ def get_analytics(fuente: str = None, filtros: Dict[str, Any] = None) -> Dict[st
     # Opciones de filtro: se calculan sobre TODAS las vacantes (antes de filtrar).
     filter_options = {
         "seniorities": _seniorities_presentes(jobs),
-        "programas": _distinct_labels(jobs, "programa_relacionado", "Unknown"),
-        "categories": _distinct_labels(jobs, "category", "Unknown"),
-        "contract_types": _distinct_labels(jobs, "contract_time", "Unknown"),
+        "programas": _distinct_labels(jobs, "programa_relacionado", "Sin especificar"),
+        "categories": _distinct_labels(jobs, "category", "Sin especificar"),
+        "contract_types": _distinct_labels(jobs, "contract_time", "Sin especificar"),
     }
 
     # Aplicar filtros (si los hay) antes de agregar las métricas.
@@ -439,14 +483,14 @@ def get_analytics(fuente: str = None, filtros: Dict[str, Any] = None) -> Dict[st
     # Categories
     category_count = {}
     for job in jobs:
-        category = job.get("category") or "Unknown"
+        category = job.get("category") or "Sin especificar"
         category_count[category] = category_count.get(category, 0) + 1
     top_categories = sorted(category_count.items(), key=lambda x: x[1], reverse=True)[:15]
 
     # Contract types
     contract_count = {}
     for job in jobs:
-        contract = job.get("contract_time") or "Unknown"
+        contract = job.get("contract_time") or "Sin especificar"
         contract_count[contract] = contract_count.get(contract, 0) + 1
     top_contracts = sorted(contract_count.items(), key=lambda x: x[1], reverse=True)
 
@@ -481,14 +525,14 @@ def get_analytics(fuente: str = None, filtros: Dict[str, Any] = None) -> Dict[st
     # Top companies
     company_count = {}
     for job in jobs:
-        company = job.get("company") or "Unknown"
+        company = job.get("company") or "Sin especificar"
         company_count[company] = company_count.get(company, 0) + 1
     top_companies = sorted(company_count.items(), key=lambda x: x[1], reverse=True)[:15]
 
     # Programs
     programa_count = {}
     for job in jobs:
-        programa = job.get("programa_relacionado") or "Unknown"
+        programa = job.get("programa_relacionado") or "Sin especificar"
         programa_count[programa] = programa_count.get(programa, 0) + 1
     top_programas = sorted(programa_count.items(), key=lambda x: x[1], reverse=True)[:15]
 
@@ -521,11 +565,14 @@ def get_vacantes_por_cargo(cargo: str, fuente: str = "adzuna", filtros: Dict[str
     empresa y el enlace para postularse.
     """
     jobs = fetch_jobs_from_db(fuente=fuente)
+    _traducir_adzuna_inplace(jobs)  # para que los filtros (sector/modalidad) casen en español
     resultado = []
     for job in jobs:
         if not _pasa_filtros_adzuna(job, filtros or {}):
             continue
-        if normalize_title(job.get("title")) != cargo:
+        # El cargo que llega ya viene traducido (identidad en español); se empareja
+        # aplicando la misma transformación al título de cada vacante.
+        if traducir_cargo(normalize_title(job.get("title"))) != cargo:
             continue
         resultado.append({
             "title": job.get("title") or "Sin título",

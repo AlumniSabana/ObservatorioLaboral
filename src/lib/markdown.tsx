@@ -4,7 +4,7 @@
  * Renderizado de Markdown para las respuestas de Claude.
  *
  * Lo usan tanto el chat flotante (floating-chat.tsx) como el lector de documentos
- * (document-reader.tsx). Expone <AssistantContent /> que renderiza texto Markdown
+ * (floating-chat.tsx y la página /asistente). Expone <AssistantContent /> que renderiza texto Markdown
  * con estilos pulidos y soporte de TABLAS.
  *
  * Las tablas se parsean a mano (parseBlocks + MarkdownTable) porque react-markdown
@@ -136,7 +136,7 @@ function MarkdownTable({ text }: { text: string }) {
 export function AssistantContent({ content }: { content: string }) {
   const blocks = parseBlocks(content);
   return (
-    <div className="text-sm leading-relaxed">
+    <div className="text-base leading-relaxed">
       {blocks.map((block, idx) =>
         block.type === 'table' ? (
           <MarkdownTable key={idx} text={block.text} />

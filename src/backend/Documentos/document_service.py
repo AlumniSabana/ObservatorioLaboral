@@ -18,7 +18,6 @@ Requiere la dependencia `anthropic` y la variable de entorno ANTHROPIC_API_KEY.
 
 import io
 from typing import Iterator
-import anthropic
 
 from config import ANTHROPIC_API_KEY
 
@@ -51,6 +50,10 @@ def _client():
     del backend siga funcionando aunque la librería todavía no esté instalada.
     """
 
+
+    # El import va AQUÍ y no arriba a propósito: si `anthropic` no está instalada,
+    # solo falla quien use el lector de documentos, no el arranque de todo main.py.
+    import anthropic
 
     if not ANTHROPIC_API_KEY:
         raise RuntimeError(

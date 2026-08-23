@@ -1,0 +1,2703 @@
+{
+  "meta": {
+    "periodo": "Feb 2026",
+    "fuente": "GEIH DANE (ingreso laboral real) + SPE Colombia (rangos de vacantes)",
+    "n_ocupados": 29892,
+    "con_ingreso": 29054,
+    "mediana_nacional": 1750905,
+    "nota": "Salarios mensuales en COP. Agregación por ocupación CNO-2020 (OFICIO_C8)."
+  },
+  "por_cno_grupo": {
+    "1": {
+      "codigo": "1",
+      "nombre": "Directores y gerentes",
+      "mediana": 3000000,
+      "media": 4228580,
+      "p25": 1800000,
+      "p75": 4800000,
+      "p10": 1000000,
+      "p90": 8000000,
+      "n": 1788
+    },
+    "2": {
+      "codigo": "2",
+      "nombre": "Profesionales, científicos e intelectuales",
+      "mediana": 3500000,
+      "media": 4394003,
+      "p25": 2500000,
+      "p75": 5100000,
+      "p10": 1750905,
+      "p90": 7800000,
+      "n": 4003
+    },
+    "3": {
+      "codigo": "3",
+      "nombre": "Técnicos y profesionales de nivel medio",
+      "mediana": 2000000,
+      "media": 2676149,
+      "p25": 1750000,
+      "p75": 3000000,
+      "p10": 1000000,
+      "p90": 4759500,
+      "n": 1992
+    },
+    "4": {
+      "codigo": "4",
+      "nombre": "Personal de apoyo administrativo",
+      "mediana": 2000000,
+      "media": 2236779,
+      "p25": 1750000,
+      "p75": 2500000,
+      "p10": 1500000,
+      "p90": 3500000,
+      "n": 1955
+    },
+    "5": {
+      "codigo": "5",
+      "nombre": "Trabajadores de servicios y vendedores",
+      "mediana": 1740000,
+      "media": 1669052,
+      "p25": 900000,
+      "p75": 2000000,
+      "p10": 500000,
+      "p90": 2600000,
+      "n": 6240
+    },
+    "6": {
+      "codigo": "6",
+      "nombre": "Agricultores y trabajadores agropecuarios",
+      "mediana": 900000,
+      "media": 1336244,
+      "p25": 550000,
+      "p75": 1525000,
+      "p10": 400000,
+      "p90": 2000000,
+      "n": 892
+    },
+    "7": {
+      "codigo": "7",
+      "nombre": "Oficiales, operarios y artesanos",
+      "mediana": 1500000,
+      "media": 1549110,
+      "p25": 857500,
+      "p75": 2000000,
+      "p10": 500000,
+      "p90": 2500000,
+      "n": 2666
+    },
+    "8": {
+      "codigo": "8",
+      "nombre": "Operadores de instalaciones y máquinas",
+      "mediana": 1500000,
+      "media": 1578364,
+      "p25": 1000000,
+      "p75": 2000000,
+      "p10": 630000,
+      "p90": 2400000,
+      "n": 2387
+    },
+    "9": {
+      "codigo": "9",
+      "nombre": "Ocupaciones elementales",
+      "mediana": 1200000,
+      "media": 1252653,
+      "p25": 700000,
+      "p75": 1750000,
+      "p10": 480000,
+      "p90": 2000000,
+      "n": 5593
+    }
+  },
+  "por_cno_subgrupo": {
+    "11": {
+      "codigo": "11",
+      "nombre": "Directores ejecutivos y personal directivo de la administración pública",
+      "mediana": 5800000,
+      "media": 7842094,
+      "p25": 3950000,
+      "p75": 10000000,
+      "p10": 2350000,
+      "p90": 16500000,
+      "n": 176
+    },
+    "12": {
+      "codigo": "12",
+      "nombre": "Directores administrativos y comerciales",
+      "mediana": 3800000,
+      "media": 5072833,
+      "p25": 2500000,
+      "p75": 5650000,
+      "p10": 2000000,
+      "p90": 10000000,
+      "n": 351
+    },
+    "13": {
+      "codigo": "13",
+      "nombre": "Directores y gerentes de producción y operaciones",
+      "mediana": 3000000,
+      "media": 4389121,
+      "p25": 2000000,
+      "p75": 4762500,
+      "p10": 1375000,
+      "p90": 8000000,
+      "n": 476
+    },
+    "14": {
+      "codigo": "14",
+      "nombre": "Gerentes de hotelería, comercio y otros servicios",
+      "mediana": 2000000,
+      "media": 2943575,
+      "p25": 1500000,
+      "p75": 3000000,
+      "p10": 800000,
+      "p90": 5060000,
+      "n": 785
+    },
+    "21": {
+      "codigo": "21",
+      "nombre": "Profesionales de las ciencias y de la ingeniería",
+      "mediana": 3500000,
+      "media": 4279188,
+      "p25": 2400000,
+      "p75": 5000000,
+      "p10": 1750905,
+      "p90": 7600000,
+      "n": 628
+    },
+    "22": {
+      "codigo": "22",
+      "nombre": "Profesionales de la salud",
+      "mediana": 3600000,
+      "media": 5008836,
+      "p25": 2500000,
+      "p75": 5500000,
+      "p10": 1800000,
+      "p90": 10000000,
+      "n": 589
+    },
+    "23": {
+      "codigo": "23",
+      "nombre": "Profesionales de la enseñanza",
+      "mediana": 3900000,
+      "media": 4293809,
+      "p25": 2600000,
+      "p75": 5530000,
+      "p10": 1750000,
+      "p90": 7000000,
+      "n": 1046
+    },
+    "24": {
+      "codigo": "24",
+      "nombre": "Profesionales en finanzas y administración",
+      "mediana": 3000000,
+      "media": 3924476,
+      "p25": 2100000,
+      "p75": 4800000,
+      "p10": 1750093,
+      "p90": 7000000,
+      "n": 712
+    },
+    "25": {
+      "codigo": "25",
+      "nombre": "Profesionales de tecnología de la información y las comunicaciones",
+      "mediana": 4000000,
+      "media": 5083996,
+      "p25": 2800000,
+      "p75": 6000000,
+      "p10": 2000000,
+      "p90": 10000000,
+      "n": 263
+    },
+    "26": {
+      "codigo": "26",
+      "nombre": "Profesionales en derecho, ciencias sociales y culturales",
+      "mediana": 3500000,
+      "media": 4351654,
+      "p25": 2220000,
+      "p75": 5000000,
+      "p10": 1500000,
+      "p90": 8000000,
+      "n": 765
+    },
+    "31": {
+      "codigo": "31",
+      "nombre": "Técnicos de las ciencias y la ingeniería",
+      "mediana": 2000000,
+      "media": 2439833,
+      "p25": 1750000,
+      "p75": 2818750,
+      "p10": 1100000,
+      "p90": 4000000,
+      "n": 470
+    },
+    "32": {
+      "codigo": "32",
+      "nombre": "Técnicos de nivel medio de la salud",
+      "mediana": 2000000,
+      "media": 2242026,
+      "p25": 1750071,
+      "p75": 2500000,
+      "p10": 1596000,
+      "p90": 3500000,
+      "n": 140
+    },
+    "33": {
+      "codigo": "33",
+      "nombre": "Técnicos de nivel medio en finanzas y administración",
+      "mediana": 2100000,
+      "media": 2918269,
+      "p25": 1750000,
+      "p75": 3500000,
+      "p10": 800000,
+      "p90": 5200000,
+      "n": 1036
+    },
+    "34": {
+      "codigo": "34",
+      "nombre": "Técnicos de servicios jurídicos, sociales y culturales",
+      "mediana": 2000000,
+      "media": 2487958,
+      "p25": 1500000,
+      "p75": 3000000,
+      "p10": 800000,
+      "p90": 4725000,
+      "n": 258
+    },
+    "35": {
+      "codigo": "35",
+      "nombre": "Técnicos de la información y las comunicaciones",
+      "mediana": 2000000,
+      "media": 2330270,
+      "p25": 1750702,
+      "p75": 2561000,
+      "p10": 1356450,
+      "p90": 3509999,
+      "n": 88
+    },
+    "41": {
+      "codigo": "41",
+      "nombre": "Oficinistas y auxiliares administrativos",
+      "mediana": 2000000,
+      "media": 2522905,
+      "p25": 1750905,
+      "p75": 3000000,
+      "p10": 1750000,
+      "p90": 4000000,
+      "n": 774
+    },
+    "42": {
+      "codigo": "42",
+      "nombre": "Empleados en trato directo con el público",
+      "mediana": 1860000,
+      "media": 2109290,
+      "p25": 1750000,
+      "p75": 2300000,
+      "p10": 1200000,
+      "p90": 3000000,
+      "n": 499
+    },
+    "43": {
+      "codigo": "43",
+      "nombre": "Empleados contables y de registro de materiales",
+      "mediana": 1750905,
+      "media": 1954439,
+      "p25": 1750000,
+      "p75": 2000000,
+      "p10": 1400000,
+      "p90": 2600000,
+      "n": 568
+    },
+    "44": {
+      "codigo": "44",
+      "nombre": "Otro personal de apoyo administrativo",
+      "mediana": 1900000,
+      "media": 2258927,
+      "p25": 1750000,
+      "p75": 2800000,
+      "p10": 1257600,
+      "p90": 3740000,
+      "n": 114
+    },
+    "51": {
+      "codigo": "51",
+      "nombre": "Trabajadores de los servicios personales",
+      "mediana": 1250000,
+      "media": 1363935,
+      "p25": 800000,
+      "p75": 1750905,
+      "p10": 500000,
+      "p90": 2200000,
+      "n": 1557
+    },
+    "52": {
+      "codigo": "52",
+      "nombre": "Vendedores",
+      "mediana": 1500000,
+      "media": 1624768,
+      "p25": 800000,
+      "p75": 2000000,
+      "p10": 500000,
+      "p90": 2500000,
+      "n": 3215
+    },
+    "53": {
+      "codigo": "53",
+      "nombre": "Trabajadores de los cuidados personales",
+      "mediana": 1750905,
+      "media": 1775224,
+      "p25": 1400000,
+      "p75": 2000000,
+      "p10": 650000,
+      "p90": 2500000,
+      "n": 689
+    },
+    "54": {
+      "codigo": "54",
+      "nombre": "Personal de los servicios de protección",
+      "mediana": 2000000,
+      "media": 2367752,
+      "p25": 1750905,
+      "p75": 2700000,
+      "p10": 1700000,
+      "p90": 3560000,
+      "n": 779
+    },
+    "61": {
+      "codigo": "61",
+      "nombre": "Agricultores y trabajadores calificados agropecuarios",
+      "mediana": 1000000,
+      "media": 1424925,
+      "p25": 595000,
+      "p75": 1662500,
+      "p10": 400000,
+      "p90": 2075000,
+      "n": 736
+    },
+    "62": {
+      "codigo": "62",
+      "nombre": "Trabajadores forestales, pesqueros y cazadores calificados",
+      "mediana": 800000,
+      "media": 917851,
+      "p25": 500000,
+      "p75": 1200000,
+      "p10": 395000,
+      "p90": 1600000,
+      "n": 156
+    },
+    "71": {
+      "codigo": "71",
+      "nombre": "Oficiales y operarios de la construcción",
+      "mediana": 1500000,
+      "media": 1576171,
+      "p25": 1000000,
+      "p75": 2000000,
+      "p10": 600000,
+      "p90": 2500000,
+      "n": 723
+    },
+    "72": {
+      "codigo": "72",
+      "nombre": "Oficiales de la metalurgia y la construcción mecánica",
+      "mediana": 1750000,
+      "media": 1716325,
+      "p25": 1037500,
+      "p75": 2000000,
+      "p10": 700000,
+      "p90": 2633715,
+      "n": 660
+    },
+    "73": {
+      "codigo": "73",
+      "nombre": "Artesanos y operarios de artes gráficas",
+      "mediana": 800000,
+      "media": 1133303,
+      "p25": 450000,
+      "p75": 1625000,
+      "p10": 330000,
+      "p90": 2000000,
+      "n": 176
+    },
+    "74": {
+      "codigo": "74",
+      "nombre": "Trabajadores de electricidad y electrotecnología",
+      "mediana": 1750902,
+      "media": 1744863,
+      "p25": 1200000,
+      "p75": 2000000,
+      "p10": 600000,
+      "p90": 2690000,
+      "n": 372
+    },
+    "75": {
+      "codigo": "75",
+      "nombre": "Operarios de procesamiento de alimentos y confección",
+      "mediana": 1200000,
+      "media": 1372832,
+      "p25": 700000,
+      "p75": 1750905,
+      "p10": 400000,
+      "p90": 2200000,
+      "n": 735
+    },
+    "81": {
+      "codigo": "81",
+      "nombre": "Operadores de instalaciones fijas y máquinas",
+      "mediana": 1750000,
+      "media": 1660710,
+      "p25": 1200000,
+      "p75": 2000000,
+      "p10": 700000,
+      "p90": 2170905,
+      "n": 431
+    },
+    "83": {
+      "codigo": "83",
+      "nombre": "Conductores y operadores de equipos móviles",
+      "mediana": 1500000,
+      "media": 1554576,
+      "p25": 950000,
+      "p75": 2000000,
+      "p10": 600000,
+      "p90": 2500000,
+      "n": 1935
+    },
+    "91": {
+      "codigo": "91",
+      "nombre": "Limpiadores y asistentes",
+      "mediana": 1000000,
+      "media": 1202818,
+      "p25": 650000,
+      "p75": 1750900,
+      "p10": 450000,
+      "p90": 2000000,
+      "n": 1965
+    },
+    "92": {
+      "codigo": "92",
+      "nombre": "Peones agropecuarios, pesqueros y forestales",
+      "mediana": 1100000,
+      "media": 1226254,
+      "p25": 720000,
+      "p75": 1600000,
+      "p10": 500000,
+      "p90": 1955814,
+      "n": 1050
+    },
+    "93": {
+      "codigo": "93",
+      "nombre": "Peones de minería, construcción, industria y transporte",
+      "mediana": 1400000,
+      "media": 1361798,
+      "p25": 900000,
+      "p75": 1750905,
+      "p10": 580000,
+      "p90": 2000000,
+      "n": 1415
+    },
+    "94": {
+      "codigo": "94",
+      "nombre": "Ayudantes de preparación de alimentos",
+      "mediana": 1200000,
+      "media": 1312205,
+      "p25": 787500,
+      "p75": 1750905,
+      "p10": 500000,
+      "p90": 2000000,
+      "n": 400
+    },
+    "95": {
+      "codigo": "95",
+      "nombre": "Vendedores ambulantes y ocupaciones afines",
+      "mediana": 800000,
+      "media": 975580,
+      "p25": 500000,
+      "p75": 1200000,
+      "p10": 360000,
+      "p90": 1750905,
+      "n": 290
+    },
+    "96": {
+      "codigo": "96",
+      "nombre": "Recolectores de desechos y otras ocupaciones elementales",
+      "mediana": 1400000,
+      "media": 1311295,
+      "p25": 700000,
+      "p75": 1750905,
+      "p10": 400000,
+      "p90": 2000000,
+      "n": 473
+    }
+  },
+  "por_nivel_educativo": {
+    "1": {
+      "codigo": "1",
+      "nombre": "Ninguno",
+      "orden": 1,
+      "mediana": 790000,
+      "media": 952638,
+      "p25": 500000,
+      "p75": 1200000,
+      "p10": 337000,
+      "p90": 1750905,
+      "n": 568
+    },
+    "3": {
+      "codigo": "3",
+      "nombre": "Básica primaria",
+      "orden": 3,
+      "mediana": 1000000,
+      "media": 1258936,
+      "p25": 650000,
+      "p75": 1700000,
+      "p10": 400000,
+      "p90": 2000000,
+      "n": 4103
+    },
+    "4": {
+      "codigo": "4",
+      "nombre": "Básica secundaria",
+      "orden": 4,
+      "mediana": 1200000,
+      "media": 1301436,
+      "p25": 800000,
+      "p75": 1750095,
+      "p10": 500000,
+      "p90": 2000000,
+      "n": 2599
+    },
+    "5": {
+      "codigo": "5",
+      "nombre": "Media académica",
+      "orden": 5,
+      "mediana": 1740000,
+      "media": 1634923,
+      "p25": 1000000,
+      "p75": 2000000,
+      "p10": 600000,
+      "p90": 2500000,
+      "n": 8481
+    },
+    "6": {
+      "codigo": "6",
+      "nombre": "Media técnica",
+      "orden": 6,
+      "mediana": 1750905,
+      "media": 1734012,
+      "p25": 1200000,
+      "p75": 2000000,
+      "p10": 699000,
+      "p90": 2500000,
+      "n": 750
+    },
+    "7": {
+      "codigo": "7",
+      "nombre": "Normalista",
+      "orden": 7,
+      "mediana": 1600000,
+      "media": 1622506,
+      "p25": 700000,
+      "p75": 2300000,
+      "p10": 400000,
+      "p90": 3300000,
+      "n": 35
+    },
+    "8": {
+      "codigo": "8",
+      "nombre": "Técnica profesional",
+      "orden": 8,
+      "mediana": 1750905,
+      "media": 2012145,
+      "p25": 1500000,
+      "p75": 2200000,
+      "p10": 800000,
+      "p90": 3000000,
+      "n": 2615
+    },
+    "9": {
+      "codigo": "9",
+      "nombre": "Tecnológica",
+      "orden": 9,
+      "mediana": 2000000,
+      "media": 2305017,
+      "p25": 1750000,
+      "p75": 2600000,
+      "p10": 1000000,
+      "p90": 3688000,
+      "n": 1204
+    },
+    "10": {
+      "codigo": "10",
+      "nombre": "Universitaria (pregrado)",
+      "orden": 10,
+      "mediana": 2500000,
+      "media": 3203206,
+      "p25": 1750905,
+      "p75": 3800000,
+      "p10": 1100000,
+      "p90": 5480000,
+      "n": 5035
+    },
+    "11": {
+      "codigo": "11",
+      "nombre": "Especialización",
+      "orden": 11,
+      "mediana": 4700000,
+      "media": 5806085,
+      "p25": 3200000,
+      "p75": 6800000,
+      "p10": 2060000,
+      "p90": 10000000,
+      "n": 1361
+    },
+    "12": {
+      "codigo": "12",
+      "nombre": "Maestría",
+      "orden": 12,
+      "mediana": 5000000,
+      "media": 6307368,
+      "p25": 3530250,
+      "p75": 7000000,
+      "p10": 2695000,
+      "p90": 10010000,
+      "n": 670
+    },
+    "13": {
+      "codigo": "13",
+      "nombre": "Doctorado",
+      "orden": 13,
+      "mediana": 7477000,
+      "media": 7988273,
+      "p25": 5500000,
+      "p75": 9650000,
+      "p10": 4000000,
+      "p90": 13000000,
+      "n": 95
+    }
+  },
+  "por_subgrupo_educacion": {
+    "11": {
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 5450000,
+        "media": 7264943,
+        "p25": 3576350,
+        "p75": 8000000,
+        "p10": 2054600,
+        "p90": 14560000,
+        "n": 74
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 6000000,
+        "media": 8062108,
+        "p25": 4700000,
+        "p75": 8300000,
+        "p10": 3850000,
+        "p90": 15100000,
+        "n": 46
+      }
+    },
+    "12": {
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 3250000,
+        "media": 4307401,
+        "p25": 2500000,
+        "p75": 4500000,
+        "p10": 2000000,
+        "p90": 7459999,
+        "n": 190
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 5300000,
+        "media": 6895894,
+        "p25": 3500000,
+        "p75": 8000000,
+        "p10": 2428800,
+        "p90": 14000000,
+        "n": 89
+      }
+    },
+    "13": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1800000,
+        "media": 1898334,
+        "p25": 1237500,
+        "p75": 2100000,
+        "p10": 1000000,
+        "p90": 2350000,
+        "n": 71
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 2000000,
+        "media": 3323587,
+        "p25": 1500000,
+        "p75": 3000000,
+        "p10": 1000000,
+        "p90": 4500000,
+        "n": 56
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 3200000,
+        "media": 4345881,
+        "p25": 2500000,
+        "p75": 4200000,
+        "p10": 1750905,
+        "p90": 8000000,
+        "n": 153
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 5000000,
+        "media": 7052725,
+        "p25": 3979000,
+        "p75": 8000000,
+        "p10": 3000000,
+        "p90": 12400000,
+        "n": 71
+      },
+      "12": {
+        "codigo": "12",
+        "nombre": "Maestría",
+        "orden": 12,
+        "mediana": 5200000,
+        "media": 8019511,
+        "p25": 4000000,
+        "p75": 8700000,
+        "p10": 3200000,
+        "p90": 15800000,
+        "n": 43
+      }
+    },
+    "14": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1700000,
+        "media": 2099011,
+        "p25": 1000000,
+        "p75": 2575000,
+        "p10": 580000,
+        "p90": 4000000,
+        "n": 99
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1560000,
+        "media": 1658196,
+        "p25": 900000,
+        "p75": 2000000,
+        "p10": 570000,
+        "p90": 2500000,
+        "n": 51
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 2000000,
+        "media": 2437951,
+        "p25": 1200000,
+        "p75": 3000000,
+        "p10": 720000,
+        "p90": 4419999,
+        "n": 245
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 2000000,
+        "media": 2890400,
+        "p25": 1290000,
+        "p75": 3125000,
+        "p10": 900000,
+        "p90": 5000000,
+        "n": 68
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2000000,
+        "media": 2797584,
+        "p25": 1750000,
+        "p75": 3000000,
+        "p10": 1430000,
+        "p90": 4560000,
+        "n": 44
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2500000,
+        "media": 3818781,
+        "p25": 1800000,
+        "p75": 4000000,
+        "p10": 1300000,
+        "p90": 7550000,
+        "n": 201
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 3600000,
+        "media": 5188066,
+        "p25": 3000000,
+        "p75": 5000000,
+        "p10": 2456000,
+        "p90": 6893800,
+        "n": 30
+      }
+    },
+    "21": {
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2250000,
+        "media": 2563021,
+        "p25": 1800000,
+        "p75": 3000000,
+        "p10": 1120000,
+        "p90": 4319999,
+        "n": 37
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 3200000,
+        "media": 4008984,
+        "p25": 2400000,
+        "p75": 4600000,
+        "p10": 1750905,
+        "p90": 7000000,
+        "n": 397
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 4800000,
+        "media": 5197988,
+        "p25": 3000000,
+        "p75": 6500000,
+        "p10": 2000000,
+        "p90": 8680000,
+        "n": 119
+      },
+      "12": {
+        "codigo": "12",
+        "nombre": "Maestría",
+        "orden": 12,
+        "mediana": 5789500,
+        "media": 6352962,
+        "p25": 3800000,
+        "p75": 7600000,
+        "p10": 2607907,
+        "p90": 10000000,
+        "n": 44
+      }
+    },
+    "22": {
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 3200000,
+        "media": 3576987,
+        "p25": 2400000,
+        "p75": 4400000,
+        "p10": 1750905,
+        "p90": 6000000,
+        "n": 355
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 6000000,
+        "media": 8065552,
+        "p25": 3813750,
+        "p75": 10000000,
+        "p10": 2500000,
+        "p90": 17099999,
+        "n": 170
+      }
+    },
+    "23": {
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1750905,
+        "media": 2008719,
+        "p25": 1500000,
+        "p75": 2300000,
+        "p10": 680000,
+        "p90": 3000000,
+        "n": 39
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 3200000,
+        "media": 3289277,
+        "p25": 2000000,
+        "p75": 4000000,
+        "p10": 1600000,
+        "p90": 5405000,
+        "n": 420
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 5000000,
+        "media": 5346200,
+        "p25": 4000000,
+        "p75": 6500000,
+        "p10": 3000000,
+        "p90": 7000000,
+        "n": 189
+      },
+      "12": {
+        "codigo": "12",
+        "nombre": "Maestría",
+        "orden": 12,
+        "mediana": 4600000,
+        "media": 4894739,
+        "p25": 3500000,
+        "p75": 6000000,
+        "p10": 2798146,
+        "p90": 7082172,
+        "n": 277
+      },
+      "13": {
+        "codigo": "13",
+        "nombre": "Doctorado",
+        "orden": 13,
+        "mediana": 7477000,
+        "media": 8178886,
+        "p25": 5900000,
+        "p75": 9250000,
+        "p10": 4500000,
+        "p90": 13000000,
+        "n": 71
+      }
+    },
+    "24": {
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2900000,
+        "media": 3502786,
+        "p25": 2000000,
+        "p75": 4000000,
+        "p10": 1750905,
+        "p90": 5500000,
+        "n": 446
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 4400000,
+        "media": 5172833,
+        "p25": 3000000,
+        "p75": 6200000,
+        "p10": 2000000,
+        "p90": 9230000,
+        "n": 144
+      },
+      "12": {
+        "codigo": "12",
+        "nombre": "Maestría",
+        "orden": 12,
+        "mediana": 5000000,
+        "media": 5668201,
+        "p25": 3759000,
+        "p75": 7000000,
+        "p10": 2800000,
+        "p90": 9040000,
+        "n": 59
+      }
+    },
+    "25": {
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 3718398,
+        "media": 4759693,
+        "p25": 2500000,
+        "p75": 5925000,
+        "p10": 2000000,
+        "p90": 8100000,
+        "n": 176
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 5000000,
+        "media": 5596868,
+        "p25": 3449095,
+        "p75": 6300000,
+        "p10": 2500000,
+        "p90": 9900000,
+        "n": 45
+      }
+    },
+    "26": {
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1875000,
+        "media": 1876497,
+        "p25": 1125000,
+        "p75": 2425000,
+        "p10": 900000,
+        "p90": 3000000,
+        "n": 34
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 3000000,
+        "media": 3270992,
+        "p25": 2000000,
+        "p75": 4000000,
+        "p10": 1500000,
+        "p90": 5000000,
+        "n": 381
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 4500000,
+        "media": 5710113,
+        "p25": 3000000,
+        "p75": 6950000,
+        "p10": 2000000,
+        "p90": 10649999,
+        "n": 230
+      },
+      "12": {
+        "codigo": "12",
+        "nombre": "Maestría",
+        "orden": 12,
+        "mediana": 5000000,
+        "media": 7854561,
+        "p25": 3500000,
+        "p75": 8000000,
+        "p10": 2900000,
+        "p90": 19000000,
+        "n": 71
+      }
+    },
+    "31": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1900000,
+        "media": 1865423,
+        "p25": 1200000,
+        "p75": 2200000,
+        "p10": 980000,
+        "p90": 2510000,
+        "n": 59
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1750905,
+        "media": 1847459,
+        "p25": 1200000,
+        "p75": 2500000,
+        "p10": 800000,
+        "p90": 2800000,
+        "n": 39
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 2000000,
+        "media": 2152707,
+        "p25": 1722500,
+        "p75": 2500000,
+        "p10": 1200000,
+        "p90": 3000000,
+        "n": 103
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 2000000,
+        "media": 2380767,
+        "p25": 1750905,
+        "p75": 2850000,
+        "p10": 1500000,
+        "p90": 3466400,
+        "n": 84
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2400000,
+        "media": 2701685,
+        "p25": 1862750,
+        "p75": 3000000,
+        "p10": 1260000,
+        "p90": 4850000,
+        "n": 64
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 3000000,
+        "media": 3205184,
+        "p25": 1750905,
+        "p75": 4000000,
+        "p10": 1444000,
+        "p90": 5800000,
+        "n": 84
+      }
+    },
+    "32": {
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1900452,
+        "media": 2066402,
+        "p25": 1750000,
+        "p75": 2350000,
+        "p10": 1570000,
+        "p90": 3000000,
+        "n": 48
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2100000,
+        "media": 2367791,
+        "p25": 1775452,
+        "p75": 2550000,
+        "p10": 1750000,
+        "p90": 3240000,
+        "n": 35
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2000000,
+        "media": 2444649,
+        "p25": 1750905,
+        "p75": 3000000,
+        "p10": 1660000,
+        "p90": 4000000,
+        "n": 35
+      }
+    },
+    "33": {
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1750905,
+        "media": 1999563,
+        "p25": 900000,
+        "p75": 2500000,
+        "p10": 450000,
+        "p90": 3200000,
+        "n": 241
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 2000000,
+        "media": 2224274,
+        "p25": 1750000,
+        "p75": 2500000,
+        "p10": 1000000,
+        "p90": 3200000,
+        "n": 161
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2000000,
+        "media": 2625398,
+        "p25": 1750905,
+        "p75": 3000000,
+        "p10": 1750000,
+        "p90": 4059999,
+        "n": 108
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2800000,
+        "media": 3320420,
+        "p25": 2000000,
+        "p75": 3800000,
+        "p10": 1706000,
+        "p90": 5412600,
+        "n": 364
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 4450000,
+        "media": 5048298,
+        "p25": 3504425,
+        "p75": 5978000,
+        "p10": 2500000,
+        "p90": 7991600,
+        "n": 78
+      }
+    },
+    "34": {
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1700000,
+        "media": 1835612,
+        "p25": 1150000,
+        "p75": 2000000,
+        "p10": 600000,
+        "p90": 3000000,
+        "n": 63
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2150000,
+        "media": 2834348,
+        "p25": 2000000,
+        "p75": 3000000,
+        "p10": 1290000,
+        "p90": 4685000,
+        "n": 30
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2000000,
+        "media": 2672378,
+        "p25": 1700000,
+        "p75": 3100000,
+        "p10": 1000000,
+        "p90": 5000000,
+        "n": 101
+      }
+    },
+    "35": {
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 2000000,
+        "media": 1987848,
+        "p25": 1637500,
+        "p75": 2190000,
+        "p10": 1180000,
+        "p90": 2583200,
+        "n": 30
+      }
+    },
+    "41": {
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1954000,
+        "media": 1968169,
+        "p25": 1750000,
+        "p75": 2100000,
+        "p10": 1370000,
+        "p90": 2700000,
+        "n": 115
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 2000000,
+        "media": 2248929,
+        "p25": 1750905,
+        "p75": 2500000,
+        "p10": 1750000,
+        "p90": 3000000,
+        "n": 162
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2000000,
+        "media": 2363335,
+        "p25": 1750905,
+        "p75": 2700000,
+        "p10": 1750000,
+        "p90": 3740000,
+        "n": 101
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2400000,
+        "media": 2714652,
+        "p25": 1800000,
+        "p75": 3200000,
+        "p10": 1750000,
+        "p90": 4000000,
+        "n": 300
+      },
+      "11": {
+        "codigo": "11",
+        "nombre": "Especialización",
+        "orden": 11,
+        "mediana": 3500000,
+        "media": 3951861,
+        "p25": 2862500,
+        "p75": 4804500,
+        "p10": 2390000,
+        "p90": 5910000,
+        "n": 50
+      }
+    },
+    "42": {
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1750905,
+        "media": 1836459,
+        "p25": 1700000,
+        "p75": 2000000,
+        "p10": 1200000,
+        "p90": 2540000,
+        "n": 157
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1750905,
+        "media": 1829663,
+        "p25": 1750702,
+        "p75": 2000000,
+        "p10": 1400000,
+        "p90": 2200000,
+        "n": 84
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2000000,
+        "media": 2247626,
+        "p25": 1970000,
+        "p75": 2550000,
+        "p10": 1750724,
+        "p90": 2800000,
+        "n": 59
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2000000,
+        "media": 2444975,
+        "p25": 1750905,
+        "p75": 2800000,
+        "p10": 1750000,
+        "p90": 3500000,
+        "n": 130
+      }
+    },
+    "43": {
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1750905,
+        "media": 1873714,
+        "p25": 1750000,
+        "p75": 2000000,
+        "p10": 1400000,
+        "p90": 2170000,
+        "n": 207
+      },
+      "6": {
+        "codigo": "6",
+        "nombre": "Media técnica",
+        "orden": 6,
+        "mediana": 1750905,
+        "media": 1812409,
+        "p25": 1750000,
+        "p75": 1929000,
+        "p10": 1540000,
+        "p90": 2130000,
+        "n": 35
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1885000,
+        "media": 1952276,
+        "p25": 1750071,
+        "p75": 2025000,
+        "p10": 1590000,
+        "p90": 2555000,
+        "n": 100
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2000000,
+        "media": 1990503,
+        "p25": 1750000,
+        "p75": 2400000,
+        "p10": 1000000,
+        "p90": 2700000,
+        "n": 61
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2000000,
+        "media": 2156825,
+        "p25": 1750905,
+        "p75": 2300000,
+        "p10": 1618000,
+        "p90": 3000000,
+        "n": 107
+      }
+    },
+    "44": {
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2600000,
+        "media": 2539311,
+        "p25": 1750905,
+        "p75": 3000000,
+        "p10": 1560000,
+        "p90": 4000000,
+        "n": 37
+      }
+    },
+    "51": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1120000,
+        "media": 1237454,
+        "p25": 750000,
+        "p75": 1700000,
+        "p10": 480000,
+        "p90": 2000360,
+        "n": 167
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1200000,
+        "media": 1266183,
+        "p25": 800000,
+        "p75": 1675000,
+        "p10": 500000,
+        "p90": 2000000,
+        "n": 191
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1200000,
+        "media": 1341172,
+        "p25": 800000,
+        "p75": 1750905,
+        "p10": 480000,
+        "p90": 2100000,
+        "n": 714
+      },
+      "6": {
+        "codigo": "6",
+        "nombre": "Media técnica",
+        "orden": 6,
+        "mediana": 1450000,
+        "media": 1416173,
+        "p25": 800000,
+        "p75": 1825000,
+        "p10": 540000,
+        "p90": 2320000,
+        "n": 55
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1500000,
+        "media": 1550243,
+        "p25": 915000,
+        "p75": 2000000,
+        "p10": 530000,
+        "p90": 2500000,
+        "n": 204
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 1750000,
+        "media": 1595585,
+        "p25": 875000,
+        "p75": 2000000,
+        "p10": 620000,
+        "p90": 2619999,
+        "n": 47
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 1200000,
+        "media": 1384420,
+        "p25": 700000,
+        "p75": 1812500,
+        "p10": 400000,
+        "p90": 2423499,
+        "n": 160
+      }
+    },
+    "52": {
+      "1": {
+        "codigo": "1",
+        "nombre": "Ninguno",
+        "orden": 1,
+        "mediana": 600000,
+        "media": 777666,
+        "p25": 400000,
+        "p75": 915000,
+        "p10": 300000,
+        "p90": 1310000,
+        "n": 60
+      },
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 900000,
+        "media": 1176746,
+        "p25": 500000,
+        "p75": 1500000,
+        "p10": 356500,
+        "p90": 2000000,
+        "n": 474
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1000000,
+        "media": 1183317,
+        "p25": 650000,
+        "p75": 1600000,
+        "p10": 405000,
+        "p90": 2000000,
+        "n": 272
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1700000,
+        "media": 1633317,
+        "p25": 1000000,
+        "p75": 2000000,
+        "p10": 502000,
+        "p90": 2400000,
+        "n": 1373
+      },
+      "6": {
+        "codigo": "6",
+        "nombre": "Media técnica",
+        "orden": 6,
+        "mediana": 1750900,
+        "media": 1670742,
+        "p25": 980000,
+        "p75": 2000000,
+        "p10": 600000,
+        "p90": 2500000,
+        "n": 119
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1750905,
+        "media": 1844077,
+        "p25": 1200000,
+        "p75": 2000000,
+        "p10": 600000,
+        "p90": 2500000,
+        "n": 345
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 1750905,
+        "media": 1782194,
+        "p25": 1155000,
+        "p75": 2000000,
+        "p10": 600000,
+        "p90": 3000000,
+        "n": 146
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 1750905,
+        "media": 2199465,
+        "p25": 1200000,
+        "p75": 2177500,
+        "p10": 700000,
+        "p90": 3500000,
+        "n": 399
+      }
+    },
+    "53": {
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1600000,
+        "media": 1435509,
+        "p25": 870000,
+        "p75": 1750905,
+        "p10": 500000,
+        "p90": 2183800,
+        "n": 170
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1900000,
+        "media": 1952563,
+        "p25": 1750000,
+        "p75": 2200000,
+        "p10": 1345000,
+        "p90": 2600000,
+        "n": 340
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2000000,
+        "media": 1995226,
+        "p25": 1750905,
+        "p75": 2100000,
+        "p10": 1565000,
+        "p90": 2550000,
+        "n": 40
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 1750905,
+        "media": 2041899,
+        "p25": 1750000,
+        "p75": 2500000,
+        "p10": 700000,
+        "p90": 3500000,
+        "n": 66
+      }
+    },
+    "54": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1750000,
+        "media": 1518405,
+        "p25": 1200000,
+        "p75": 1750905,
+        "p10": 714000,
+        "p90": 2060000,
+        "n": 48
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1750905,
+        "media": 1630227,
+        "p25": 1200000,
+        "p75": 2000000,
+        "p10": 800000,
+        "p90": 2200000,
+        "n": 47
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 2000000,
+        "media": 2183221,
+        "p25": 1750905,
+        "p75": 2400000,
+        "p10": 1750000,
+        "p90": 3000000,
+        "n": 420
+      },
+      "6": {
+        "codigo": "6",
+        "nombre": "Media técnica",
+        "orden": 6,
+        "mediana": 2000000,
+        "media": 2192896,
+        "p25": 1750905,
+        "p75": 2600000,
+        "p10": 1750000,
+        "p90": 3200000,
+        "n": 41
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 2800000,
+        "media": 2920822,
+        "p25": 2172000,
+        "p75": 3500000,
+        "p10": 1750905,
+        "p90": 4280000,
+        "n": 113
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 2800000,
+        "media": 3858016,
+        "p25": 2150000,
+        "p75": 3725000,
+        "p10": 1930000,
+        "p90": 4000000,
+        "n": 44
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2500000,
+        "media": 2990890,
+        "p25": 2000000,
+        "p75": 4000000,
+        "p10": 1750000,
+        "p90": 4820000,
+        "n": 50
+      }
+    },
+    "61": {
+      "1": {
+        "codigo": "1",
+        "nombre": "Ninguno",
+        "orden": 1,
+        "mediana": 600000,
+        "media": 776180,
+        "p25": 400000,
+        "p75": 995750,
+        "p10": 321000,
+        "p90": 1500000,
+        "n": 82
+      },
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 900000,
+        "media": 1243847,
+        "p25": 500000,
+        "p75": 1500000,
+        "p10": 400000,
+        "p90": 2000000,
+        "n": 348
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1166000,
+        "media": 1300424,
+        "p25": 800000,
+        "p75": 1750000,
+        "p10": 436000,
+        "p90": 2152000,
+        "n": 89
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1200000,
+        "media": 1475143,
+        "p25": 750000,
+        "p75": 1750905,
+        "p10": 400000,
+        "p90": 2162500,
+        "n": 146
+      }
+    },
+    "62": {
+      "1": {
+        "codigo": "1",
+        "nombre": "Ninguno",
+        "orden": 1,
+        "mediana": 565000,
+        "media": 684666,
+        "p25": 400000,
+        "p75": 775000,
+        "p10": 309000,
+        "p90": 1212000,
+        "n": 30
+      },
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 800000,
+        "media": 978956,
+        "p25": 500000,
+        "p75": 1300000,
+        "p10": 430400,
+        "p90": 1620000,
+        "n": 69
+      }
+    },
+    "71": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1200000,
+        "media": 1421814,
+        "p25": 800000,
+        "p75": 1750226,
+        "p10": 500000,
+        "p90": 2190000,
+        "n": 192
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1400000,
+        "media": 1465977,
+        "p25": 975000,
+        "p75": 1850000,
+        "p10": 584000,
+        "p90": 2400000,
+        "n": 147
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1500000,
+        "media": 1596961,
+        "p25": 1000000,
+        "p75": 2000000,
+        "p10": 650000,
+        "p90": 2400000,
+        "n": 284
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1750905,
+        "media": 1911117,
+        "p25": 1260000,
+        "p75": 2300000,
+        "p10": 800000,
+        "p90": 3150000,
+        "n": 48
+      }
+    },
+    "72": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1400000,
+        "media": 1386686,
+        "p25": 875000,
+        "p75": 1750905,
+        "p10": 600000,
+        "p90": 2260000,
+        "n": 107
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1560000,
+        "media": 1460519,
+        "p25": 1000000,
+        "p75": 1800000,
+        "p10": 600000,
+        "p90": 2000000,
+        "n": 117
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1750000,
+        "media": 1630971,
+        "p25": 1200000,
+        "p75": 2000000,
+        "p10": 700000,
+        "p90": 2500000,
+        "n": 274
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 2000000,
+        "media": 2472587,
+        "p25": 1750000,
+        "p75": 2500000,
+        "p10": 1340000,
+        "p90": 3340000,
+        "n": 79
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 2000000,
+        "media": 2140322,
+        "p25": 1675000,
+        "p75": 2650000,
+        "p10": 800000,
+        "p90": 3200000,
+        "n": 31
+      }
+    },
+    "73": {
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1000000,
+        "media": 1233181,
+        "p25": 487500,
+        "p75": 1788178,
+        "p10": 350000,
+        "p90": 2500000,
+        "n": 76
+      }
+    },
+    "74": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1500000,
+        "media": 1425206,
+        "p25": 650000,
+        "p75": 1800000,
+        "p10": 500000,
+        "p90": 2040000,
+        "n": 33
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1400000,
+        "media": 1290048,
+        "p25": 750000,
+        "p75": 1800000,
+        "p10": 460000,
+        "p90": 2000000,
+        "n": 37
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1750902,
+        "media": 1670290,
+        "p25": 1000000,
+        "p75": 2000000,
+        "p10": 600000,
+        "p90": 2475000,
+        "n": 156
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1750905,
+        "media": 1897950,
+        "p25": 1500000,
+        "p75": 2175000,
+        "p10": 840000,
+        "p90": 3000000,
+        "n": 71
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 1750905,
+        "media": 2200849,
+        "p25": 1750000,
+        "p75": 2500000,
+        "p10": 980000,
+        "p90": 3400000,
+        "n": 33
+      }
+    },
+    "75": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1200000,
+        "media": 1185075,
+        "p25": 700000,
+        "p75": 1500000,
+        "p10": 350000,
+        "p90": 2000000,
+        "n": 153
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1100000,
+        "media": 1201478,
+        "p25": 700000,
+        "p75": 1750000,
+        "p10": 465000,
+        "p90": 2000000,
+        "n": 104
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1300000,
+        "media": 1480496,
+        "p25": 700000,
+        "p75": 1750905,
+        "p10": 408000,
+        "p90": 2200000,
+        "n": 305
+      },
+      "6": {
+        "codigo": "6",
+        "nombre": "Media técnica",
+        "orden": 6,
+        "mediana": 1350000,
+        "media": 1435435,
+        "p25": 855000,
+        "p75": 1800000,
+        "p10": 530000,
+        "p90": 2000000,
+        "n": 34
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1500000,
+        "media": 1367534,
+        "p25": 800000,
+        "p75": 1750905,
+        "p10": 450000,
+        "p90": 2306000,
+        "n": 68
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 1500000,
+        "media": 1516875,
+        "p25": 675000,
+        "p75": 2000000,
+        "p10": 500000,
+        "p90": 2290000,
+        "n": 32
+      }
+    },
+    "81": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1200000,
+        "media": 1211709,
+        "p25": 600000,
+        "p75": 1640000,
+        "p10": 412000,
+        "p90": 2000000,
+        "n": 67
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1600000,
+        "media": 1457236,
+        "p25": 1000000,
+        "p75": 1750905,
+        "p10": 700000,
+        "p90": 2000000,
+        "n": 50
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1750905,
+        "media": 1776804,
+        "p25": 1500000,
+        "p75": 2000000,
+        "p10": 900000,
+        "p90": 2200000,
+        "n": 220
+      }
+    },
+    "83": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1200000,
+        "media": 1444061,
+        "p25": 800000,
+        "p75": 1750938,
+        "p10": 600000,
+        "p90": 2300000,
+        "n": 350
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1240000,
+        "media": 1343711,
+        "p25": 900000,
+        "p75": 1750905,
+        "p10": 600000,
+        "p90": 2000000,
+        "n": 273
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1500000,
+        "media": 1604945,
+        "p25": 1000000,
+        "p75": 2000000,
+        "p10": 700000,
+        "p90": 2500000,
+        "n": 963
+      },
+      "6": {
+        "codigo": "6",
+        "nombre": "Media técnica",
+        "orden": 6,
+        "mediana": 1750905,
+        "media": 1784889,
+        "p25": 1400000,
+        "p75": 2000000,
+        "p10": 870000,
+        "p90": 2500000,
+        "n": 48
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1746500,
+        "media": 1742595,
+        "p25": 1000000,
+        "p75": 2000000,
+        "p10": 780000,
+        "p90": 3000000,
+        "n": 137
+      },
+      "9": {
+        "codigo": "9",
+        "nombre": "Tecnológica",
+        "orden": 9,
+        "mediana": 1500000,
+        "media": 2093660,
+        "p25": 1275000,
+        "p75": 2000000,
+        "p10": 600000,
+        "p90": 3150000,
+        "n": 48
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 1500000,
+        "media": 1589561,
+        "p25": 850000,
+        "p75": 2000000,
+        "p10": 520000,
+        "p90": 2800000,
+        "n": 83
+      }
+    },
+    "91": {
+      "1": {
+        "codigo": "1",
+        "nombre": "Ninguno",
+        "orden": 1,
+        "mediana": 700000,
+        "media": 818558,
+        "p25": 500000,
+        "p75": 1000000,
+        "p10": 312000,
+        "p90": 1750000,
+        "n": 57
+      },
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 900000,
+        "media": 1073332,
+        "p25": 600000,
+        "p75": 1525000,
+        "p10": 400000,
+        "p90": 2000000,
+        "n": 547
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 950000,
+        "media": 1102865,
+        "p25": 600000,
+        "p75": 1600000,
+        "p10": 450000,
+        "p90": 2000000,
+        "n": 343
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1300000,
+        "media": 1315327,
+        "p25": 780000,
+        "p75": 1750905,
+        "p10": 500000,
+        "p90": 2000000,
+        "n": 819
+      },
+      "6": {
+        "codigo": "6",
+        "nombre": "Media técnica",
+        "orden": 6,
+        "mediana": 1380000,
+        "media": 1326000,
+        "p25": 700000,
+        "p75": 1787736,
+        "p10": 486000,
+        "p90": 2035000,
+        "n": 54
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1750000,
+        "media": 1469561,
+        "p25": 850000,
+        "p75": 2000000,
+        "p10": 520000,
+        "p90": 2100000,
+        "n": 91
+      },
+      "10": {
+        "codigo": "10",
+        "nombre": "Universitaria (pregrado)",
+        "orden": 10,
+        "mediana": 1350000,
+        "media": 1324379,
+        "p25": 800000,
+        "p75": 1750905,
+        "p10": 504000,
+        "p90": 2016000,
+        "n": 33
+      }
+    },
+    "92": {
+      "1": {
+        "codigo": "1",
+        "nombre": "Ninguno",
+        "orden": 1,
+        "mediana": 1000000,
+        "media": 1254776,
+        "p25": 672500,
+        "p75": 1500000,
+        "p10": 500000,
+        "p90": 1800000,
+        "n": 122
+      },
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1000000,
+        "media": 1154685,
+        "p25": 720000,
+        "p75": 1500000,
+        "p10": 480000,
+        "p90": 1839000,
+        "n": 482
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1200000,
+        "media": 1228303,
+        "p25": 800000,
+        "p75": 1600000,
+        "p10": 500000,
+        "p90": 2000000,
+        "n": 186
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1200000,
+        "media": 1309807,
+        "p25": 720000,
+        "p75": 1750000,
+        "p10": 450000,
+        "p90": 2000000,
+        "n": 206
+      }
+    },
+    "93": {
+      "1": {
+        "codigo": "1",
+        "nombre": "Ninguno",
+        "orden": 1,
+        "mediana": 800000,
+        "media": 956149,
+        "p25": 500000,
+        "p75": 1350000,
+        "p10": 380000,
+        "p90": 1750181,
+        "n": 59
+      },
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 1200000,
+        "media": 1243064,
+        "p25": 800000,
+        "p75": 1672500,
+        "p10": 545000,
+        "p90": 1910000,
+        "n": 446
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1200000,
+        "media": 1280211,
+        "p25": 800000,
+        "p75": 1750000,
+        "p10": 500000,
+        "p90": 2000000,
+        "n": 269
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1600000,
+        "media": 1521110,
+        "p25": 1000000,
+        "p75": 1800000,
+        "p10": 604000,
+        "p90": 2100000,
+        "n": 493
+      },
+      "6": {
+        "codigo": "6",
+        "nombre": "Media técnica",
+        "orden": 6,
+        "mediana": 1600000,
+        "media": 1379875,
+        "p25": 800000,
+        "p75": 1800000,
+        "p10": 524000,
+        "p90": 2000000,
+        "n": 44
+      },
+      "8": {
+        "codigo": "8",
+        "nombre": "Técnica profesional",
+        "orden": 8,
+        "mediana": 1750000,
+        "media": 1639549,
+        "p25": 1500000,
+        "p75": 1937726,
+        "p10": 735000,
+        "p90": 2065814,
+        "n": 50
+      }
+    },
+    "94": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 810000,
+        "media": 996478,
+        "p25": 600000,
+        "p75": 1375000,
+        "p10": 400000,
+        "p90": 1900000,
+        "n": 71
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1300000,
+        "media": 1317133,
+        "p25": 800000,
+        "p75": 1750905,
+        "p10": 600000,
+        "p90": 2000000,
+        "n": 80
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1300000,
+        "media": 1433112,
+        "p25": 810000,
+        "p75": 1800000,
+        "p10": 500000,
+        "p90": 2000000,
+        "n": 177
+      }
+    },
+    "95": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 800000,
+        "media": 836603,
+        "p25": 475000,
+        "p75": 1000000,
+        "p10": 300000,
+        "p90": 1500000,
+        "n": 91
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 800000,
+        "media": 1022692,
+        "p25": 500000,
+        "p75": 1500000,
+        "p10": 405000,
+        "p90": 1795000,
+        "n": 52
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 800000,
+        "media": 1022009,
+        "p25": 550000,
+        "p75": 1200000,
+        "p10": 400000,
+        "p90": 1750090,
+        "n": 100
+      }
+    },
+    "96": {
+      "3": {
+        "codigo": "3",
+        "nombre": "Básica primaria",
+        "orden": 3,
+        "mediana": 770000,
+        "media": 954567,
+        "p25": 480000,
+        "p75": 1400000,
+        "p10": 355000,
+        "p90": 1750905,
+        "n": 106
+      },
+      "4": {
+        "codigo": "4",
+        "nombre": "Básica secundaria",
+        "orden": 4,
+        "mediana": 1000000,
+        "media": 1072363,
+        "p25": 600000,
+        "p75": 1500000,
+        "p10": 400000,
+        "p90": 1750905,
+        "n": 65
+      },
+      "5": {
+        "codigo": "5",
+        "nombre": "Media académica",
+        "orden": 5,
+        "mediana": 1750000,
+        "media": 1502882,
+        "p25": 1000000,
+        "p75": 1750905,
+        "p10": 600000,
+        "p90": 2000000,
+        "n": 201
+      }
+    }
+  },
+  "spe_rangos": [
+    {
+      "rango": "Hasta $1.000.000",
+      "min_cop": 0,
+      "max_cop": 1000000,
+      "participacion": 1.1,
+      "variacion": -49.6
+    },
+    {
+      "rango": "$1.000.001 – $1.500.000",
+      "min_cop": 1000001,
+      "max_cop": 1500000,
+      "participacion": 4.6,
+      "variacion": -91.2
+    },
+    {
+      "rango": "$1.500.001 – $2.000.000",
+      "min_cop": 1500001,
+      "max_cop": 2000000,
+      "participacion": 54.6,
+      "variacion": 193.5
+    },
+    {
+      "rango": "$2.000.001 – $3.000.000",
+      "min_cop": 2000001,
+      "max_cop": 3000000,
+      "participacion": 12.4,
+      "variacion": 9.0
+    },
+    {
+      "rango": "$3.000.001 – $4.000.000",
+      "min_cop": 3000001,
+      "max_cop": 4000000,
+      "participacion": 4.2,
+      "variacion": 64.3
+    },
+    {
+      "rango": "Más de $4.000.000",
+      "min_cop": 4000001,
+      "max_cop": 99000000,
+      "participacion": 1.9,
+      "variacion": 18.6
+    },
+    {
+      "rango": "A convenir",
+      "min_cop": null,
+      "max_cop": null,
+      "participacion": 21.2,
+      "variacion": -34.8
+    }
+  ],
+  "tiene_geih": true
+}

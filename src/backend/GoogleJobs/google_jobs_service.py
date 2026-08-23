@@ -18,11 +18,13 @@ Este módulo hace dos cosas:
 Reutiliza de adzuna_service el cliente de Supabase y la normalización de títulos.
 """
 
+import re
 import requests
+from datetime import date, datetime, timedelta, timezone
 from typing import List, Dict, Any
 from collections import Counter
 
-from config import SERPAPI_KEY, PROGRAMAS_KEYWORDS_CO, SERPAPI_MAX_BUSQUEDAS
+from config import SERPAPI_KEY, PROGRAMAS_KEYWORDS_CO, SERPAPI_MAX_BUSQUEDAS, es_pertinente
 # Reutilizamos el cliente de Supabase, el normalizador de títulos y los helpers
 # de filtrado/seniority ya existentes (viven en adzuna_service por historia).
 from Adzuna.adzuna_service import (
@@ -103,6 +105,50 @@ def _extract_highlights(job: Dict[str, Any]) -> Dict[str, str]:
     return out
 
 
+# Unidades de tiempo que usa Google Jobs en `posted_at`, en días.
+_UNIDADES_DIAS = {
+    "minuto": 0, "minutos": 0, "minute": 0, "minutes": 0,
+    "hora": 0, "horas": 0, "hour": 0, "hours": 0,
+    "día": 1, "dia": 1, "días": 1, "dias": 1, "day": 1, "days": 1,
+    "semana": 7, "semanas": 7, "week": 7, "weeks": 7,
+    "mes": 30, "meses": 30, "month": 30, "months": 30,
+    "año": 365, "años": 365, "ano": 365, "anos": 365, "year": 365, "years": 365,
+}
+
+_RE_POSTED = re.compile(r"(\d+)\s*\+?\s*([a-zA-Zñáéíóú]+)")
+
+
+def fecha_de_posted_at(posted_at: str, referencia: date | None = None) -> str | None:
+    """Convierte el `posted_at` RELATIVO de Google Jobs en una fecha absoluta ISO.
+
+    Google Jobs no entrega fecha de publicación: da textos como "hace 3 días",
+    "hace 2 semanas" o "30+ days ago" (en el idioma de la consulta, aquí español).
+    Las tendencias necesitan una fecha real, así que se resta el intervalo a la
+    fecha de recolección.
+
+        "hace 3 días"  + referencia 2026-07-22  ->  "2026-07-19"
+
+    Precisión: es aproximada por diseño (un "hace 1 mes" se toma como 30 días) y
+    las horas/minutos se redondean al mismo día. Suficiente para agrupar por MES,
+    que es el grano de las tendencias. Devuelve None si no se puede interpretar,
+    y en ese caso quien llama decide (normalmente usar la fecha de recolección).
+    """
+    if not posted_at or not isinstance(posted_at, str):
+        return None
+
+    m = _RE_POSTED.search(posted_at.lower())
+    if not m:
+        return None
+
+    cantidad = int(m.group(1))
+    unidad = m.group(2)
+    if unidad not in _UNIDADES_DIAS:
+        return None
+
+    ref = referencia or datetime.now(timezone.utc).date()
+    return (ref - timedelta(days=cantidad * _UNIDADES_DIAS[unidad])).isoformat()
+
+
 def _extract_apply_link(job: Dict[str, Any]) -> str:
     apply_options = job.get("apply_options") or []
     if apply_options and apply_options[0].get("link"):
@@ -132,9 +178,18 @@ def borrar_vacantes_google():
 def _buscar_pagina_google(keyword: str, next_page_token: str = None, location: str = "Colombia"):
     """Hace UNA sola petición a Google Jobs (= 1 búsqueda de SerpApi).
 
-    Devuelve la tupla (results, next_token): la lista de vacantes de esa página y
-    el token para la siguiente página (None si ya no hay más). La orquestación
-    (procesar_vacantes_google) decide cuántas páginas pedir según el presupuesto.
+    Devuelve (results, next_token, agotado):
+      - results/next_token: la página de resultados y el token de la siguiente
+        (None si ya no hay más).
+      - agotado=True SOLO cuando SerpApi responde 429. Verificado contra
+        `GET https://serpapi.com/account.json`: el 429 de este plan es CUPO
+        MENSUAL agotado (renueva en una fecha fija), no un límite por segundo —
+        así que no tiene sentido pausar y reintentar la MISMA keyword: TODA
+        petición volverá a fallar hasta la renovación. Antes esto se trataba
+        igual que "esta keyword no tiene más resultados" y la desactivaba una
+        por una, agotando el presupuesto restante en peticiones que no podían
+        funcionar. Ahora se distingue para que la orquestación aborte la
+        corrida entera de inmediato, igual que ya hace LinkedIn con su 429.
     """
     params = {
         "engine": "google_jobs",
@@ -149,20 +204,23 @@ def _buscar_pagina_google(keyword: str, next_page_token: str = None, location: s
 
     try:
         response = requests.get(SERPAPI_URL, params=params, timeout=30)
+        if response.status_code == 429:
+            print(f"   ⛔ SerpApi 429 en '{keyword}': cupo agotado. Se aborta la corrida.")
+            return [], None, True
         response.raise_for_status()
         data = response.json()
         if data.get("error"):
             print(f"   ❌ SerpApi error para '{keyword}': {data['error']}")
-            return [], None
+            return [], None, False
         results = data.get("jobs_results", [])
         token = (
             data.get("serpapi_pagination", {}).get("next_page_token")
             or data.get("next_page_token")
         )
-        return results, token
+        return results, token, False
     except Exception as e:
         print(f"   ❌ Error buscando '{keyword}' en Google Jobs: {str(e)}")
-        return [], None
+        return [], None, False
 
 
 def guardar_vacante_google(job: Dict[str, Any], programa: str, keyword: str) -> bool:
@@ -170,6 +228,12 @@ def guardar_vacante_google(job: Dict[str, Any], programa: str, keyword: str) -> 
     try:
         job_id = job.get("job_id")
         if not job_id:
+            return False
+
+        # Google resuelve la búsqueda por full-text match y el programa se estampa
+        # con la keyword pedida, sin mirar el título: descarta lo que no puede
+        # pertenecer a ese programa (ver EXCLUSIONES_PROGRAMA en config.py).
+        if not es_pertinente(programa, job.get("title")):
             return False
 
         detected = job.get("detected_extensions", {}) or {}
@@ -244,8 +308,10 @@ def procesar_vacantes_google(borrar: bool = False):
 
     print(f"📋 {len(unidades)} keywords | presupuesto: {presupuesto} búsquedas SerpApi\n")
 
+    agotado = False
+
     # Cada ronda pide UNA página a cada keyword que siga activa (round-robin).
-    while busquedas < presupuesto and any(u["activa"] for u in unidades):
+    while busquedas < presupuesto and any(u["activa"] for u in unidades) and not agotado:
         ronda += 1
         for u in unidades:
             if busquedas >= presupuesto:
@@ -254,8 +320,16 @@ def procesar_vacantes_google(borrar: bool = False):
                 continue
 
             print(f"   🔍 [R{ronda}] '{u['keyword']}'  ({busquedas + 1}/{presupuesto})")
-            results, token = _buscar_pagina_google(u["keyword"], u["token"])
+            results, token, sin_cupo = _buscar_pagina_google(u["keyword"], u["token"])
             busquedas += 1
+
+            # Cupo agotado: NO es que esta keyword se haya quedado sin resultados
+            # (todas fallarían igual). Se aborta la corrida entera de inmediato en
+            # vez de recorrer el resto de unidades reintentando algo que no puede
+            # funcionar hasta la renovación mensual.
+            if sin_cupo:
+                agotado = True
+                break
 
             total_vacantes += len(results)
             for vacante in results:
@@ -272,6 +346,8 @@ def procesar_vacantes_google(borrar: bool = False):
     print(f"   Total vacantes encontradas: {total_vacantes}")
     print(f"   Total vacantes guardadas (nuevas/actualizadas): {total_guardadas}")
     print(f"   Programas procesados: {len(PROGRAMAS_KEYWORDS_CO)}")
+    if agotado:
+        print("   ⛔ Corrida abortada: cupo mensual de SerpApi agotado.")
 
     return {
         "status": "completed",
@@ -279,6 +355,7 @@ def procesar_vacantes_google(borrar: bool = False):
         "total_vacantes": total_vacantes,
         "total_guardadas": total_guardadas,
         "programas_procesados": len(PROGRAMAS_KEYWORDS_CO),
+        "abortado_por_cupo_serpapi": agotado,
     }
 
 

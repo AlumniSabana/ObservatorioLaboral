@@ -39,6 +39,50 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 # Sin ella, la sección de competencias muestra un aviso de "no configurado".
 ONET_API_KEY = os.getenv("ONET_API_KEY")
 
+# --- Google Document AI (OCR de informes PDF) -------------------------------
+# Se usa para leer los informes PDF que se ingieren como fuente de skills
+# (ver Informes/informe_extractor.py). Si no está configurado, el extractor cae a
+# pypdf, que funciona bien con PDFs nativos pero NO con escaneos.
+#
+# Para configurarlo:
+#   1. En Google Cloud, crear un procesador de tipo "Document OCR".
+#   2. Poner en src/backend/.env:
+#        GCP_PROJECT_ID=<id-del-proyecto>
+#        GCP_LOCATION=us            # o 'eu'
+#        DOCAI_PROCESSOR=<id-del-procesador>
+#        GOOGLE_APPLICATION_CREDENTIALS=<ruta al json de la service account>
+#   3. pip install google-cloud-documentai
+GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
+GCP_LOCATION = os.getenv("GCP_LOCATION", "us")
+DOCAI_PROCESSOR = os.getenv("DOCAI_PROCESSOR")
+
+
+# --- LinkedIn (endpoints públicos "jobs-guest") -----------------------------
+# INTERRUPTOR DE APROBACIÓN. La infraestructura está lista pero DESACTIVADA a
+# propósito: recolectar de LinkedIn va contra sus Términos de Uso como asunto
+# CONTRACTUAL (ver LinkedIn/linkedin_service.py). Solo se activa cuando la
+# Dirección de Alumni / jurídica de la Universidad lo apruebe explícitamente,
+# poniendo LINKEDIN_HABILITADO=true en src/backend/.env.
+#
+# Alcance aprobado (no ampliar sin volver a consultar):
+#   - SOLO ofertas de empleo públicas. NUNCA perfiles de personas (serían datos
+#     personales sujetos a la Ley 1581 de 2012 de habeas data).
+#   - Frecuencia trimestral, no comercial, con fines académicos.
+LINKEDIN_HABILITADO = os.getenv("LINKEDIN_HABILITADO", "false").strip().lower() in ("1", "true", "si", "sí", "yes")
+
+# Tope de páginas por keyword en cada corrida. LinkedIn limita a ~10 páginas por
+# IP; nos quedamos MUY por debajo a propósito (huella mínima, sin proxies).
+try:
+    LINKEDIN_MAX_PAGINAS = int(os.getenv("LINKEDIN_MAX_PAGINAS", "3"))
+except ValueError:
+    LINKEDIN_MAX_PAGINAS = 3
+
+# Segundos de espera entre peticiones (cortesía; evita parecer un bot agresivo).
+try:
+    LINKEDIN_PAUSA_SEG = float(os.getenv("LINKEDIN_PAUSA_SEG", "3"))
+except ValueError:
+    LINKEDIN_PAUSA_SEG = 3.0
+
 
 # Mapeo de programas académicos -> términos de búsqueda EN INGLÉS.
 # Se usa para ADZUNA (mercado de Estados Unidos), donde las vacantes están en inglés.
@@ -52,10 +96,18 @@ PROGRAMAS_KEYWORDS = {
     "Administración de Mercadeo y Logística Internacionales": ["marketing manager", "digital marketing", "supply chain", "logistics manager"],
     "Administración de Negocios Internacionales": ["international business", "global business development", "export manager"],
     "Economía y Finanzas Internacionales": ["financial analyst", "investment analyst", "international finance", "risk analyst"],
-    "Economía y Finanzas Internacionales Virtual": ["financial analyst", "fintech", "remote financial analyst"],
+    # OJO: la PRIMERA keyword de cada programa debe ser ÚNICA en todo el diccionario.
+    # El backfill de tendencias usa solo la primera (una llamada por programa) y hace
+    # upsert de las vacantes por su id: si dos programas comparten la primera keyword,
+    # la última escritura gana y uno de los dos programas desaparece de la etiqueta
+    # `programa_relacionado`. Por eso 'fintech' va antes que 'financial analyst' aquí.
+    "Economía y Finanzas Internacionales Virtual": ["fintech", "remote financial analyst", "financial analyst"],
     "Gastronomía": ["chef", "executive chef", "food and beverage manager", "restaurant manager"],
     "Comportamiento Organizacional": ["organizational development", "talent management", "hr business partner"],
-    "Psicología": ["organizational psychologist", "hr psychologist", "talent acquisition"],
+    "Psicología": [
+        "organizational psychologist", "hr psychologist", "talent acquisition",
+        "clinical psychologist", "school psychologist", "psychotherapist",
+    ],
     "Comunicación Audiovisual y Multimedios": ["video producer", "multimedia specialist", "content creator"],
     "Comunicación Corporativa": ["corporate communications", "public relations manager", "communications manager"],
     "Comunicación Social y Periodismo": ["journalist", "content writer", "social media manager"],
@@ -88,10 +140,18 @@ PROGRAMAS_KEYWORDS_CO = {
     "Administración de Mercadeo y Logística Internacionales": ["analista de mercadeo", "marketing digital", "analista de logística", "jefe de cadena de suministro"],
     "Administración de Negocios Internacionales": ["negocios internacionales", "analista de comercio exterior", "coordinador de importaciones y exportaciones"],
     "Economía y Finanzas Internacionales": ["analista financiero", "analista de inversiones", "analista de riesgos"],
-    "Economía y Finanzas Internacionales Virtual": ["analista financiero", "analista fintech", "analista económico"],
+    # Primera keyword única, por el mismo motivo que en PROGRAMAS_KEYWORDS.
+    "Economía y Finanzas Internacionales Virtual": ["analista fintech", "analista económico", "analista financiero"],
     "Gastronomía": ["chef", "jefe de cocina", "administrador de restaurante"],
     "Comportamiento Organizacional": ["desarrollo organizacional", "analista de gestión del talento", "analista de recursos humanos"],
-    "Psicología": ["psicólogo organizacional", "analista de selección", "psicólogo"],
+    # Antes solo se buscaba la rama organizacional, así que el programa se veía
+    # como si el mercado solo contratara psicólogos de selección. Las ramas
+    # clínica, educativa y social son las que faltaban.
+    "Psicología": [
+        "psicólogo organizacional", "analista de selección", "psicólogo",
+        "psicólogo clínico", "psicólogo educativo", "psicólogo social",
+        "psicoterapeuta", "neuropsicólogo", "psicólogo infantil",
+    ],
     "Comunicación Audiovisual y Multimedios": ["productor audiovisual", "editor de video", "creador de contenido"],
     "Comunicación Corporativa": ["comunicaciones corporativas", "relaciones públicas", "jefe de comunicaciones"],
     "Comunicación Social y Periodismo": ["periodista", "redactor de contenido", "community manager"],
@@ -113,3 +173,52 @@ PROGRAMAS_KEYWORDS_CO = {
     "Ingeniería Química": ["ingeniero químico", "ingeniero de procesos químicos"],
     "Ingeniería en Inteligencia Artificial": ["ingeniero de inteligencia artificial", "ingeniero de machine learning", "especialista en inteligencia artificial"],
 }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Pertinencia: qué NO puede ser una vacante de cada programa
+# ─────────────────────────────────────────────────────────────────────────────
+# Las fuentes (Adzuna, Google Jobs, LinkedIn) resuelven la búsqueda por full-text
+# match, así que pedir "registered nurse" devuelve también "Registered Veterinary
+# Nurse". El pipeline etiqueta `programa_relacionado` con el programa de la
+# keyword buscada, SIN mirar el título, de modo que esas ofertas entraban a
+# Enfermería y salían en la vista como el cargo "Auxiliar veterinario(a)".
+#
+# No hay forma de pedirle a la API que afine la búsqueda, así que el descarte se
+# hace aquí y se aplica DOS veces, a propósito:
+#   - al RECOLECTAR, para que la tabla deje de acumular ruido nuevo;
+#   - al LEER, porque las filas ya guardadas conservan su etiqueta vieja y
+#     re-recolectar todo el histórico no es viable cada vez.
+#
+# Las cadenas se comparan en minúscula y sin tildes contra el título del cargo,
+# como subcadena: "veterinar" cubre veterinary / veterinario / veterinaria.
+# Mantener la lista corta y basada en casos observados, no en sospechas: cada
+# entrada de más es una vacante legítima que se deja de contar.
+EXCLUSIONES_PROGRAMA: dict[str, list[str]] = {
+    "Enfermería": ["veterinar"],
+    "Medicina": ["veterinar"],
+}
+
+
+def _plegar(texto: str) -> str:
+    """minúsculas y sin tildes, para comparar títulos ES/EN con una sola regla."""
+    import unicodedata
+
+    return "".join(
+        c for c in unicodedata.normalize("NFD", (texto or "").lower())
+        if unicodedata.category(c) != "Mn"
+    )
+
+
+def es_pertinente(programa: str | None, titulo: str | None) -> bool:
+    """¿Este título puede pertenecer a este programa?
+
+    Devuelve True cuando no hay regla que lo desmienta: el criterio es descartar
+    lo que sabemos que está mal, no exigir que el título demuestre pertenecer.
+    Un match por tokens de la keyword descartaría vacantes legítimas en español
+    buscadas con keywords en inglés (y viceversa).
+    """
+    prohibidas = EXCLUSIONES_PROGRAMA.get(programa or "")
+    if not prohibidas:
+        return True
+    plano = _plegar(titulo)
+    return not any(p in plano for p in prohibidas)

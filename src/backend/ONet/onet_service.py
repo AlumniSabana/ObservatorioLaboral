@@ -1,27 +1,30 @@
 """
-Servicio de O*NET para la sección "Competencias y habilidades apetecidas".
+Servicio de O*NET: competencias y tecnologías por ocupación, con su importancia.
 
 O*NET (U.S. Dept. of Labor) es una base de datos de ~900 ocupaciones con sus
 habilidades, conocimientos y tecnologías. Aquí mapeamos cada programa de La Sabana
-a una ocupación O*NET y consultamos su API (gratuita, requiere registro) para
-mostrar las competencias clave y las tecnologías típicas de esa ocupación.
+a una ocupación O*NET (`PROGRAMAS_ONET`) y consultamos su API para obtener las
+competencias y tecnologías de esa ocupación CON su peso de importancia.
+
+Lo consume `Tendencias/skills_demandadas.py` (página "Skills más demandadas"),
+que cruza estos pesos con la demanda real de cada programa.
 
 ⚠️ Sobre el dato: O*NET describe el mercado de EE.UU. y es NORMATIVO ("qué
-requiere la ocupación"), NO demanda colombiana de vacantes. Sirve como referencia
-autoritativa de competencias por carrera; en la UI se etiqueta como tal.
+requiere la ocupación"), NO demanda colombiana de vacantes.
 
 Acceso: API v2 en https://api-v2.onetcenter.org, autenticación por header
 `X-API-Key`. Regístrate en https://services.onetcenter.org/developer/signup y pon
 la clave en ONET_API_KEY. Sin la clave, las funciones devuelven listas vacías.
-
-El resultado se cachea en memoria (O*NET es data de referencia que cambia pocas
-veces al año): la primera consulta de un programa pega a la API, las siguientes
-se sirven de caché hasta reiniciar el proceso.
+El resultado se cachea en memoria (O*NET cambia pocas veces al año).
 """
+
+import json
+from pathlib import Path
 
 import requests
 
 from config import ONET_API_KEY
+from traducciones import traducir_tecnologia
 
 ONET_BASE = "https://api-v2.onetcenter.org"
 
@@ -59,8 +62,6 @@ PROGRAMAS_ONET = {
     "Ingeniería en Inteligencia Artificial": "15-1221.00",            # Computer and Information Research Scientists
 }
 
-# Caché en memoria: programa -> {"habilidades": [...], "tecnologias": [...]}
-_cache = {}
 
 
 def _get(path: str):
@@ -80,83 +81,6 @@ def _get(path: str):
     except Exception as e:
         print(f"   ❌ O*NET error en {path}: {e}")
         return None
-
-
-def _extraer_habilidades(data, max_n: int = 12):
-    """Saca los nombres de habilidades de la respuesta de O*NET.
-
-    Busca la primera lista de objetos que tengan 'name' (cada habilidad trae
-    nombre y un puntaje de importancia). Tolerante a variaciones de estructura.
-    """
-    if not data:
-        return []
-
-    def buscar_lista(o):
-        if isinstance(o, list):
-            if o and isinstance(o[0], dict) and "name" in o[0]:
-                return o
-            for it in o:
-                r = buscar_lista(it)
-                if r:
-                    return r
-        elif isinstance(o, dict):
-            for v in o.values():
-                r = buscar_lista(v)
-                if r:
-                    return r
-        return None
-
-    lista = buscar_lista(data) or []
-    nombres = []
-    for it in lista:
-        n = it.get("name")
-        if n and n not in nombres:
-            nombres.append(n)
-        if len(nombres) >= max_n:
-            break
-    return nombres
-
-
-def _extraer_tecnologias(data, max_n: int = 12):
-    """Devuelve [{nombre, categoria, hot}] desde la respuesta technology_skills.
-
-    Estructura real de O*NET:
-      data["category"] = [ {"title": <categoría>, "example": [ {"title": <herramienta>,
-                            "hot_technology": bool, "in_demand": bool, "percentage": int} ]} ]
-    La categoría (ej. "Development environment software") sirve de explicación para
-    CUALQUIER herramienta. Ordenamos por relevancia (hot/in-demand y % de empleadores).
-    """
-    if not data or not isinstance(data, dict):
-        return []
-    categorias = data.get("category")
-    if not isinstance(categorias, list):
-        return []
-
-    items = []
-    for cat in categorias:
-        cat_title = cat.get("title")
-        for ex in cat.get("example", []) or []:
-            nombre = ex.get("title") or ex.get("name")
-            if not nombre:
-                continue
-            items.append({
-                "nombre": nombre,
-                "categoria": cat_title,
-                "hot": bool(ex.get("hot_technology")) or bool(ex.get("in_demand")),
-                "pct": ex.get("percentage") or 0,
-            })
-
-    # Más relevantes primero: las "hot/in-demand" y las que más empleadores piden.
-    items.sort(key=lambda x: (x["hot"], x["pct"]), reverse=True)
-
-    vistos, unicos = set(), []
-    for it in items:
-        if it["nombre"] not in vistos:
-            vistos.add(it["nombre"])
-            unicos.append(it)
-        if len(unicos) >= max_n:
-            break
-    return unicos
 
 
 # Traducción al español de las habilidades de O*NET (es un vocabulario fijo de ~35
@@ -305,6 +229,75 @@ def _describir_habilidad(nombre_en: str) -> str:
     )
 
 
+# ---------------------------------------------------------------------------
+# Homologación a las 13 competencias generales (Monitoreo entorno 2025, Alumni
+# Sabana): ese estudio rastreó ~656 términos de habilidades blandas en decenas
+# de fuentes (LinkedIn, papers, diccionarios de competencias) y los agrupó a
+# mano en 13 categorías generales. Aquí se traduce eso a las 35 "Skills" de
+# O*NET —vocabulario FIJO y distinto al del estudio— para que la app pueda
+# marcar cuáles de sus competencias son homologables a esa taxonomía.
+#
+# Solo se mapean las ~20 competencias de O*NET que son genuinamente blandas
+# (las técnicas — Programación, Ciencia, Diseño de tecnología...— quedan fuera
+# por diseño: no son "habilidades blandas", ver `_es_habilidad_tecnica`).
+# No todo tiene un hogar natural en las 13 ("Comprensión de lectura" se deja
+# sin homologar antes que forzarla en una categoría que no le corresponde).
+#
+# El criterio de cada asignación: se contrastó contra los términos CRUDOS reales
+# que el estudio homologó en cada categoría (ej. "Active listening" aparece
+# textual en los crudos de "Comunicación asertiva"; "Coaching" en los de
+# "Trabajo en equipo"; "Autoridad y control sobre subordinados" en "Gestión").
+# Persuasión/Negociación son la asignación menos obvia (podrían leerse también
+# como Comunicación o Solución de problemas) — revisable si no calza con cómo
+# lo usa Alumni.
+HOMOLOGACION_13 = {
+    "Escucha activa": "Comunicación asertiva",
+    "Redacción": "Comunicación asertiva",
+    "Expresión oral": "Comunicación asertiva",
+    "Pensamiento crítico": "Pensamiento estratégico y analítico",
+    "Aprendizaje activo": "Aprender a aprender",
+    "Estrategias de aprendizaje": "Aprender a aprender",
+    "Monitoreo y autoevaluación": "Aprender a aprender",
+    "Percepción social": "Trabajo en equipo",
+    "Coordinación": "Trabajo en equipo",
+    "Enseñanza/instrucción": "Trabajo en equipo",
+    "Persuasión": "Liderazgo",
+    "Negociación": "Liderazgo",
+    "Orientación al servicio": "Servicio",
+    "Resolución de problemas complejos": "Solución de problemas",
+    "Juicio y toma de decisiones": "Toma de decisiones",
+    "Gestión del tiempo": "Gestión",
+    "Gestión de recursos financieros": "Gestión",
+    "Gestión de recursos materiales": "Gestión",
+    "Gestión de personal": "Gestión",
+}
+
+# Las 13 categorías del estudio, en el orden en que aparecen ahí (por volumen
+# de menciones). Sirve para que el frontend garantice que estén representadas
+# en la gráfica de tendencias aunque su demanda de mercado no las meta en el
+# top-N por sí solas — ver `evolucion_skills`.
+CATEGORIAS_HOMOLOGADAS_13 = [
+    "Apropiación y gestión de la tecnología",
+    "Gestión",
+    "Liderazgo",
+    "Adaptación al cambio",
+    "Comunicación asertiva",
+    "Pensamiento estratégico y analítico",
+    "Aprender a aprender",
+    "Solución de problemas",
+    "Trabajo en equipo",
+    "Creatividad",
+    "Servicio",
+    "Toma de decisiones",
+    "Responsabilidad ambiental y de recursos",
+]
+
+
+def homologada_a(nombre_es: str) -> str | None:
+    """La categoría de las 13 a la que se homologa esta competencia, o None."""
+    return HOMOLOGACION_13.get(nombre_es)
+
+
 # Traducción de las CATEGORÍAS de tecnología de O*NET (el "tipo" de herramienta).
 # Sirven de explicación para cualquier herramienta no listada arriba. Si una
 # categoría no está aquí, se muestra su título original (en inglés) como respaldo.
@@ -375,37 +368,311 @@ def _describir_tecnologia(nombre: str, categoria: str = None) -> str:
     return "Herramienta o tecnología utilizada en esta ocupación según O*NET."
 
 
-def obtener_competencias(programa: str):
-    """Devuelve las competencias y tecnologías de un programa.
+# ---------------------------------------------------------------------------
+# Competencias y tecnologías CON PUNTAJE, para el ranking de "skills más
+# demandadas". Cada skill trae su PESO en la ocupación, para ponderar: una skill
+# vale según cuánto la requiere la ocupación (importancia O*NET) y cuánta demanda
+# tiene esa ocupación en el mercado real (que se calcula aparte, en
+# Tendencias/skills_demandadas.py).
+# ---------------------------------------------------------------------------
 
-    Ambas son listas de objetos {nombre, descripcion} (todo en español), de modo
-    que CADA ítem —habilidad o tecnología— tiene su propia explicación clickable.
+_cache_scored = {}
+
+
+def _skills_con_score(data, max_n: int = 20):
+    """[(nombre_en, importancia 0-100, id_onet)] desde la respuesta de skills de O*NET.
+
+    Se guarda el `id` (p. ej. '2.B.3.e') porque es la forma OFICIAL de O*NET de
+    distinguir sus 35 "Skills" entre sí — no hay que adivinar por el nombre.
+    Ver `_ES_HABILIDAD_TECNICA`.
+    """
+    def buscar(o):
+        if isinstance(o, list):
+            if o and isinstance(o[0], dict) and "name" in o[0]:
+                return o
+            for it in o:
+                r = buscar(it)
+                if r:
+                    return r
+        elif isinstance(o, dict):
+            for v in o.values():
+                r = buscar(v)
+                if r:
+                    return r
+        return None
+
+    out = []
+    for it in (buscar(data) or [])[:max_n]:
+        nombre = it.get("name")
+        imp = it.get("importance")
+        if nombre and imp:
+            out.append((nombre, float(imp), it.get("id", "")))
+    return out
+
+
+# Del taxonomía oficial de O*NET (Content Model), grupo "2.B.3 Technical" dentro
+# de las 35 Skills: Operations Analysis, Technology Design, Equipment Selection,
+# Installation, Programming, Operation Monitoring, Operation and Control,
+# Equipment Maintenance, Troubleshooting, Repairing, Quality Control Analysis.
+# Se suman Mathematics y Science (2.A.1.e/f): son "Basic Skills > Content" en la
+# taxonomía de O*NET, no "Technical", pero para quien ve el perfil son igual de
+# técnicas y no pertenecen junto a cosas como "Persuasión" o "Negociación" bajo
+# "Competencias clave" — que es justo lo que reportó el feedback del 12 ago 2026
+# ("Programación, Ciencia, Matemáticas aparecen como Competencias clave").
+def _es_habilidad_tecnica(element_id: str) -> bool:
+    return element_id.startswith("2.B.3.") or element_id in ("2.A.1.e", "2.A.1.f")
+
+
+# IDs oficiales de O*NET para las 35 Skills (Content Model, estable). Solo se
+# listan las que hacen falta para derivar `NOMBRES_TECNICOS_ES` sin tener que
+# volver a llamar a la API — el resto de `competencias_scored()` sí usa el id
+# real que devuelve cada ocupación, este mapa es nada más para este cálculo.
+_IDS_SKILLS_TECNICAS = {
+    "Mathematics": "2.A.1.e",
+    "Science": "2.A.1.f",
+    "Operations Analysis": "2.B.3.a",
+    "Technology Design": "2.B.3.b",
+    "Equipment Selection": "2.B.3.c",
+    "Installation": "2.B.3.d",
+    "Programming": "2.B.3.e",
+    "Operations Monitoring": "2.B.3.f",
+    "Operation and Control": "2.B.3.g",
+    "Equipment Maintenance": "2.B.3.h",
+    "Troubleshooting": "2.B.3.i",
+    "Repairing": "2.B.3.j",
+    "Quality Control Analysis": "2.B.3.k",
+}
+
+# Nombres en ESPAÑOL de las competencias que O*NET clasifica como técnicas.
+# Usado para filtrarlas de vistas que solo deben mostrar habilidades blandas
+# (ranking y gráfica de tendencia de la página Competencias) sin tener que
+# repetir la lógica de IDs en cada sitio que lo necesite.
+NOMBRES_TECNICOS_ES = {
+    _traducir_habilidad(nombre_en) for nombre_en in _IDS_SKILLS_TECNICAS
+}
+
+
+def _tecnologias_con_score(data, max_n: int = 25):
+    """[(nombre, categoria, peso 0-100)] desde technology_skills de O*NET.
+
+    Peso: el `percentage` de empleadores si viene; si no, un proxy por relevancia
+    (hot/in-demand pesa más que una herramienta cualquiera).
+    """
+    if not isinstance(data, dict):
+        return []
+    items = []
+    for cat in data.get("category", []) or []:
+        cat_title = cat.get("title")
+        for ex in cat.get("example", []) or []:
+            nombre = ex.get("title") or ex.get("name")
+            if not nombre:
+                continue
+            pct = ex.get("percentage")
+            hot = bool(ex.get("hot_technology")) or bool(ex.get("in_demand"))
+            peso = float(pct) if pct else (70.0 if hot else 40.0)
+            items.append((nombre, cat_title, peso))
+    items.sort(key=lambda x: -x[2])
+    return items[:max_n]
+
+
+def competencias_scored(programa: str):
+    """Competencias y tecnologías de un programa, CADA UNA con su peso O*NET.
+
+    Devuelve {"competencias": [{nombre, descripcion, peso}],
+              "tecnologias":  [{nombre, descripcion, peso}]}
+    con los nombres ya en español. `peso` es 0-100 (importancia O*NET para las
+    competencias; % de empleadores/relevancia para las tecnologías).
     """
     code = PROGRAMAS_ONET.get(programa)
     if not code:
-        return {"habilidades": [], "tecnologias": []}
-    if programa in _cache:
-        return _cache[programa]
+        return {"competencias": [], "tecnologias": []}
+    if programa in _cache_scored:
+        return _cache_scored[programa]
 
-    skills_en = _extraer_habilidades(_get(f"/online/occupations/{code}/details/skills"), 12)
-    tec_en = _extraer_tecnologias(_get(f"/online/occupations/{code}/details/technology_skills"), 12)
+    skills = _skills_con_score(_get(f"/online/occupations/{code}/details/skills"))
+    tecs = _tecnologias_con_score(_get(f"/online/occupations/{code}/details/technology_skills"))
 
-    habilidades = [
-        {"nombre": _traducir_habilidad(h), "descripcion": _describir_habilidad(h)}
-        for h in skills_en
+    # `competencias`/`tecnologias` se quedan COMPLETAS, igual que siempre: las
+    # usa Tendencias/skills_demandadas.py para el ranking de mercado y el KPI de
+    # "emergentes" de la página Competencias, que necesita el pool entero para
+    # tener señal de tendencia (se probó sacar Programación/Ciencia/Matemáticas
+    # de ahí y el KPI se quedó con un solo término emergente — esas tres son
+    # justo las más volátiles del grupo, y sin ellas lo que queda es demasiado
+    # transversal/plano para mostrar movimiento real).
+    competencias = [
+        {
+            "nombre": _traducir_habilidad(nombre),
+            "descripcion": _describir_habilidad(nombre),
+            "peso": peso,
+            # Categoría de las 13 homologadas (Monitoreo entorno 2025, Alumni
+            # Sabana) a la que pertenece, o None si no es homologable.
+            "homologada": homologada_a(_traducir_habilidad(nombre)),
+        }
+        for nombre, peso, element_id in skills
     ]
     tecnologias = [
-        {"nombre": t["nombre"], "descripcion": _describir_tecnologia(t["nombre"], t["categoria"])}
-        for t in tec_en
+        {
+            "nombre": traducir_tecnologia(nombre),
+            "descripcion": _describir_tecnologia(nombre, categoria),
+            "peso": peso,
+        }
+        for nombre, categoria, peso in tecs
     ]
-    resultado = {"habilidades": habilidades, "tecnologias": tecnologias}
-
-    # Solo cacheamos si la API respondió con algo (evita "cachear" un fallo).
-    if habilidades or tecnologias:
-        _cache[programa] = resultado
+    # Subconjunto de `competencias` que O*NET clasifica como técnicas (ver
+    # `_es_habilidad_tecnica`). Se lista APARTE, sin sacarlas de `competencias`:
+    # quien solo necesite el pool de mercado (arriba) las ignora sin más, y quien
+    # muestra un programa suelto (Perfil ocupacional) las mueve a tecnologías en
+    # su propia vista, donde no rompe ninguna estadística agregada.
+    competencias_tecnicas = sorted({
+        _traducir_habilidad(nombre) for nombre, _, element_id in skills
+        if _es_habilidad_tecnica(element_id)
+    })
+    resultado = {
+        "competencias": competencias,
+        "tecnologias": tecnologias,
+        "competencias_tecnicas": competencias_tecnicas,
+    }
+    if competencias or tecnologias:
+        _cache_scored[programa] = resultado
     return resultado
 
 
-def listar_programas():
-    """Lista de programas con mapeo a O*NET (para poblar el selector del frontend)."""
-    return list(PROGRAMAS_ONET.keys())
+# ---------------------------------------------------------------------------
+# Perfil ocupacional O*NET: intereses RIASEC + Job Zone + descripción.
+# Alimenta la página "Perfil Ocupacional" (sección de contexto vocacional).
+# ---------------------------------------------------------------------------
+
+# RIASEC (modelo de Holland). Orden canónico R-I-A-S-E-C.
+_RIASEC_ORDEN = ["Realistic", "Investigative", "Artistic", "Social", "Enterprising", "Conventional"]
+_RIASEC_ES = {
+    "Realistic": ("R", "Realista"),
+    "Investigative": ("I", "Investigador"),
+    "Artistic": ("A", "Artístico"),
+    "Social": ("S", "Social"),
+    "Enterprising": ("E", "Emprendedor"),
+    "Conventional": ("C", "Convencional"),
+}
+
+# Job Zone (1-5): nivel de preparación que requiere la ocupación.
+_JOB_ZONE_ES = {
+    1: ("Poca preparación", "Requiere poca o ninguna preparación previa."),
+    2: ("Algo de preparación", "Requiere formación breve y algo de experiencia."),
+    3: ("Preparación media", "Requiere formación técnica o tecnológica y experiencia."),
+    4: ("Preparación alta", "Requiere un título universitario y experiencia considerable."),
+    5: ("Preparación extensa", "Requiere posgrado y amplia experiencia especializada."),
+}
+
+# Descripción breve en español por ocupación de referencia (código SOC). Conjunto
+# cerrado de los 29 programas; si falta o la API no responde, cae a la descripción
+# en inglés de O*NET (fallback). Coherente con las traducciones del backend.
+_DESCRIPCIONES_OCUPACION_ES = {
+    "11-1021.00": "Planifican, dirigen y coordinan las operaciones de una organización a nivel general.",
+    "43-4051.00": "Atienden y resuelven las solicitudes de los clientes sobre productos y servicios.",
+    "11-2021.00": "Diseñan y dirigen estrategias de mercadeo para posicionar productos y servicios.",
+    "13-1111.00": "Analizan procesos y proponen mejoras para aumentar la eficiencia de las organizaciones.",
+    "13-2051.00": "Evalúan inversiones y datos financieros para orientar decisiones económicas.",
+    "35-1011.00": "Dirigen la cocina, crean menús y supervisan la preparación de alimentos.",
+    "13-1071.00": "Gestionan la selección, el desarrollo y el bienestar del talento humano.",
+    "19-3033.00": "Evalúan y acompañan la salud mental y el comportamiento de las personas.",
+    "27-2012.00": "Planifican y dirigen la producción de contenidos audiovisuales y multimedia.",
+    "27-3031.00": "Gestionan la comunicación y la reputación de las organizaciones ante sus públicos.",
+    "27-3023.00": "Investigan, redactan y difunden noticias e información de interés público.",
+    "25-2011.00": "Educan y acompañan el desarrollo integral de niños en la primera infancia.",
+    "29-1141.00": "Brindan cuidado clínico a los pacientes y coordinan su atención en salud.",
+    "29-1123.00": "Rehabilitan el movimiento y la función física de los pacientes.",
+    "19-3094.00": "Analizan sistemas políticos, políticas públicas y asuntos de gobierno.",
+    "23-1011.00": "Asesoran y representan a personas y organizaciones en asuntos legales.",
+    "25-1126.00": "Investigan y enseñan filosofía y pensamiento crítico a nivel superior.",
+    "29-1215.00": "Diagnostican y tratan enfermedades brindando atención médica integral.",
+    "15-2051.00": "Extraen conocimiento de grandes volúmenes de datos con métodos analíticos.",
+    "17-2051.00": "Diseñan y supervisan obras de infraestructura civil como vías y edificaciones.",
+    "17-2031.00": "Aplican la ingeniería a sistemas biológicos y a la producción biotecnológica.",
+    "27-1021.00": "Diseñan productos y soluciones que combinan función, innovación y estética.",
+    "17-2112.00": "Optimizan procesos, recursos y sistemas productivos en las organizaciones.",
+    "15-1252.00": "Diseñan, desarrollan y mantienen software y sistemas informáticos.",
+    "17-2141.00": "Diseñan y desarrollan sistemas y máquinas mecánicas.",
+    "17-2041.00": "Diseñan procesos y plantas para transformar materias primas mediante química.",
+    "15-1221.00": "Investigan y desarrollan nuevas tecnologías de computación e inteligencia artificial.",
+}
+
+_CACHE_PERFIL_PATH = Path(__file__).resolve().parent / "_cache_perfil_onet.json"
+_cache_perfil: dict | None = None
+
+
+def _riasec_desde_api(code: str) -> list[dict]:
+    """Intereses RIASEC (0-100) en orden R-I-A-S-E-C, traducidos. [] si no hay datos."""
+    data = _get(f"/online/occupations/{code}/details/interests")
+    if not isinstance(data, dict):
+        return []
+    valores = {}
+    for el in data.get("element", []) or []:
+        nombre = el.get("name")
+        val = el.get("occupational_interest")
+        if nombre in _RIASEC_ES and val is not None:
+            valores[nombre] = float(val)
+    salida = []
+    for nombre_en in _RIASEC_ORDEN:
+        if nombre_en in valores:
+            cod, nombre_es = _RIASEC_ES[nombre_en]
+            salida.append({"codigo": cod, "nombre": nombre_es, "valor": round(valores[nombre_en], 1)})
+    return salida
+
+
+def perfil_onet(programa: str) -> dict:
+    """
+    Contexto vocacional O*NET de un programa: intereses RIASEC, Job Zone (nivel de
+    preparación) y descripción de la ocupación de referencia. Cacheado en memoria
+    y disco. Si no hay ONET_API_KEY o la ocupación no está mapeada, degrada con
+    gracia (riasec=[], job_zone=None, descripcion=None) para que la UI lo oculte.
+
+    Nota de mantenimiento: al cambiar traducciones aquí, borrar `_cache_perfil_onet.json`.
+    """
+    global _cache_perfil
+    if _cache_perfil is None:
+        if _CACHE_PERFIL_PATH.exists():
+            try:
+                with open(_CACHE_PERFIL_PATH, encoding="utf-8") as fh:
+                    _cache_perfil = json.load(fh)
+            except Exception:
+                _cache_perfil = {}
+        else:
+            _cache_perfil = {}
+
+    if programa in _cache_perfil:
+        return _cache_perfil[programa]
+
+    code = PROGRAMAS_ONET.get(programa)
+    vacio = {"codigo_soc": code, "ocupacion_ref": None, "descripcion": None,
+             "job_zone": None, "riasec": [], "bright_outlook": False}
+    if not code:
+        return vacio
+
+    detalle = _get(f"/online/occupations/{code}") or {}
+    jz = _get(f"/online/occupations/{code}/details/job_zone") or {}
+
+    job_zone = None
+    nivel = jz.get("code")
+    if isinstance(nivel, int) and nivel in _JOB_ZONE_ES:
+        etiqueta, frase = _JOB_ZONE_ES[nivel]
+        job_zone = {"nivel": nivel, "etiqueta": etiqueta, "descripcion": frase}
+
+    descripcion = _DESCRIPCIONES_OCUPACION_ES.get(code) or detalle.get("description")
+
+    resultado = {
+        "codigo_soc": code,
+        "ocupacion_ref": detalle.get("title"),
+        "descripcion": descripcion,
+        "job_zone": job_zone,
+        "riasec": _riasec_desde_api(code),
+        "bright_outlook": bool((detalle.get("tags") or {}).get("bright_outlook")),
+    }
+
+    # Solo se cachea si vino con contenido real (no persistir un fallo de la API).
+    if resultado["riasec"] or resultado["job_zone"]:
+        _cache_perfil[programa] = resultado
+        try:
+            with open(_CACHE_PERFIL_PATH, "w", encoding="utf-8") as fh:
+                json.dump(_cache_perfil, fh, ensure_ascii=False)
+        except Exception:
+            pass
+    return resultado

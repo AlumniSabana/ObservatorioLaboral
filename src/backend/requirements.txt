@@ -6,3 +6,4 @@ requests
 pydantic
 anthropic
 python-multipart
+beautifulsoup4

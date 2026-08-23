@@ -45,6 +45,13 @@ next-env.d.ts
 
 # database structure
 *.sql
+# …pero las migraciones SÍ van al repo: son el esquema de la base y sin ellas
+# el proyecto no se puede levantar desde cero.
+!src/backend/migrations/*.sql
+
+# Fuentes externas grandes: los ETL las descargan solas (ver la URL en cada
+# cargar_*.py). La Base IBC del OLE pesa 48 MB y no tiene por qué vivir en Git.
+src/backend/OLE/data/*.xlsx
 
 # pdfs de prueba
 *.pdf

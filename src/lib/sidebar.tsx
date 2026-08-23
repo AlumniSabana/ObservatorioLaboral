@@ -14,35 +14,28 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
-  Home,
   GraduationCap,
-  Briefcase,
   DollarSign,
   Building2,
   Users,
   Zap,
-  BarChart3,
+  TrendingUp,
+  Sparkles,
+  ClipboardList,
+  MessagesSquare,
+  FileText,
 } from 'lucide-react';
 
 // Lista única de enlaces de la barra lateral. Para agregar/quitar una sección,
 // edita este arreglo (href = ruta, label = texto visible, icon = ícono).
 const navigationItems = [
-  { href: '/', label: 'Inicio', icon: Home },
-  { href: '/analytics', label: 'Análisis de mercado', icon: BarChart3 },
-  {
-    href: '/skills',
-    label: 'Competencias y habilidades',
-    icon: Briefcase,
-  },
+  { href: '/', label: 'Tendencias', icon: TrendingUp },
+  { href: '/skills-demandadas', label: 'Competencias', icon: Sparkles },
   { href: '/cursos', label: 'Cursos y formación', icon: GraduationCap },
   { href: '/salaries', label: 'Análisis salarial', icon: DollarSign },
-  { href: '/sectors', label: 'Sectores y empresas', icon: Building2 },
-  {
-    href: '/conditions',
-    label: 'Condiciones laborales',
-    icon: Users,
-  },
-  { href: '/demand', label: 'Mayor demanda actual', icon: Zap },
+  { href: '/perfil-ocupacional', label: 'Perfil ocupacional', icon: ClipboardList },
+  { href: '/asistente', label: 'Empresas', icon: MessagesSquare },
+  { href: '/informes', label: 'Informes', icon: FileText },
 ];
 
 export function Sidebar() {
@@ -100,7 +93,8 @@ export function PageLayout({
     <div className="flex min-h-screen bg-zinc-50 dark:bg-black" style={{backgroundColor: 'var(--white-background)'}}>
       <Sidebar />
       <main className="ml-80 flex-1 p-8">
-        <div className="max-w-4xl mx-auto">
+        {/* Contenido a todo el ancho disponible (uniforme en todas las páginas). */}
+        <div className="w-full">
           <h1 className="text-4xl font-bold mb-2" style={{color: 'var(--sabana-dark-navy)'}}>
             {title}
           </h1>

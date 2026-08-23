@@ -57,10 +57,9 @@ El proyecto tiene **dos partes independientes** que se despliegan por separado:
 src/
 ├── app/                      # Páginas del frontend (Next.js App Router)
 │   ├── layout.tsx            # Layout raíz (fuentes, <html>, metadata)
-│   ├── page.tsx              # Página de inicio (/)
+│   ├── page.tsx              # ⭐ PORTADA: Tendencias temporales (crece / estable / decrece) — ver §9
 │   ├── globals.css           # Estilos globales + paleta de colores de La Sabana
 │   ├── analytics/page.tsx    # ⭐ Dashboard principal: combo box de fuentes + lector de PDF
-│   ├── skills/page.tsx       # Competencias y habilidades (datos de O*NET)
 │   ├── cursos/page.tsx       # Buscador de cursos (abre Google Skills / IBM Training)
 │   ├── api/chat/route.ts     # Proxy (streaming) hacia Claude para el chat flotante
 │   ├── salaries/             # ──┐
@@ -77,13 +76,19 @@ src/
     ├── config.py             # Variables de entorno + keywords por programa (inglés y español)
     ├── requirements.txt      # Dependencias de Python
     ├── migrations/
-    │   └── 001_vacantes_google.sql      # SQL para crear la tabla vacantes_google
+    │   ├── 001_vacantes_google.sql      # SQL para crear la tabla vacantes_google
+    │   └── 002_tendencias.sql           # SQL para las 3 tablas de tendencias (§9)
     ├── Adzuna/
     │   └── adzuna_service.py            # Recolección de Adzuna + analíticas (compartido)
     ├── GoogleJobs/
     │   └── google_jobs_service.py       # Recolección de Google Jobs (SerpApi) + analíticas CO
     ├── ONet/
-    │   └── onet_service.py              # Competencias por programa (O*NET) para la página /skills
+    │   └── onet_service.py              # Competencias/tecnologías O*NET con peso (para Skills más demandadas)
+    ├── Tendencias/
+    │   ├── historical_collector.py      # Backfill histórico en Adzuna (muestreo por antigüedad)
+    │   ├── tendencias_service.py        # Ponderación + regresión: crece / estable / decrece
+    │   ├── skills_extractor.py          # Extractor de skills por diccionario (aún sin fuente útil)
+    │   └── diccionario_skills.json      # Taxonomía O*NET + Ocupacol (portada de Reto-Alumni)
     └── Documentos/
         └── document_service.py          # Lectura de PDFs con Claude (Files API)
 ```
@@ -136,7 +141,7 @@ temporalmente en la Files API de Claude). Ver `src/backend/Documentos/`.
 | `SERPAPI_KEY`           | Colombia   | API key de SerpApi (Google Jobs, mercado Colombia).  |
 | `SERPAPI_MAX_BUSQUEDAS` | Opcional   | Presupuesto de búsquedas por corrida (def. `240`). Ver §8. |
 | `ANTHROPIC_API_KEY`     | Documentos | API key de Anthropic para el lector de PDFs (puede ser la misma que `CLAUDE_API_KEY`). |
-| `ONET_API_KEY`          | Competencias | API key de O*NET Web Services (gratis) para la página de competencias (`/skills`). |
+| `ONET_API_KEY`          | Competencias | API key de O*NET Web Services (gratis) para la página «Skills más demandadas» (`/skills-demandadas`). |
 
 > Los archivos `.env` están en `.gitignore` y **no** se versionan. Cada fuente es
 > independiente: si falta una credencial, esa fuente simplemente se omite y el
@@ -242,7 +247,74 @@ Detalle importante para entender el costo y la cobertura:
 
 ---
 
-## 9. Notas / pendientes para quien continúe
+## 9. Tendencias temporales (portada, ruta `/`)
+
+Responde a "¿qué cargos y sectores están creciendo?" usando la **fecha real de
+publicación** de cada vacante (`created_at` de Adzuna). Tiene tres sutilezas que
+conviene entender antes de tocar el código.
+
+### 9.1 El scrape normal no sirve para tendencias
+`POST /scrape` pide `sort_by=date` en 2 páginas, así que solo trae las ~100
+vacantes **más recientes** por keyword: el 91% de la tabla `vacantes` cae en un
+solo mes. Medir una tendencia ahí mide el scraper, no el mercado. Además el
+scrape borra y reescribe la tabla.
+
+Por eso el backfill vive aparte (`Tendencias/historical_collector.py`) y escribe
+en su propia tabla `vacantes_historicas`, que **nunca** se borra.
+
+### 9.2 Cómo se llega al pasado
+Adzuna no tiene filtro "publicado antes de X", pero combinando dos parámetros sí
+se puede muestrear cualquier mes:
+
+```
+max_days_old=D  +  sort_direction=up   →  las vacantes MÁS ANTIGUAS de los últimos D días
+```
+
+Es decir, aterriza justo en el borde de edad `D`. Barriendo `D` mes a mes se
+obtiene una muestra estratificada por antigüedad (verificado contra la API):
+
+| `max_days_old` | 30 | 60 | 90 | 180 | 365 |
+|---|---|---|---|---|---|
+| mes que devuelve | −1 mes | −2 meses | −3 meses | −6 meses | −12 meses |
+
+### 9.3 Por qué la muestra se pondera (lo más importante)
+El recolector pide ~50 vacantes por keyword y por mes. Eso deja la muestra
+**balanceada por construcción**: `chef` pesa lo mismo que `software engineer`
+aunque el mercado publique 20x más del segundo. Sin corregirlo, el reparto por
+sector es el de nuestras keywords y **todo sale "estable"**.
+
+La respuesta de la API trae gratis un campo `count` con el total real de vacantes
+de la ventana. Restando ventanas consecutivas se obtiene el volumen real
+publicado cada mes, y con él se pondera cada vacante muestreada:
+
+```
+peso = volumen_real(keyword, mes) / vacantes_muestreadas(keyword, mes)
+```
+
+Se guarda en `muestreo_volumen`. Con esto, las 50 vacantes de `registered nurse`
+representan las ~330.000 que de verdad se publicaron.
+
+### 9.4 La métrica es el *share*, no el conteo
+Adzuna retira las vacantes viejas de su índice, así que los volúmenes absolutos
+decaen hacia atrás en el tiempo (atrición) y **no son comparables entre meses**.
+Lo que sí es comparable es el reparto *dentro* de cada mes:
+
+```
+share(término, mes) = vacantes estimadas del término / vacantes estimadas del mes
+```
+
+La atrición afecta a todas las keywords del mismo mes y se cancela al dividir.
+Un mes en el que el término no aparece cuenta como `share = 0`, no como dato
+faltante (omitirlo sesgaría la pendiente hacia arriba).
+
+La tendencia sale de una **regresión lineal ponderada** sobre esa serie, que da
+más peso a los meses recientes; la pendiente se normaliza contra la media para
+que sea comparable entre términos de distinta magnitud, y se clasifica con un
+umbral simétrico (±0.08) en `creciente` / `estable` / `decreciente`.
+
+
+
+## 10. Notas / pendientes para quien continúe
 
 - Las páginas `salaries`, `sectors`, `conditions` y `demand` muestran **contenido
   estático de ejemplo**. Aún no consumen el backend; son candidatas naturales para
