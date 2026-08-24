@@ -55,3 +55,11 @@ src/backend/OLE/data/*.xlsx
 
 # pdfs de prueba
 *.pdf
+
+# Cachés en disco que el backend regenera solo (ver comentarios junto a cada
+# CACHE_*_PATH en el código). Versionarlos genera ruido en cada regeneración
+# local y, peor, puede servir datos obsoletos en producción si el deploy trae
+# una versión vieja committeada en vez de recalcularla.
+src/backend/Tendencias/_cache_onet.json
+src/backend/Tendencias/_cache_opciones.json
+src/backend/ONet/_cache_perfil_onet.json
