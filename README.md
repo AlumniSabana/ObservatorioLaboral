@@ -50,7 +50,7 @@ Dos partes independientes que se despliegan por separado:
   analíticas, sirve las fuentes normativas/oficiales y lee PDFs con Claude.
   Guarda todo en Supabase; el lector de PDF ad-hoc (`/documento/*`) no persiste
   nada.
-- **⚠️ Caveat de despliegue**: en modo `output: 'export'` las rutas
+- ** Caveat de despliegue**: en modo `output: 'export'` las rutas
   `src/app/api/*` de Next (incluida `/api/chat`, que sirve **ambos** chats) NO
   corren como servidor — GitHub Pages no las ejecuta. En producción, el chat
   necesita un entorno que sí las sirva (o un despliegue distinto al export
@@ -63,7 +63,7 @@ Dos partes independientes que se despliegan por separado:
 ```
 src/
 ├── app/                        # Páginas del frontend (Next.js App Router)
-│   ├── page.tsx                # ⭐ PORTADA "Tendencias" — crece/estable/decrece por cargo o sector
+│   ├── page.tsx                # PORTADA "Tendencias" — crece/estable/decrece por cargo o sector
 │   ├── skills-demandadas/      # "Competencias" — skills/tecnologías ponderadas por demanda real
 │   ├── cursos/                 # "Cursos y formación" — busca y abre catálogos externos (Coursera, IBM…)
 │   ├── salaries/               # "Análisis salarial" — GEIH + SPE pivotado por programa
@@ -130,14 +130,14 @@ Documentación interactiva completa (Swagger) en `http://localhost:8000/docs`.
 
 | Fuente | Qué aporta | Mercado / idioma | Estado |
 |---|---|---|---|
-| **Adzuna** | Recolección de vacantes + analítica salarial | EE.UU., inglés | ✅ Activa — tabla `vacantes` |
-| **Google Jobs** (SerpApi) | Recolección de vacantes, ciudades/modalidad | Colombia, español | ✅ Activa — tabla `vacantes_google` |
-| **LinkedIn** | Scraping de vacantes públicas | Colombia, español | ⚠️ **Desactivada por defecto** — interruptor `LINKEDIN_HABILITADO` en `.env` (solo ofertas públicas, nunca perfiles; requiere aprobación jurídica de la Universidad) |
-| **SPE** (Servicio Público de Empleo) | Competencias observadas + tendencia mensual + top ocupaciones, sobre ~1.8M vacantes reales | Colombia, español | ✅ Activa — única serie de tendencia realmente **observada** en Colombia |
-| **O\*NET 27.3** | Taxonomía normativa de skills/tecnologías + RIASEC/job zone | EE.UU., inglés (traducido al mostrarse) | ✅ Activa — requiere `ONET_API_KEY` (gratis); sin ella devuelve listas vacías |
-| **SENA / CNO 2025** | Skills y conocimientos por ocupación, taxonomía oficial colombiana | Colombia, español | ✅ Activa — mapeo CNO **propio**, distinto del que usa Salarios/GEIH |
-| **OLE** (MinEducación) | Ingreso de egresados por programa (bandas de SMMLV) | Colombia, español | ✅ Activa — complementa, no reemplaza, el salario de GEIH |
-| **GEIH** (DANE) | Salario real por ocupación | Colombia, español | ✅ Activa — JSON precalculado, pivotado por programa vía CNO |
+| **Adzuna** | Recolección de vacantes + analítica salarial | EE.UU., inglés |  Activa — tabla `vacantes` |
+| **Google Jobs** (SerpApi) | Recolección de vacantes, ciudades/modalidad | Colombia, español |  Activa — tabla `vacantes_google` |
+| **LinkedIn** | Scraping de vacantes públicas | Colombia, español | **Desactivada por defecto** — interruptor `LINKEDIN_HABILITADO` en `.env` (solo ofertas públicas, nunca perfiles; requiere aprobación jurídica de la Universidad) |
+| **SPE** (Servicio Público de Empleo) | Competencias observadas + tendencia mensual + top ocupaciones, sobre ~1.8M vacantes reales | Colombia, español | Activa — única serie de tendencia realmente **observada** en Colombia |
+| **O\*NET 27.3** | Taxonomía normativa de skills/tecnologías + RIASEC/job zone | EE.UU., inglés (traducido al mostrarse) |  Activa — requiere `ONET_API_KEY` (gratis); sin ella devuelve listas vacías |
+| **SENA / CNO 2025** | Skills y conocimientos por ocupación, taxonomía oficial colombiana | Colombia, español |  Activa — mapeo CNO **propio**, distinto del que usa Salarios/GEIH |
+| **OLE** (MinEducación) | Ingreso de egresados por programa (bandas de SMMLV) | Colombia, español |  Activa — complementa, no reemplaza, el salario de GEIH |
+| **GEIH** (DANE) | Salario real por ocupación | Colombia, español |  Activa — JSON precalculado, pivotado por programa vía CNO |
 
 `PROGRAMAS_KEYWORDS` (`config.py`) trae las keywords en **inglés** para Adzuna;
 `PROGRAMAS_KEYWORDS_CO` trae las de **español** para Google Jobs y LinkedIn.
