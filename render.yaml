@@ -29,7 +29,8 @@ services:
         sync: false
       - key: ONET_API_KEY
         sync: false
-      # Interruptor de aprobación de LinkedIn — 'false' hasta que la Dirección
-      # de Alumni / jurídica de la Universidad lo apruebe explícitamente.
+      # Interruptor de aprobación de LinkedIn — la Dirección de Alumni /
+      # jurídica de la Universidad ya lo aprobó, así que va en 'true'. Si esa
+      # aprobación se retira alguna vez, poner 'false' aquí y en Render.
       - key: LINKEDIN_HABILITADO
-        value: "false"
+        value: "true"
