@@ -359,7 +359,7 @@ export default function SalariesPage() {
               {ole?.sabana && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
                   <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-                    🎓 Egresados de La Sabana — OLE, MinEducación {ole.anio_corte}
+                    Egresados de La Sabana — OLE, MinEducación {ole.anio_corte}
                   </h3>
                   <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
                     Ingreso de los <b>{ole.sabana.graduados.toLocaleString('es-CO')}</b> graduados de{' '}
@@ -438,7 +438,7 @@ export default function SalariesPage() {
                       className="text-xs rounded px-3 py-2 mb-4"
                       style={{ backgroundColor: 'var(--sabana-sky-blue)', color: 'var(--sabana-dark-navy)' }}
                     >
-                      ⚠ Solo {ole.sabana.graduados} graduados cotizantes. Con una muestra tan
+                      Solo {ole.sabana.graduados} graduados cotizantes. Con una muestra tan
                       pequeña la mediana se mueve con unas pocas personas: tómese como indicio.
                     </p>
                   )}
@@ -485,7 +485,7 @@ export default function SalariesPage() {
               {/* Comparativa por subgrupo CNO */}
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
                 <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-                  💰 Comparativa salarial entre grupos ocupacionales
+                  Comparativa salarial entre grupos ocupacionales
                 </h3>
                 <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
                   Mediana mensual (COP) por gran grupo profesional. En{' '}
@@ -527,10 +527,10 @@ export default function SalariesPage() {
               {/* Rangos SPE */}
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
                 <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-                  📊 Rangos salariales en vacantes activas — SPE Colombia
+                  Rangos salariales en vacantes activas — SPE Colombia
                 </h3>
                 <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
-                  Participación de vacantes por rango y su variación anual. Resaltado ⭐, el
+                  Participación de vacantes por rango y su variación anual. Resaltado con borde, el
                   rango donde cae la mediana de <b>{analisis.programa}</b>.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -553,7 +553,6 @@ export default function SalariesPage() {
                           <div className="flex justify-between items-baseline">
                             <span className="text-sm font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>
                               {r.rango}
-                              {enRango ? ' ⭐' : ''}
                             </span>
                             <span
                               className="text-xs font-semibold"
@@ -575,7 +574,7 @@ export default function SalariesPage() {
               {analisis.nivel_educativo.length > 0 && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
                   <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-                    🎓 Salario según nivel educativo
+                    Salario según nivel educativo
                   </h3>
                   <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
                     {analisis.nivel_educativo_nacional ? (

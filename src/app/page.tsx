@@ -236,15 +236,15 @@ interface DemandaResp {
 
 // Una gráfica de barras horizontal reutilizable para las 4 vistas de demanda.
 function GraficaDemanda({
-  icono, titulo, descripcion, datos, color, vacio,
+  titulo, descripcion, datos, color, vacio,
 }: {
-  icono: string; titulo: string; descripcion: string;
+  titulo: string; descripcion: string;
   datos: ItemDemanda[]; color: string; vacio: string;
 }) {
   return (
     <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
       <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-        {icono} {titulo}
+        {titulo}
       </h3>
       <p className="text-sm text-zinc-500 mb-4">{descripcion}</p>
       {datos.length === 0 ? (
@@ -867,7 +867,7 @@ export default function TendenciasPage() {
       <PageLayout title={DIMENSIONES[dimension].titulo}>
         {selector}
         <div className="flex items-center justify-center py-12">
-          <p className="text-lg text-zinc-600 font-bold">⏳ Cargando tendencias...</p>
+          <p className="text-lg text-zinc-600 font-bold">Cargando tendencias...</p>
         </div>
       </PageLayout>
     );
@@ -878,7 +878,7 @@ export default function TendenciasPage() {
       <PageLayout title={DIMENSIONES[dimension].titulo}>
         {selector}
         <div className="bg-red-100 rounded-lg p-6">
-          <p className="text-red-700">❌ {error}</p>
+          <p className="text-red-700">{error}</p>
           <button
             onClick={() => cargar(dimension, programa, seniority, desde, hasta, paisesSel)}
             className="mt-4 px-4 py-2 rounded-lg font-semibold"
@@ -919,7 +919,7 @@ export default function TendenciasPage() {
               style={{ borderColor: 'var(--sabana-navy)' }}
             >
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
-                💰 Salario promedio — {programa}
+                Salario promedio — {programa}
               </p>
               {salarioLoading ? (
                 <p className="text-sm text-zinc-500 mt-2">Cargando…</p>
@@ -1008,12 +1008,13 @@ export default function TendenciasPage() {
             para no repetir prácticamente la misma pregunta cuatro veces. */}
         <div className="mb-4">
           <h2 className="text-2xl font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
-            📌 Demanda actual
+            Demanda actual
           </h2>
           <p className="text-sm text-zinc-500">
-            {programa === TODOS
-              ? 'Los cargos, sectores, empresas y programas con más vacantes en la muestra, según los filtros de arriba (país, programa y nivel).'
-              : `${dimension === 'sector' ? 'Los sectores' : 'Los cargos'} con más vacantes para ${programa}, según los filtros de arriba.`}
+            {dimension === 'sector'
+              ? 'Los sectores con más vacantes en la muestra, según los filtros de arriba (país, programa y nivel).'
+              : 'Los cargos con más vacantes en la muestra, según los filtros de arriba (país, programa y nivel).'}
+            {programa === TODOS ? ' Incluye además empresas y programas académicos.' : ''}
             {demanda ? ` Basado en ${demanda.meta.total.toLocaleString('es-CO')} vacantes.` : ''}
           </p>
         </div>
@@ -1022,17 +1023,17 @@ export default function TendenciasPage() {
           <p className="text-center text-zinc-500 py-8">Cargando demanda…</p>
         ) : (
           <div className="space-y-6 mb-10">
-            {(programa === TODOS || dimension === 'cargo') && (
+            {dimension === 'cargo' && (
               <GraficaDemanda
-                icono="💼" titulo="Cargos más demandados"
+                titulo="Cargos más demandados"
                 descripcion="Títulos de cargo con mayor número de vacantes."
                 datos={demanda?.cargos ?? []} color="var(--sabana-dark-navy)"
                 vacio="No hay cargos con ese filtro."
               />
             )}
-            {(programa === TODOS || dimension === 'sector') && (
+            {dimension === 'sector' && (
               <GraficaDemanda
-                icono="🏢" titulo="Sectores con mayor actividad de contratación"
+                titulo="Sectores con mayor actividad de contratación"
                 descripcion="Sectores económicos que más contratan (Adzuna; Google Jobs no aporta sector)."
                 datos={demanda?.sectores ?? []} color="var(--sabana-navy)"
                 vacio="No hay datos de sector para la selección (Google Jobs no trae sector)."
@@ -1041,13 +1042,13 @@ export default function TendenciasPage() {
             {programa === TODOS && (
               <>
                 <GraficaDemanda
-                  icono="🏭" titulo="Empresas con mayor actividad de contratación"
+                  titulo="Empresas con mayor actividad de contratación"
                   descripcion="Empleadores con más vacantes publicadas."
                   datos={demanda?.empresas ?? []} color="var(--sabana-light-blue)"
                   vacio="No hay empresas con ese filtro."
                 />
                 <GraficaDemanda
-                  icono="🎓" titulo="Programas académicos relacionados con mayor demanda"
+                  titulo="Programas académicos relacionados con mayor demanda"
                   descripcion="Programas de La Sabana asociados a más vacantes."
                   datos={demanda?.programas ?? []} color="var(--sabana-navy)"
                   vacio="No hay programas con ese filtro."
@@ -1068,7 +1069,7 @@ export default function TendenciasPage() {
             {soloFuentesEnDesarrollo ? (
               <>
                 <p className="text-lg font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
-                  🌱 Esta fuente está en desarrollo
+                  Esta fuente está en desarrollo
                 </p>
                 <p className="text-sm text-zinc-500 max-w-2xl mx-auto">
                   La demanda actual de arriba <b>sí es real</b> y viene de esta fuente. Lo que falta es
@@ -1123,7 +1124,7 @@ export default function TendenciasPage() {
                   className="px-6 py-2 rounded-lg font-semibold disabled:opacity-60"
                   style={{ backgroundColor: 'var(--sabana-navy)', color: 'white', cursor: 'pointer' }}
                 >
-                  {recolectando ? '⏳ Recolectando histórico...' : '📥 Recolectar histórico (24 meses)'}
+                  {recolectando ? 'Recolectando histórico...' : 'Recolectar histórico (24 meses)'}
                 </button>
               </>
             )}
@@ -1141,7 +1142,6 @@ export default function TendenciasPage() {
           {([
             {
               clave: 'creciente' as Tendencia,
-              icono: '📈',
               titulo: `${DIMENSIONES[dimension].singular === 'cargo' ? 'Cargo' : 'Sector'}s crecientes`,
               datos: porTendencia.crecientes,
               color: 'var(--trend-up)',
@@ -1150,7 +1150,6 @@ export default function TendenciasPage() {
             },
             {
               clave: 'decreciente' as Tendencia,
-              icono: '📉',
               titulo: `${DIMENSIONES[dimension].singular === 'cargo' ? 'Cargo' : 'Sector'}s en decrecimiento`,
               datos: porTendencia.decrecientes,
               color: 'var(--trend-down)',
@@ -1164,7 +1163,7 @@ export default function TendenciasPage() {
               style={{ borderColor: c.color }}
             >
               <p className="text-sm font-bold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-                {c.icono} {c.titulo}
+                {c.titulo}
               </p>
               {c.datos.total === 0 ? (
                 <p className="text-sm text-zinc-500">{c.vacio}</p>
@@ -1219,7 +1218,7 @@ export default function TendenciasPage() {
         {/* ---------------- Barras: fuerza de la señal ---------------- */}
         <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mb-8">
           <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-            📊 Crecimiento de vacantes
+            Crecimiento de vacantes
           </h3>
           <p className="text-sm text-zinc-500 mb-4">
             
@@ -1270,7 +1269,7 @@ export default function TendenciasPage() {
         {/* ---------------- Evolución temporal ---------------- */}
         <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mb-8">
           <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-            📈 Evolución temporal
+            Evolución temporal
           </h3>
           <p className="text-sm text-zinc-500 mb-4">
             % de las vacantes de cada mes. Elige hasta {MAX_SERIES} {DIMENSIONES[dimension].singular}s para comparar.
@@ -1352,7 +1351,7 @@ export default function TendenciasPage() {
         {tendSpe && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mb-8">
             <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-              🇨🇴 Serie mensual del SPE — Colombia
+              Serie mensual del SPE — Colombia
             </h3>
             <p className="text-sm text-zinc-500 mb-4">
               La única tendencia <b>observada en Colombia</b> del Observatorio: las demás vienen de
@@ -1480,7 +1479,7 @@ export default function TendenciasPage() {
         {/* ---------------- Tabla ---------------- */}
         <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
           <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-            📋 Detalle
+            Detalle
           </h3>
           <p className="text-sm text-zinc-500 mb-4">
             Vista de tabla de los mismos datos de los gráficos
@@ -1551,7 +1550,7 @@ export default function TendenciasPage() {
             className="px-6 py-2 rounded-lg font-semibold disabled:opacity-60"
             style={{ backgroundColor: 'var(--sabana-navy)', color: 'white', cursor: 'pointer' }}
           >
-            {recolectando ? '⏳ Actualizando histórico...' : '🔄 Actualizar histórico'}
+            {recolectando ? 'Actualizando histórico...' : 'Actualizar histórico'}
           </button>
         </div>
           </>

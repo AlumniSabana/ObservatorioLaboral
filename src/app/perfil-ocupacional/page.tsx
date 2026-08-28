@@ -192,7 +192,7 @@ export default function PerfilOcupacionalPage() {
               className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
               style={{ backgroundColor: 'var(--sabana-dark-navy)' }}
             >
-              ⬇ Descargar reporte PDF
+              Descargar reporte PDF
             </button>
           </div>
 
@@ -206,7 +206,7 @@ export default function PerfilOcupacionalPage() {
                 <p className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>
                   Ocupación de referencia O*NET: <b style={{ color: 'var(--sabana-dark-navy)' }}>{data.onet.ocupacion_ref}</b>
                   {data.salario.cno ? ` · Grupo ocupacional CNO ${data.salario.cno.codigo} (${data.salario.cno.nombre})` : ''}
-                  {data.onet.bright_outlook ? ' · 🌟 Perspectiva de crecimiento' : ''}
+                  {data.onet.bright_outlook ? ' · Perspectiva de crecimiento' : ''}
                 </p>
               )}
 
@@ -250,7 +250,7 @@ export default function PerfilOcupacionalPage() {
 
               {/* ── SECCIÓN 1 · SALARIO + NIVEL EDUCATIVO ─────────────────── */}
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--sabana-dark-navy)' }}>💰 Salario en Colombia (COP)</h3>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--sabana-dark-navy)' }}>Salario en Colombia (COP)</h3>
                 <div className="mb-6">
                   <div className="rounded-lg p-4 border-l-4 max-w-xs" style={{ borderColor: 'var(--sabana-dark-navy)' }}>
                     <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Mediana mensual</p>
@@ -285,15 +285,15 @@ export default function PerfilOcupacionalPage() {
 
               {/* ── SECCIÓN 2 · SKILLS ─────────────────────────────────────── */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SkillsCard titulo="🧠 Competencias clave" skills={data.skills.competencias} color="var(--sabana-navy)" />
-                <SkillsCard titulo="🛠️ Tecnologías y herramientas" skills={data.skills.tecnologias} color="var(--sabana-light-blue)" />
+                <SkillsCard titulo="Competencias clave" skills={data.skills.competencias} color="var(--sabana-navy)" />
+                <SkillsCard titulo="Tecnologías y herramientas" skills={data.skills.tecnologias} color="var(--sabana-light-blue)" />
               </div>
 
               {/* ── SECCIÓN 2b · CNO 2025 (SENA) ───────────────────────────── */}
               {!data.cno_sena.sin_datos && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
                   <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-                    🇨🇴 Perfil oficial colombiano — CNO 2025 (SENA)
+                    Perfil oficial colombiano — CNO 2025 (SENA)
                   </h3>
                   <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
                     Lo que la <b style={{ color: 'var(--sabana-dark-navy)' }}>Clasificación Nacional de Ocupaciones</b> exige
@@ -313,7 +313,7 @@ export default function PerfilOcupacionalPage() {
               {/* ── SECCIÓN 3 · TENDENCIA ──────────────────────────────────── */}
               {data.tendencia.serie.length > 1 && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>📈 Tendencia de demanda</h3>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Tendencia de demanda</h3>
                   <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
                     Evolución del índice de demanda del programa. <b>Tendencia observada, no es una proyección.</b>
                     {' '}Señal: <span style={{ color: tend.color, fontWeight: 600 }}>{tend.icono} {tend.label}</span>.
@@ -332,14 +332,14 @@ export default function PerfilOcupacionalPage() {
 
               {/* ── SECCIÓN 4 · SENIORITY ÓPTIMO ───────────────────────────── */}
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>🎯 ¿Qué seniority conviene más?</h3>
+                <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>¿Qué seniority conviene más?</h3>
                 <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
                   Balance entre <b>acceso</b> (cuántas vacantes hay) y <b>pago</b> por nivel de experiencia.
                   Índice de pago relativo entre niveles (promedio = 100). Fuente: {data.seniority.fuente}.
                 </p>
                 {data.seniority.confianza === 'limitada' && (
                   <div className="rounded-lg px-3 py-2 mb-4 text-xs" style={{ background: 'var(--sabana-cream)', color: 'var(--sabana-dark-navy)' }}>
-                    ⚠️ Señal limitada: solo {data.seniority.n_total_etiquetadas} vacantes declaran nivel en el título. Tómese como orientación, no como conclusión.
+                    Señal limitada: solo {data.seniority.n_total_etiquetadas} vacantes declaran nivel en el título. Tómese como orientación, no como conclusión.
                   </div>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -347,7 +347,7 @@ export default function PerfilOcupacionalPage() {
                     const rec = data.seniority.recomendado?.codigo === nv.codigo;
                     return (
                       <div key={nv.codigo} className="rounded-lg p-3 border" style={{ borderColor: rec ? 'var(--sabana-dark-navy)' : 'var(--sabana-sky-blue)', borderWidth: rec ? 2 : 1, background: rec ? 'var(--sabana-sky-blue)' : 'transparent' }}>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>{nv.etiqueta}{rec ? ' ⭐' : ''}</p>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>{nv.etiqueta}</p>
                         <p className="text-xs mt-1" style={{ color: 'var(--sabana-black-50)' }}>Demanda: <b style={{ color: 'var(--sabana-dark-navy)' }}>{nv.demanda_pct}%</b></p>
                         <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Pago: <b style={{ color: 'var(--sabana-dark-navy)' }}>{nv.salario_indice != null ? `${nv.salario_indice} / 100` : '—'}</b></p>
                       </div>
@@ -365,7 +365,7 @@ export default function PerfilOcupacionalPage() {
               {(data.onet.riasec.length > 0 || data.onet.job_zone || data.onet.descripcion) && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>🧭 Perfil de intereses (RIASEC)</h3>
+                    <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Perfil de intereses (RIASEC)</h3>
                     <p className="text-sm mb-2" style={{ color: 'var(--sabana-black-50)' }}>Afinidad vocacional de la ocupación (modelo de Holland, Holland, J. L. (1997). Making vocational choices: A theory of vocational personalities and work environments (3rd ed.). Psychological Assessment Resources.).</p>
                     {data.onet.riasec.length > 0 ? (
                       <ResponsiveContainer width="100%" height={280}>
@@ -411,7 +411,7 @@ export default function PerfilOcupacionalPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {data.sectores.length > 0 && (
                     <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>🏢 Sectores que contratan</h3>
+                      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Sectores que contratan</h3>
                       <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>Vacantes por sector (referencia internacional, Adzuna).</p>
                       <ResponsiveContainer width="100%" height={Math.max(200, data.sectores.length * 42)}>
                         <BarChart data={data.sectores} layout="vertical" margin={{ left: 8, right: 30 }}>
@@ -426,7 +426,7 @@ export default function PerfilOcupacionalPage() {
                   )}
                   {data.ciudades_colombia.length > 0 && (
                     <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>📍 Dónde se contrata en Colombia</h3>
+                      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Dónde se contrata en Colombia</h3>
                       <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>Vacantes por ciudad (Google Jobs + LinkedIn, Colombia).</p>
                       <ResponsiveContainer width="100%" height={Math.max(200, data.ciudades_colombia.length * 42)}>
                         <BarChart data={data.ciudades_colombia} layout="vertical" margin={{ left: 8, right: 30 }}>

@@ -167,7 +167,7 @@ export default function CursosPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
               <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--sabana-light-blue)' }}>
-                📚 Coursera
+                Coursera
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 Cursos, certificados profesionales y títulos de universidades y empresas
@@ -177,7 +177,7 @@ export default function CursosPage() {
             </div>
             <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
               <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--sabana-light-blue)' }}>
-                💡 LinkedIn Learning
+                LinkedIn Learning
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 Formación corta y orientada al trabajo en tecnología, negocios y habilidades
@@ -186,7 +186,7 @@ export default function CursosPage() {
             </div>
             <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
               <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--sabana-light-blue)' }}>
-                🎓 Google Skills
+                Google Skills
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 Plataforma de formación de Google con miles de cursos, laboratorios y credenciales
@@ -195,7 +195,7 @@ export default function CursosPage() {
             </div>
             <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
               <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--sabana-light-blue)' }}>
-                💼 IBM Training
+                IBM Training
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 Catálogo de IBM con más de 1.500 cursos, certificaciones, insignias digitales y rutas

@@ -576,7 +576,7 @@ export default function SkillsDemandadasPage() {
         >
           {speActivo && dataSpe ? (
             <>
-              🇨🇴 Ranking <strong>observado</strong>: son las competencias que los empleadores
+              Ranking <strong>observado</strong>: son las competencias que los empleadores
               pidieron de verdad en las vacantes registradas por el <strong>Servicio Público de
               Empleo</strong> de Colombia. No es una estimación: se cuentan menciones reales sobre
               ~1,8 millones de ofertas. El índice va de 0 a 100 respecto a la skill líder.
@@ -584,7 +584,7 @@ export default function SkillsDemandadasPage() {
             </>
           ) : (
             <>
-              ℹ️ Ranking <strong>derivado</strong>: combina la <strong>demanda real</strong> de cada programa
+              Ranking <strong>derivado</strong>: combina la <strong>demanda real</strong> de cada programa
               (share de vacantes de Adzuna) con la <strong>importancia O*NET</strong> de cada skill en la
               ocupación. No son skills leídas del texto de las vacantes —Adzuna no lo permite— sino una
               estimación de qué competencias y herramientas concentra el mercado que se está demandando. El
@@ -658,13 +658,13 @@ export default function SkillsDemandadasPage() {
 
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <p className="text-lg text-zinc-600 font-bold">⏳ Cargando ranking...</p>
+            <p className="text-lg text-zinc-600 font-bold">Cargando ranking...</p>
           </div>
         )}
 
         {!loading && error && (
           <div className="bg-red-100 rounded-lg p-6">
-            <p className="text-red-700">❌ {error}</p>
+            <p className="text-red-700">{error}</p>
             <button
               onClick={() => cargar(tipo, programa, seniority, paisesSel)}
               className="mt-4 px-4 py-2 rounded-lg font-semibold"
@@ -763,7 +763,7 @@ export default function SkillsDemandadasPage() {
                   style={{ color: 'var(--sabana-navy)' }}
                   aria-label="Cerrar"
                 >
-                  ✕
+                  Cerrar
                 </button>
               </div>
             )}
@@ -777,7 +777,7 @@ export default function SkillsDemandadasPage() {
         {senaActivo && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mt-8">
             <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-              🇨🇴 Requisito oficial — CNO 2025 (SENA)
+              Requisito oficial — CNO 2025 (SENA)
             </h3>
             {programa === TODOS ? (
               <p className="text-sm text-zinc-500">
@@ -831,7 +831,7 @@ export default function SkillsDemandadasPage() {
         {contraste && contraste.informes.length > 0 && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mt-8">
             <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-              📑 Contraste con informes
+              Contraste con informes
             </h3>
             <p className="text-sm text-zinc-500 mb-3">
               Qué dicen los informes seleccionados frente a nuestro ranking. Son cifras{' '}
@@ -850,7 +850,7 @@ export default function SkillsDemandadasPage() {
                   <b>{inf.label}</b>
                   {` · ${inf.anio_referencia}`}
                   {inf.antiguo && (
-                    <span style={{ color: 'var(--trend-down)' }}> · ⚠ datos de {inf.anio_referencia}</span>
+                    <span style={{ color: 'var(--trend-down)' }}> · datos de {inf.anio_referencia}</span>
                   )}
                 </span>
               ))}
@@ -907,7 +907,7 @@ export default function SkillsDemandadasPage() {
                           ) : diferencia === null ? (
                             '—'
                           ) : Math.abs(diferencia) <= 1 ? (
-                            <span style={{ color: 'var(--trend-up)' }}>✓ coinciden</span>
+                            <span style={{ color: 'var(--trend-up)' }}>Coinciden</span>
                           ) : (
                             <span style={{ color: 'var(--trend-flat)' }}>
                               {diferencia > 0 ? '▲' : '▼'} {Math.abs(diferencia)} posiciones
@@ -935,7 +935,7 @@ export default function SkillsDemandadasPage() {
         {!loading && !error && mostrarEvolucion && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mt-8">
             <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-              📈 Evolución de la demanda
+              Evolución de la demanda
             </h3>
             <p className="text-sm text-zinc-500 mb-2">
               Cómo se ha movido el índice de demanda a lo largo del tiempo. Elige hasta{' '}

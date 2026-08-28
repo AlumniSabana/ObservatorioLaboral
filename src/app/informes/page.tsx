@@ -508,7 +508,7 @@ export default function InformesPage() {
         {comparativa && comparativa.terminos.length > 0 && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
             <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-              📊 Comparativa entre informes
+              Comparativa entre informes
             </h3>
             <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
               Qué posición ocupa cada skill en cada informe. Se comparan <b>posiciones</b>, no

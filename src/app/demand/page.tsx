@@ -22,7 +22,7 @@ export default function DemandPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              👨‍💻 Roles en tecnología
+              Roles en tecnología
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Desarrollador Full Stack</li>
@@ -35,7 +35,7 @@ export default function DemandPage() {
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              💼 Roles en negocios
+              Roles en negocios
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Gerente de Proyectos</li>
@@ -48,7 +48,7 @@ export default function DemandPage() {
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              📊 Roles en datos y análisis
+              Roles en datos y análisis
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Científico de Datos</li>
@@ -61,7 +61,7 @@ export default function DemandPage() {
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🔒 Roles en seguridad
+              Roles en seguridad
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Analista de Ciberseguridad</li>
@@ -74,20 +74,20 @@ export default function DemandPage() {
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🌐 Tendencias de demanda
+              Tendencias de demanda
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
-              <li>↑ Roles remotos en aumento</li>
-              <li>↑ Demanda de especialistas en IA</li>
-              <li>↑ Profesionales con múltiples skills</li>
-              <li>↑ Experiencia en transformación digital</li>
-              <li>↑ Habilidades en sostenibilidad</li>
+              <li>• Roles remotos en aumento</li>
+              <li>• Demanda de especialistas en IA</li>
+              <li>• Profesionales con múltiples skills</li>
+              <li>• Experiencia en transformación digital</li>
+              <li>• Habilidades en sostenibilidad</li>
             </ul>
           </div>
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🎯 Competencias prioritarias
+              Competencias prioritarias
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-sm">
               <li>• Adaptabilidad y flexibilidad</li>

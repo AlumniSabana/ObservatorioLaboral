@@ -178,7 +178,7 @@ export function generarPerfilPDF(data: PerfilPDF): void {
   data.seniority.niveles.forEach((nv) => {
     const rec = data.seniority.recomendado?.etiqueta === nv.etiqueta;
     setText(rec ? NAVY : NAVY2); doc.setFont('helvetica', rec ? 'bold' : 'normal'); doc.setFontSize(9);
-    doc.text((rec ? '★ ' : '') + nv.etiqueta, M, y);
+    doc.text(nv.etiqueta, M, y);
     doc.text(`${nv.demanda_pct}%`, M + 70, y);
     y += 6;
   });

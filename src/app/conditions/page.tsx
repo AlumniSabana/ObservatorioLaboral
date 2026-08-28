@@ -22,7 +22,7 @@ export default function ConditionsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              📍 Modalidades de trabajo
+              Modalidades de trabajo
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• <strong>Presencial:</strong> Trabajo en oficina tradicional</li>
@@ -34,7 +34,7 @@ export default function ConditionsPage() {
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              🎁 Beneficios y prestaciones
+              Beneficios y prestaciones
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Seguro de salud completo</li>
@@ -46,7 +46,7 @@ export default function ConditionsPage() {
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              ⏰ Horarios de trabajo
+              Horarios de trabajo
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Jornada de 40 horas semanales</li>
@@ -58,7 +58,7 @@ export default function ConditionsPage() {
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              📚 Desarrollo profesional
+              Desarrollo profesional
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Programas de capacitación</li>
@@ -70,7 +70,7 @@ export default function ConditionsPage() {
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              👥 Cultura empresarial
+              Cultura empresarial
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Ambiente colaborativo</li>
@@ -82,7 +82,7 @@ export default function ConditionsPage() {
 
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{borderColor: 'var(--sabana-light-blue)'}}>
             <h3 className="text-lg font-semibold mb-3" style={{color: 'var(--sabana-light-blue)'}}>
-              ⚖️ Estabilidad laboral
+              Estabilidad laboral
             </h3>
             <ul className="text-zinc-600 dark:text-zinc-400 space-y-2 text-sm">
               <li>• Contratos indefinidos</li>

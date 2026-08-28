@@ -151,7 +151,7 @@ export function SelectorFuentes({
               style={estiloAtajo(soloNacionales)}
               title="Usar solo las fuentes del mercado colombiano"
             >
-              🇨🇴 Colombia
+              Colombia
             </button>
             <button
               type="button"

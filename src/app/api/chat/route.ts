@@ -231,8 +231,8 @@ async function responderConClaude(
           const detalle = err instanceof Error ? err.message : String(err);
           const sinSaldo = /credit balance|quota|billing/i.test(detalle);
           const mensaje = sinSaldo
-            ? "⚠️ No se pudo generar la respuesta: la cuenta de Anthropic no tiene saldo disponible. Revisa *Plans & Billing* en console.anthropic.com y vuelve a intentarlo."
-            : `⚠️ No se pudo generar la respuesta: ${detalle}`;
+            ? "No se pudo generar la respuesta: la cuenta de Anthropic no tiene saldo disponible. Revisa *Plans & Billing* en console.anthropic.com y vuelve a intentarlo."
+            : `No se pudo generar la respuesta: ${detalle}`;
           controller.enqueue(encoder.encode(mensaje));
         }
         controller.close();
@@ -310,8 +310,8 @@ async function responderConGemini(
     console.error("Error de Gemini antes de transmitir:", geminiResponse.status, detalle);
     const sinCuota = geminiResponse.status === 429 || /quota|RESOURCE_EXHAUSTED/i.test(detalle);
     const mensaje = sinCuota
-      ? "⚠️ No se pudo generar la respuesta: se agotó la cuota de la API de Gemini. Revisa el plan en Google AI Studio y vuelve a intentarlo."
-      : `⚠️ No se pudo generar la respuesta: ${geminiResponse.status} ${detalle.slice(0, 300)}`;
+      ? "No se pudo generar la respuesta: se agotó la cuota de la API de Gemini. Revisa el plan en Google AI Studio y vuelve a intentarlo."
+      : `No se pudo generar la respuesta: ${geminiResponse.status} ${detalle.slice(0, 300)}`;
     return new Response(mensaje, {
       status: 200, // el frontend espera texto plano y lo muestra tal cual
       headers: { "Content-Type": "text/plain; charset=utf-8" },
@@ -361,7 +361,7 @@ async function responderConGemini(
         console.error("Error durante el streaming de Gemini:", err);
         if (!huboTexto) {
           const detalle = err instanceof Error ? err.message : String(err);
-          controller.enqueue(encoder.encode(`⚠️ No se pudo generar la respuesta: ${detalle}`));
+          controller.enqueue(encoder.encode(`No se pudo generar la respuesta: ${detalle}`));
         }
         controller.close();
       }
