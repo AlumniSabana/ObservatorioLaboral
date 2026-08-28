@@ -47,7 +47,7 @@ from typing import Any, Dict, List, Tuple
 
 from Adzuna.adzuna_service import normalize_title, supabase
 from Tendencias.seniority import NIVELES, detectar_seniority
-from config import es_pertinente
+from config import es_pertinente, coincide_con_keyword
 from traducciones import traducir_sector, traducir_cargo
 
 TABLA_OBS = "tendencias_observaciones"
@@ -190,6 +190,16 @@ def agregar_observaciones(
 
     for fila in filas:
         if not fila.get("created_at"):
+            continue
+        # El backfill de Adzuna pide sort_direction=up (más antiguas primero,
+        # para poder muestrear meses pasados), lo que desactiva el orden por
+        # relevancia de la API: para keywords amplias de 1-2 palabras, la
+        # mayoría de lo que vuelve no tiene relación real con lo buscado
+        # (verificado: "organizational development" trajo 0% de títulos
+        # relevantes). Se descarta toda la fila, no solo el término de cargo,
+        # porque si el título no coincide con lo buscado tampoco es fiable su
+        # sector ni sus skills. Ver coincide_con_keyword() en config.py.
+        if not coincide_con_keyword(fila.get("keyword"), fila.get("title")):
             continue
         p = _periodo(fila["created_at"])
         w = peso.get((fila.get("keyword") or "", p), 1.0)

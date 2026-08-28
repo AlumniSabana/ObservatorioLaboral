@@ -44,7 +44,7 @@ from Tendencias.skills_demandadas import (
 )
 from Tendencias.google_jobs_sync import sincronizar as sincronizar_google_jobs
 from Tendencias.linkedin_sync import sincronizar as sincronizar_linkedin
-from Tendencias.demanda_actual import demanda_actual, invalidar_cache as invalidar_demanda
+from Tendencias.demanda_actual import demanda_actual, salario_vacantes_cop, invalidar_cache as invalidar_demanda
 from Salarios.salarios_service import (
     salario_por_programa,
     resumen_salarios,
@@ -166,17 +166,26 @@ async def get_salary_by_job_category(category: str):
 
 
 @app.get("/analytics/salarios")
-async def get_salarios(programa: str = None):
+async def get_salarios(programa: str = None, paises: str = None):
     """
     Análisis salarial en COP pivotado por programa académico (GEIH DANE + SPE).
 
     Sin `programa`: devuelve el resumen base (meta, lista de programas con datos,
     rangos SPE). Con `programa`: devuelve KPIs (mediana/percentiles), la
     comparativa por subgrupo ocupacional CNO y el rango SPE donde cae la mediana.
+
+    Si además se pasa `paises` (los mismos códigos de Tendencias, ej. "us,gb,co"),
+    se agrega `salario_vacantes`: el promedio mensual en COP de las vacantes de
+    Adzuna seleccionadas (convertido con la TRM del momento), para comparar el
+    salario oficial de GEIH contra lo que de verdad ofrecen las vacantes de esas
+    fuentes. Google Jobs y LinkedIn no aportan aquí (no traen salario estructurado).
     """
     try:
         if programa:
-            return salario_por_programa(programa)
+            resultado = salario_por_programa(programa)
+            if paises:
+                resultado["salario_vacantes"] = salario_vacantes_cop(programa, paises.split(","))
+            return resultado
         return resumen_salarios()
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})

@@ -57,6 +57,7 @@ from config import (
     LINKEDIN_PAUSA_SEG,
     PROGRAMAS_KEYWORDS_CO,
     es_pertinente,
+    coincide_con_keyword,
 )
 
 TABLA = "vacantes_linkedin"
@@ -128,6 +129,8 @@ def _parsear_tarjetas(html: str, keyword: str, programa: str,
         # sin mirar el título: descarta lo que no puede pertenecer a ese programa
         # (ver EXCLUSIONES_PROGRAMA en config.py).
         if not es_pertinente(programa, titulo):
+            continue
+        if not coincide_con_keyword(keyword, titulo):
             continue
         empresa = _texto(tarjeta.find("h4"))
         ubicacion = _texto(tarjeta.find("span", class_=re.compile("job-search-card__location")))

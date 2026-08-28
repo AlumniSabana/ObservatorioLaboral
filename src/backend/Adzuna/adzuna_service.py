@@ -289,7 +289,15 @@ def normalize_title(title: str) -> str:
         return "Sin título"
     
     title = title.lower()
-    
+
+    # Sufijo de género en español, en sus dos convenciones más comunes en
+    # ofertas colombianas: paréntesis ("Administrador(a)") y barra
+    # ("Administrador/a"). Sin esto, el paso de abajo que quita signos de
+    # puntuación deja una "a"/"o" suelta en medio del título
+    # ("administrador a empresas" en vez de "administrador empresas").
+    title = re.sub(r'\((a|o|as|os)\)', '', title, flags=re.IGNORECASE)
+    title = re.sub(r'(?<=\w)/(a|o|as|os)\b', '', title, flags=re.IGNORECASE)
+
     # Eliminar niveles de seniority
     title = re.sub(r'\b(sr\.?|senior|s\.r\.?|jr\.?|junior|lead|principal|staff|associate|entry\s*level|entry-level|entry)\b', '', title, flags=re.IGNORECASE)
     

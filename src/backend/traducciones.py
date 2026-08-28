@@ -316,6 +316,64 @@ CARGOS: dict[str, str] = {
     "management trainee": "Trainee de gestión",
     "customer success manager": "Gerente de éxito del cliente",
     "solution architect": "Arquitecto de soluciones",
+
+    # Añadidos tras filtrar el ruido de keywords amplias (2026-08-25, ver
+    # coincide_con_keyword en config.py): con menos ruido compitiendo por
+    # volumen, estos términos genuinos quedaron visibles sin traducir.
+    "business manager": "Gerente de negocios",
+    "business office manager": "Gerente de oficina",
+    "it business manager": "Gerente de negocios de TI",
+    "new business manager": "Gerente de nuevos negocios",
+    "digital marketing specialist": "Especialista en marketing digital",
+    "digital marketing executive": "Ejecutivo de marketing digital",
+    "digital marketing coordinator": "Coordinador de marketing digital",
+    "digital marketing intern": "Practicante de marketing digital",
+    "field marketing manager": "Gerente de marketing de campo",
+    "marketing sales manager": "Gerente de marketing y ventas",
+    "growth marketing manager": "Gerente de marketing de crecimiento",
+    "influencer marketing manager": "Gerente de marketing de influencers",
+    "data governance analyst": "Analista de gobierno de datos",
+    "business data analyst": "Analista de datos de negocio",
+    "ecommerce data analyst remote": "Analista de datos de e-commerce (remoto)",
+    "data management analyst": "Analista de gestión de datos",
+    "financial data analyst": "Analista de datos financieros",
+    "marketing data scientist": "Científico de datos de marketing",
+    "data quality analyst": "Analista de calidad de datos",
+    # Mismo término que "analista político" (keyword en español) para que
+    # ambos idiomas se fusionen en una sola barra en vez de dos separadas.
+    "political analyst": "Analista político",
+    "political science analyst intern": "Practicante de análisis en ciencia política",
+    "political research analyst": "Analista de investigación política",
+    "geopolitical analyst": "Analista geopolítico",
+    "organizational developer specialist": "Especialista en desarrollo organizacional",
+    "corporate manager talent management": "Gerente corporativo de gestión del talento",
+    "talent management intern": "Practicante de gestión del talento",
+    "talent management analyst hr": "Analista de gestión del talento (RRHH)",
+
+    # Formas en español que salían mal formadas por el bug de "Administrador(a)"
+    # en normalize_title (ya arreglado ahí) o simplemente sin mayúsculas por
+    # venir en minúscula desde la fuente. Donde ya existe un equivalente en
+    # inglés en este diccionario, se usa la MISMA traducción para que se
+    # fusionen en un solo término en vez de aparecer como barras separadas.
+    "administrador empresas": "Administrador(a) de Empresas",
+    "director desarrollo organizacional": "Director(a) de Desarrollo Organizacional",
+    "científico datos": "Científico de datos",
+    "cientifico datos": "Científico de datos",
+    "coordinador contable": "Coordinador(a) Contable",
+    "consultor sénior desarrollo organizacional": "Consultor(a) Sénior de Desarrollo Organizacional",
+    "gerente operaciones": "Gerente de operaciones",
+    "analista administrativo": "Analista administrativo",
+    "analista mercadeo": "Analista de mercadeo",
+    "analista logística": "Analista de logística",
+    "analista comercio exterior": "Analista de comercio exterior",
+    "analista recursos humanos": "Analista de recursos humanos",
+    "analista datos": "Analista de datos",
+    "analista inteligencia negocios": "Analista de inteligencia de negocios",
+    "coordinador desarrollo organizacional": "Coordinador(a) de Desarrollo Organizacional",
+    "auxiliar desarrollo organizacional": "Auxiliar de Desarrollo Organizacional",
+    "analista desarrollo organizacional": "Analista de Desarrollo Organizacional",
+    "especialista desarrollo organizacional": "Especialista en Desarrollo Organizacional",
+    "analista gestión talento": "Analista de Gestión del Talento",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────

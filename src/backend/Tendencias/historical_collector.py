@@ -42,7 +42,7 @@ from typing import Any, Dict, List, Tuple
 
 import requests
 
-from config import ADZUNA_APP_ID, ADZUNA_APP_KEY, PROGRAMAS_KEYWORDS, es_pertinente
+from config import ADZUNA_APP_ID, ADZUNA_APP_KEY, PROGRAMAS_KEYWORDS, es_pertinente, coincide_con_keyword
 from Adzuna.adzuna_service import supabase
 
 TABLA_HIST = "vacantes_historicas"
@@ -107,6 +107,12 @@ def _fila(job: Dict[str, Any], keyword: str, programa: str, pais: str = "us") ->
     if "id" not in job or not job.get("created"):
         return None
     if not es_pertinente(programa, job.get("title")):
+        return None
+    # El backfill pide sort_direction=up (más antiguas primero) para poder
+    # muestrear meses pasados, y eso desactiva el orden por relevancia de
+    # Adzuna: para keywords amplias de 1-2 palabras, la mayoría de lo que
+    # vuelve no tiene relación real con lo buscado. Ver coincide_con_keyword().
+    if not coincide_con_keyword(keyword, job.get("title")):
         return None
     return {
         "id": int(job["id"]),

@@ -24,7 +24,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import List, Dict, Any
 from collections import Counter
 
-from config import SERPAPI_KEY, PROGRAMAS_KEYWORDS_CO, SERPAPI_MAX_BUSQUEDAS, es_pertinente
+from config import SERPAPI_KEY, PROGRAMAS_KEYWORDS_CO, SERPAPI_MAX_BUSQUEDAS, es_pertinente, coincide_con_keyword
 # Reutilizamos el cliente de Supabase, el normalizador de títulos y los helpers
 # de filtrado/seniority ya existentes (viven en adzuna_service por historia).
 from Adzuna.adzuna_service import (
@@ -234,6 +234,11 @@ def guardar_vacante_google(job: Dict[str, Any], programa: str, keyword: str) -> 
         # con la keyword pedida, sin mirar el título: descarta lo que no puede
         # pertenecer a ese programa (ver EXCLUSIONES_PROGRAMA en config.py).
         if not es_pertinente(programa, job.get("title")):
+            return False
+        # Verificado con datos reales (2026-08-25): algunas keywords en español
+        # también traen ruido por full-text ("jefe de cadena de suministro" solo
+        # 20% relevante, "coordinador de importaciones y exportaciones" 8%).
+        if not coincide_con_keyword(keyword, job.get("title")):
             return False
 
         detected = job.get("detected_extensions", {}) or {}

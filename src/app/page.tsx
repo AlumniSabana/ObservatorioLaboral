@@ -22,6 +22,7 @@
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 import { SelectorFuentes, type FuenteOpcion as OpcionSelector } from '@/lib/selector-fuentes';
+import { Spinner } from '@/lib/spinner';
 import { useState, useEffect, useMemo } from 'react';
 import {
   BarChart,
@@ -101,6 +102,16 @@ interface TendenciasResponse {
 interface SalarioPrograma {
   kpis: { media: number; mediana: number; n: number } | null;
   tiene_geih: boolean;
+  // Promedio mensual en COP de las vacantes de Adzuna seleccionadas (ver
+  // Tendencias/demanda_actual.py::salario_vacantes_cop). Solo Adzuna trae
+  // salario estructurado — Google Jobs y LinkedIn no aportan aquí.
+  salario_vacantes?: {
+    disponible: boolean;
+    media_cop?: number;
+    n?: number;
+    paises?: string[];
+    trm_fecha?: string;
+  };
 }
 
 interface FuenteOpcion {
@@ -394,6 +405,11 @@ export default function TendenciasPage() {
   const cargarDemanda = async (prog: string, sen: string, pais: string[], top: number) => {
     if (pais.length === 0) return;
     setDemandaLoading(true);
+    // Limpia el dato viejo ANTES de pedir el nuevo: si no, mientras el fetch
+    // está en curso (puede tardar) la gráfica sigue mostrando el resultado del
+    // filtro anterior sin avisar que está desactualizado — parece que el
+    // filtro no aplicó, cuando en realidad solo va lento.
+    setDemanda(null);
     try {
       const url = new URL(`${BACKEND_URL}/tendencias/demanda`);
       url.searchParams.set('programa', prog);
@@ -431,6 +447,7 @@ export default function TendenciasPage() {
       try {
         const url = new URL(`${BACKEND_URL}/analytics/salarios`);
         url.searchParams.set('programa', programa);
+        url.searchParams.set('paises', paisesSel.join(','));
         const r = await fetch(url);
         const d = r.ok ? await r.json() : null;
         if (!cancelado) setSalario(d);
@@ -442,7 +459,7 @@ export default function TendenciasPage() {
     })();
     return () => { cancelado = true; };
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [programa]);
+  }, [programa, paisesSel]);
 
   // Nombres legibles de las fuentes seleccionadas (para el chat y los textos).
   const etiquetasPaises = opciones.fuentes
@@ -866,9 +883,7 @@ export default function TendenciasPage() {
     return (
       <PageLayout title={DIMENSIONES[dimension].titulo}>
         {selector}
-        <div className="flex items-center justify-center py-12">
-          <p className="text-lg text-zinc-600 font-bold">Cargando tendencias...</p>
-        </div>
+        <Spinner label="Cargando tendencias..." />
       </PageLayout>
     );
   }
@@ -913,16 +928,16 @@ export default function TendenciasPage() {
             aplica con UN programa elegido — el resumen sin programa no trae
             un KPI puntual, trae un panorama distinto. */}
         {programa !== TODOS && (
-          <div className="mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <div
-              className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4 max-w-sm"
+              className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4"
               style={{ borderColor: 'var(--sabana-navy)' }}
             >
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
-                Salario promedio — {programa}
+                Salario promedio (GEIH) — {programa}
               </p>
               {salarioLoading ? (
-                <p className="text-sm text-zinc-500 mt-2">Cargando…</p>
+                <Spinner size="sm" compact label="Cargando..." />
               ) : salario?.tiene_geih && salario.kpis ? (
                 <>
                   <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
@@ -943,6 +958,41 @@ export default function TendenciasPage() {
                 </p>
               )}
             </div>
+
+            {/* Promedio de las vacantes de Adzuna realmente seleccionadas arriba,
+                convertido a COP con la TRM del día. Solo Adzuna (us/gb/ca/mx/es)
+                trae salario estructurado — Google Jobs y LinkedIn no aportan
+                aquí aunque estén marcados en el selector de fuentes. */}
+            <div
+              className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4"
+              style={{ borderColor: 'var(--sabana-light-blue)' }}
+            >
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
+                Salario de las vacantes seleccionadas — {programa}
+              </p>
+              {salarioLoading ? (
+                <Spinner size="sm" compact label="Cargando..." />
+              ) : salario?.salario_vacantes?.disponible ? (
+                <>
+                  <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                    {salario.salario_vacantes.media_cop!.toLocaleString('es-CO', {
+                      style: 'currency',
+                      currency: 'COP',
+                      maximumFractionDigits: 0,
+                    })}
+                  </p>
+                  <p className="text-xs mt-1 text-zinc-500">
+                    Mensual · {salario.salario_vacantes.n} vacantes de Adzuna ({salario.salario_vacantes.paises?.join(', ')}),
+                    convertido a COP con la TRM del {salario.salario_vacantes.trm_fecha}.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-zinc-500 mt-2">
+                  Sin salario disponible: selecciona alguna fuente de Adzuna (EE.UU., Reino Unido, Canadá,
+                  México o España) — Google Jobs y LinkedIn no traen salario estructurado.
+                </p>
+              )}
+            </div>
           </div>
         )}
 
@@ -950,8 +1000,10 @@ export default function TendenciasPage() {
         {hayTendencia && data && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             {/* Volumen crudo detrás del análisis. Va primero porque es la cifra
-                que da escala: los "cargos normalizados" de al lado salen de
-                agrupar estas vacantes por título. */}
+                que da escala: los "cargos con tendencia" de al lado son solo
+                los que tuvieron suficiente historia mensual para calcularla —
+                todas las vacantes recolectadas se normalizan/agrupan igual,
+                sean o no suficientes para una tendencia. */}
             <div className="rounded-lg p-5" style={{ backgroundColor: 'var(--sabana-sky-blue)' }}>
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
                 Vacantes analizadas
@@ -966,13 +1018,13 @@ export default function TendenciasPage() {
 
             <div className="rounded-lg p-5" style={{ backgroundColor: 'var(--sabana-sky-blue)' }}>
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
-                {DIMENSIONES[dimension].singular}s normalizados
+                {DIMENSIONES[dimension].singular}s con tendencia
               </p>
               <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
                 {data.meta.total_terminos}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--sabana-navy)' }}>
-                en {periodos.length} meses
+                con suficiente historia en {periodos.length} meses
               </p>
             </div>
 
@@ -1020,7 +1072,7 @@ export default function TendenciasPage() {
         </div>
 
         {demandaLoading && !demanda ? (
-          <p className="text-center text-zinc-500 py-8">Cargando demanda…</p>
+          <Spinner label="Cargando demanda..." />
         ) : (
           <div className="space-y-6 mb-10">
             {dimension === 'cargo' && (

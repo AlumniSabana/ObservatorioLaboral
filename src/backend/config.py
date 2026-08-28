@@ -215,10 +215,49 @@ def es_pertinente(programa: str | None, titulo: str | None) -> bool:
     Devuelve True cuando no hay regla que lo desmienta: el criterio es descartar
     lo que sabemos que está mal, no exigir que el título demuestre pertenecer.
     Un match por tokens de la keyword descartaría vacantes legítimas en español
-    buscadas con keywords en inglés (y viceversa).
+    buscadas con keywords en inglés (y viceversa) — para eso está
+    `coincide_con_keyword`, que sí hace ese match pero por otro motivo (ver ahí).
     """
     prohibidas = EXCLUSIONES_PROGRAMA.get(programa or "")
     if not prohibidas:
         return True
     plano = _plegar(titulo)
     return not any(p in plano for p in prohibidas)
+
+
+# Palabras que no cuentan para decidir si el título "contiene" la keyword —
+# demasiado cortas o demasiado comunes en ambos idiomas para ser señal.
+_STOP_KEYWORD = {"de", "la", "el", "los", "las", "y", "en", "para", "con", "a", "del", "al"}
+
+
+def coincide_con_keyword(keyword: str | None, titulo: str | None) -> bool:
+    """¿El título contiene las palabras de la keyword que se buscó?
+
+    Motivo (encontrado 2026-08-25, auditando por qué salían cargos en inglés
+    sin relación con el programa — ver ejemplos abajo): Adzuna hace *full-text*
+    sobre título Y descripción, y clasifica por relevancia — pero el backfill
+    histórico pide `sort_direction=up` (las más antiguas primero, para poder
+    muestrear meses pasados) y ESO desactiva el orden por relevancia. El
+    resultado, verificado en vivo contra la API real: para una keyword amplia
+    de 1-2 palabras (`business manager`, `organizational development`,
+    `public policy`...) el 70-99% de lo que vuelve NO tiene relación real con
+    lo buscado (ej.: 'business manager' trajo 'Line Cook', 'Custodian/Bus
+    Driver', 'Adjunct Faculty - Music Department'). Se probaron los parámetros
+    `title_only` y `what_phrase` de la API: NINGUNO arregla el problema en modo
+    `sort_direction=up` (se siguen colando resultados sin relación).
+
+    La única señal fiable que queda es re-verificar del lado de acá: si el
+    título no contiene ni una palabra de lo que se buscó, no es del tema.
+    Puede perder algún match cruzado de idioma legítimo (un título en español
+    para una keyword en inglés) — verificado contra datos reales que es raro:
+    los mercados de España/México devuelven casi todo en inglés para roles
+    profesionales. Ese costo es mucho menor que dejar pasar 70-99% de ruido.
+
+    Devuelve True si la keyword es None/vacía o no tiene palabras significativas
+    (no hay con qué comparar, mejor no descartar).
+    """
+    palabras = [w for w in _plegar(keyword or "").split() if w not in _STOP_KEYWORD and len(w) > 2]
+    if not palabras:
+        return True
+    titulo_plano = _plegar(titulo or "")
+    return all(w in titulo_plano for w in palabras)

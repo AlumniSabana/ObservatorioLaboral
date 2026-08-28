@@ -14,6 +14,7 @@
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 import { generarPerfilPDF } from '@/lib/perfil-pdf';
+import { Spinner } from '@/lib/spinner';
 import { useState, useEffect } from 'react';
 import {
   BarChart,
@@ -140,6 +141,10 @@ export default function PerfilOcupacionalPage() {
     (async () => {
       setLoading(true);
       setError(null);
+      // Limpia el perfil del programa anterior ANTES de pedir el nuevo: la
+      // consulta tarda hasta ~10s, y sin esto la vista se quedaba mostrando el
+      // perfil viejo todo ese tiempo sin ningún aviso de que estaba desactualizado.
+      setData(null);
       try {
         const url = new URL(`${BACKEND_URL}/perfil-ocupacional`);
         url.searchParams.append('programa', programa);
@@ -197,7 +202,7 @@ export default function PerfilOcupacionalPage() {
           </div>
 
           {error && <div className="rounded-lg p-4 bg-red-50 text-red-700 text-sm">{error}</div>}
-          {loading && !data && <div className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>Cargando…</div>}
+          {loading && <Spinner label={`Cargando perfil de ${programa}...`} />}
 
           {data && data.encontrado && kpis && tend && (
             <>

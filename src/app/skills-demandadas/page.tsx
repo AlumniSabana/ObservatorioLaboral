@@ -15,6 +15,7 @@
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 import { SelectorFuentes, type FuenteOpcion as OpcionSelector } from '@/lib/selector-fuentes';
+import { Spinner } from '@/lib/spinner';
 import { useState, useEffect, useMemo } from 'react';
 import {
   BarChart,
@@ -656,11 +657,7 @@ export default function SkillsDemandadasPage() {
           </>
         )}
 
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <p className="text-lg text-zinc-600 font-bold">Cargando ranking...</p>
-          </div>
-        )}
+        {loading && <Spinner label="Cargando ranking..." />}
 
         {!loading && error && (
           <div className="bg-red-100 rounded-lg p-6">
