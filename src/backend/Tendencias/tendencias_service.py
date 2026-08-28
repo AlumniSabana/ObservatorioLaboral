@@ -46,6 +46,7 @@ from statistics import quantiles
 from typing import Any, Dict, List, Tuple
 
 from Adzuna.adzuna_service import normalize_title, supabase
+from Tendencias.escolaridad import NIVELES as NIVELES_ESCOLARIDAD
 from Tendencias.seniority import NIVELES, detectar_seniority
 from config import es_pertinente, coincide_con_keyword
 from traducciones import traducir_sector, traducir_cargo
@@ -386,6 +387,11 @@ def opciones_disponibles() -> Dict[str, List[str]]:
 
     programas = [TODOS] + sorted(PROGRAMAS_ONET.keys())
     seniorities = [TODOS] + list(NIVELES)
+    # Nivel de escolaridad: eje independiente de seniority (tipo de ocupación,
+    # no experiencia). Solo alimenta demanda_actual.py, pero se expone junto a
+    # las demás opciones para que el frontend arranque el dropdown sin un
+    # segundo viaje de red. Ver Tendencias/escolaridad.py.
+    escolaridades = [TODOS] + list(NIVELES_ESCOLARIDAD)
     periodos: List[str] = []
 
     try:
@@ -504,6 +510,7 @@ def opciones_disponibles() -> Dict[str, List[str]]:
     _cache_opciones = {
         "programas": programas,
         "seniorities": seniorities,
+        "escolaridades": escolaridades,
         "periodos": periodos,
         "fuentes": fuentes,
     }

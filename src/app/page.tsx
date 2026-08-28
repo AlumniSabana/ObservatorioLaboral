@@ -126,6 +126,7 @@ interface FuenteOpcion {
 interface Opciones {
   programas: string[];
   seniorities: string[];
+  escolaridades: string[];
   periodos: string[];
   fuentes: FuenteOpcion[];
 }
@@ -147,6 +148,24 @@ const SENIORITY_LABEL: Record<string, string> = {
   junior: 'Junior',
   graduado: 'Recién graduado',
   no_especificado: 'No especificado',
+};
+
+// Etiquetas legibles de escolaridad. Es un filtro DISTINTO de seniority: no
+// mide experiencia sino tipo de ocupación (Grandes Grupos CIUO-08 + Junior y
+// Recién Graduado, que sí se solapan con seniority pero se repiten aquí
+// porque el título los señala igual de bien). Ver Tendencias/escolaridad.py.
+const ESCOLARIDAD_LABEL: Record<string, string> = {
+  TODOS: 'Todos',
+  directivo: 'Directores y gerentes',
+  profesional: 'Profesionales, científicos e intelectuales',
+  tecnico: 'Técnicos y profesionales de nivel medio',
+  apoyo_administrativo: 'Personal de apoyo administrativo',
+  servicios_ventas: 'Trabajadores de servicios y vendedores',
+  oficios: 'Oficiales, operarios y artesanos',
+  operadores: 'Operadores de máquinas y ensambladores',
+  elemental: 'Ocupaciones elementales',
+  junior: 'Junior',
+  graduado: 'Recién graduado',
 };
 
 const DIMENSIONES: Record<Dimension, { label: string; titulo: string; singular: string }> = {
@@ -242,7 +261,7 @@ interface DemandaResp {
   sectores: ItemDemanda[];
   empresas: ItemDemanda[];
   programas: ItemDemanda[];
-  meta: { total: number; paises: string[]; programa: string; seniority: string };
+  meta: { total: number; paises: string[]; programa: string; seniority: string; escolaridad: string };
 }
 
 // Una gráfica de barras horizontal reutilizable para las 4 vistas de demanda.
@@ -284,6 +303,7 @@ export default function TendenciasPage() {
   const [dimension, setDimension] = useState<Dimension>('cargo');
   const [programa, setPrograma] = useState<string>(TODOS);
   const [seniority, setSeniority] = useState<string>(TODOS);
+  const [escolaridad, setEscolaridad] = useState<string>(TODOS);
   const [desde, setDesde] = useState<string>('');
   const [hasta, setHasta] = useState<string>('');
   const [topN, setTopN] = useState<number>(15);
@@ -293,6 +313,7 @@ export default function TendenciasPage() {
   const [opciones, setOpciones] = useState<Opciones>({
     programas: [TODOS],
     seniorities: [TODOS],
+    escolaridades: [TODOS],
     periodos: [],
     fuentes: [FUENTE_DEFECTO],
   });
@@ -402,7 +423,7 @@ export default function TendenciasPage() {
 
   // Demanda actual: usa los mismos filtros (programa, seniority, países) + Top N.
   // No depende de la dimensión ni del rango de fechas (es una foto, no una serie).
-  const cargarDemanda = async (prog: string, sen: string, pais: string[], top: number) => {
+  const cargarDemanda = async (prog: string, sen: string, esc: string, pais: string[], top: number) => {
     if (pais.length === 0) return;
     setDemandaLoading(true);
     // Limpia el dato viejo ANTES de pedir el nuevo: si no, mientras el fetch
@@ -414,6 +435,7 @@ export default function TendenciasPage() {
       const url = new URL(`${BACKEND_URL}/tendencias/demanda`);
       url.searchParams.set('programa', prog);
       url.searchParams.set('seniority', sen);
+      url.searchParams.set('escolaridad', esc);
       url.searchParams.set('paises', pais.join(','));
       url.searchParams.set('top', String(top));
       const r = await fetch(url);
@@ -428,9 +450,9 @@ export default function TendenciasPage() {
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
-    cargarDemanda(programa, seniority, paisesSel, topN);
+    cargarDemanda(programa, seniority, escolaridad, paisesSel, topN);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [programa, seniority, paisesSel, topN]);
+  }, [programa, seniority, escolaridad, paisesSel, topN]);
 
   // Salario: solo tiene sentido con un programa concreto (el endpoint sin
   // `programa` devuelve un resumen distinto, no un KPI puntual).
@@ -681,11 +703,13 @@ export default function TendenciasPage() {
   const claseEtiqueta =
     'flex items-end min-h-[2.1rem] text-xs font-bold uppercase tracking-wide leading-tight mb-1';
 
-  const hayFiltros = programa !== TODOS || seniority !== TODOS || !!desde || !!hasta;
+  const hayFiltros =
+    programa !== TODOS || seniority !== TODOS || escolaridad !== TODOS || !!desde || !!hasta;
 
   const limpiarFiltros = () => {
     setPrograma(TODOS);
     setSeniority(TODOS);
+    setEscolaridad(TODOS);
     setDesde('');
     setHasta('');
   };
@@ -770,6 +794,25 @@ export default function TendenciasPage() {
             {opciones.seniorities.map((s) => (
               <option key={s} value={s}>
                 {SENIORITY_LABEL[s] ?? s}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex-[1.6] min-w-[190px]">
+          <label htmlFor="f-esc" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+            Nivel de escolaridad
+          </label>
+          <select
+            id="f-esc"
+            value={escolaridad}
+            onChange={(e) => setEscolaridad(e.target.value)}
+            className={claseSelect}
+            style={estiloSelect}
+          >
+            {opciones.escolaridades.map((s) => (
+              <option key={s} value={s}>
+                {ESCOLARIDAD_LABEL[s] ?? s}
               </option>
             ))}
           </select>
@@ -1064,8 +1107,8 @@ export default function TendenciasPage() {
           </h2>
           <p className="text-sm text-zinc-500">
             {dimension === 'sector'
-              ? 'Los sectores con más vacantes en la muestra, según los filtros de arriba (país, programa y nivel).'
-              : 'Los cargos con más vacantes en la muestra, según los filtros de arriba (país, programa y nivel).'}
+              ? 'Los sectores con más vacantes en la muestra, según los filtros de arriba (país, programa, nivel de experiencia y nivel de escolaridad). El nivel de escolaridad solo afecta esta sección, no la tendencia temporal de arriba.'
+              : 'Los cargos con más vacantes en la muestra, según los filtros de arriba (país, programa, nivel de experiencia y nivel de escolaridad). El nivel de escolaridad solo afecta esta sección, no la tendencia temporal de arriba.'}
             {programa === TODOS ? ' Incluye además empresas y programas académicos.' : ''}
             {demanda ? ` Basado en ${demanda.meta.total.toLocaleString('es-CO')} vacantes.` : ''}
           </p>

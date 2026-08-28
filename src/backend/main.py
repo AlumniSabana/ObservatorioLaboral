@@ -625,17 +625,24 @@ def tendencias_opciones():
 def tendencias_demanda(
     programa: str = "TODOS",
     seniority: str = "TODOS",
+    escolaridad: str = "TODOS",
     paises: str = "us",
     top: int = 15,
 ):
     """
     Top-N de demanda (cargos, sectores, empresas, programas) sobre la muestra
     histórica, respetando los filtros de la página de Tendencias (país, programa,
-    seniority). Alimenta las 4 gráficas "más demandados".
+    seniority, escolaridad). Alimenta las 4 gráficas "más demandados".
+
+    `escolaridad` (directivo|profesional|tecnico|apoyo_administrativo|
+    servicios_ventas|oficios|operadores|elemental|junior|graduado) es un eje
+    distinto de `seniority`: agrupa por TIPO de ocupación (Grandes Grupos
+    CIUO-08 + Junior/Recién Graduado), no por experiencia. Ver
+    Tendencias/escolaridad.py.
     """
     try:
         lista_paises = [p.strip() for p in paises.split(",") if p.strip()] or ["us"]
-        return demanda_actual(programa, seniority, lista_paises, top)
+        return demanda_actual(programa, seniority, lista_paises, top, escolaridad)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 

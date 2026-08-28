@@ -24,9 +24,10 @@ from typing import Any
 from Adzuna.adzuna_service import normalize_title, supabase
 from config import es_pertinente, _plegar, coincide_con_keyword
 from Salarios.trm_service import tasas_a_cop, fecha_tasas, PAIS_MONEDA
+from Tendencias.escolaridad import detectar_escolaridad
 from Tendencias.seniority import detectar_seniority
 from Tendencias.tendencias_service import PAIS_DEFECTO, TODOS
-from traducciones import traducir_cargo, traducir_sector
+from traducciones import agrupar_sector, traducir_cargo, traducir_sector
 
 _TABLA = "vacantes_historicas"
 
@@ -93,12 +94,21 @@ def _es_empresa_confidencial(nombre: str) -> bool:
 
 
 def demanda_actual(programa: str = TODOS, seniority: str = TODOS,
-                   paises: list[str] | None = None, top: int = 15) -> dict[str, Any]:
+                   paises: list[str] | None = None, top: int = 15,
+                   escolaridad: str = TODOS) -> dict[str, Any]:
     """
     Top-N de cargos, sectores, empresas y programas sobre la muestra histórica,
-    filtrada por país(es), programa y seniority (los filtros de Tendencias).
+    filtrada por país(es), programa, seniority y escolaridad (los filtros de
+    Tendencias).
 
-    Devuelve listas `[{label, count}]` ya traducidas al español.
+    `escolaridad` es un eje DISTINTO de `seniority`: no mide experiencia sino
+    tipo de ocupación (Grandes Grupos CIUO-08 + Junior/Recién Graduado). Ver
+    Tendencias/escolaridad.py. Vive solo aquí (no en el motor de tendencias
+    temporales) a propósito: es el filtro que alimenta estas 4 gráficas de
+    demanda actual, no la serie histórica.
+
+    Devuelve listas `[{label, count}]` ya traducidas al español (los sectores,
+    además, agrupados en los 6 campos amplios de `agrupar_sector`).
     """
     paises = paises or [PAIS_DEFECTO]
     conjunto_paises = set(paises)
@@ -140,12 +150,14 @@ def demanda_actual(programa: str = TODOS, seniority: str = TODOS,
             continue
         if seniority != TODOS and detectar_seniority(f.get("title")) != seniority:
             continue
+        if escolaridad != TODOS and detectar_escolaridad(f.get("title")) != escolaridad:
+            continue
 
         total += 1
         cargo = traducir_cargo(normalize_title(f.get("title") or ""))
         if cargo:
             cargos[cargo] += 1
-        sector = traducir_sector(f.get("category"))
+        sector = agrupar_sector(traducir_sector(f.get("category")))
         if sector:
             sectores[sector] += 1
         empresa = f.get("company")
@@ -168,6 +180,7 @@ def demanda_actual(programa: str = TODOS, seniority: str = TODOS,
             "paises": paises,
             "programa": programa,
             "seniority": seniority,
+            "escolaridad": escolaridad,
         },
     }
 

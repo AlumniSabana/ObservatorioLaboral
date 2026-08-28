@@ -59,6 +59,67 @@ SECTORES: dict[str, str] = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Agrupación amplia de sectores para "Sectores con mayor actividad de
+# contratación" (Tendencias > Demanda actual). Los ~29 sectores de Adzuna son
+# demasiado finos para leerse de un vistazo, así que se colapsan en 6 campos
+# amplios alineados con las áreas de los programas de la Sabana. Es una
+# decisión EDITORIAL, no una taxonomía oficial (a diferencia de SECTORES, que
+# sí es la traducción literal de Adzuna): un sector sin mejor encaje cae en
+# "Otros / general" en vez de forzarlo, y "Sin especificar" se deja aparte
+# porque es ausencia de dato, no un sector que no encaje.
+# ─────────────────────────────────────────────────────────────────────────────
+GRUPOS_SECTOR: dict[str, str] = {
+    # Ciencias y de la ingeniería
+    "Ingeniería": "Ciencias y de la ingeniería",
+    "Ciencia y control de calidad": "Ciencias y de la ingeniería",
+    "Energía, petróleo y gas": "Ciencias y de la ingeniería",
+    "Manufactura": "Ciencias y de la ingeniería",
+    "Mantenimiento": "Ciencias y de la ingeniería",
+    "Oficios y construcción": "Ciencias y de la ingeniería",
+    "Diseño y creatividad": "Ciencias y de la ingeniería",
+    # Salud
+    "Salud y enfermería": "Salud",
+    # Educación
+    "Educación": "Educación",
+    # Negocios y Administración
+    "Contabilidad y finanzas": "Negocios y Administración",
+    "Ventas": "Negocios y Administración",
+    "Administración": "Negocios y Administración",
+    "Recursos humanos y selección": "Negocios y Administración",
+    "Consultoría": "Negocios y Administración",
+    "Logística y almacenamiento": "Negocios y Administración",
+    "Inmobiliario": "Negocios y Administración",
+    "Comercio minorista": "Negocios y Administración",
+    "Servicio al cliente": "Negocios y Administración",
+    "Comunicación, publicidad y marketing": "Negocios y Administración",
+    "Hostelería y gastronomía": "Negocios y Administración",
+    "Turismo y viajes": "Negocios y Administración",
+    # Tecnología de la información y las comunicaciones
+    "Tecnología (TI)": "Tecnología de la información y las comunicaciones",
+    # Derecho y Ciencias Sociales y Culturales
+    "Jurídico": "Derecho y Ciencias Sociales y Culturales",
+    "Trabajo social": "Derecho y Ciencias Sociales y Culturales",
+    "ONG y voluntariado": "Derecho y Ciencias Sociales y Culturales",
+    # No son sectores reales: Adzuna los cuela como "categoría" pero describen
+    # modalidad o nivel, no un rubro económico.
+    "Empleos de medio tiempo": "Otros / general",
+    "Recién graduados": "Otros / general",
+}
+
+
+def agrupar_sector(sector_es: str | None) -> str | None:
+    """Colapsa un sector YA TRADUCIDO (salida de `traducir_sector`) en uno de
+    los 6 campos amplios + "Otros / general".
+
+    "Sin especificar" se deja tal cual: es ausencia de dato, no un sector que
+    no encaje en ningún campo.
+    """
+    if not sector_es or sector_es == "Sin especificar":
+        return sector_es
+    return GRUPOS_SECTOR.get(sector_es, "Otros / general")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Modalidad de Adzuna (contract_time). Conjunto FINITO.
 # La clave se compara en minúsculas para tolerar 'Unknown'/'unknown'.
 # ─────────────────────────────────────────────────────────────────────────────
