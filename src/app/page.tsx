@@ -95,6 +95,14 @@ interface TendenciasResponse {
   insights: Insights;
 }
 
+// Salario por programa (GEIH+SPE, /analytics/salarios) — solo se pide lo que
+// esta página necesita: el promedio ("media") cuando se filtra un programa.
+// La granularidad real es por gran-grupo CNO (2 dígitos), no por cargo exacto.
+interface SalarioPrograma {
+  kpis: { media: number; mediana: number; n: number } | null;
+  tiene_geih: boolean;
+}
+
 interface FuenteOpcion {
   fuente: string;
   pais: string;
@@ -289,6 +297,11 @@ export default function TendenciasPage() {
   // Demanda actual (4 gráficas top-N), independiente del bloque de tendencias.
   const [demanda, setDemanda] = useState<DemandaResp | null>(null);
   const [demandaLoading, setDemandaLoading] = useState(true);
+  // Salario promedio del programa filtrado (GEIH+SPE). Independiente de si la
+  // fuente de vacantes ya tiene tendencia madura: el salario sale de otra
+  // fuente, así que se muestra aunque arriba salga el aviso "en desarrollo".
+  const [salario, setSalario] = useState<SalarioPrograma | null>(null);
+  const [salarioLoading, setSalarioLoading] = useState(false);
 
   const cargar = async (
     dim: Dimension,
@@ -402,6 +415,34 @@ export default function TendenciasPage() {
     cargarDemanda(programa, seniority, paisesSel, topN);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [programa, seniority, paisesSel, topN]);
+
+  // Salario: solo tiene sentido con un programa concreto (el endpoint sin
+  // `programa` devuelve un resumen distinto, no un KPI puntual).
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (programa === TODOS) {
+      setSalario(null);
+      setSalarioLoading(false);
+      return;
+    }
+    let cancelado = false;
+    setSalarioLoading(true);
+    (async () => {
+      try {
+        const url = new URL(`${BACKEND_URL}/analytics/salarios`);
+        url.searchParams.set('programa', programa);
+        const r = await fetch(url);
+        const d = r.ok ? await r.json() : null;
+        if (!cancelado) setSalario(d);
+      } catch {
+        if (!cancelado) setSalario(null);
+      } finally {
+        if (!cancelado) setSalarioLoading(false);
+      }
+    })();
+    return () => { cancelado = true; };
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [programa]);
 
   // Nombres legibles de las fuentes seleccionadas (para el chat y los textos).
   const etiquetasPaises = opciones.fuentes
@@ -866,6 +907,45 @@ export default function TendenciasPage() {
       <PageLayout title={DIMENSIONES[dimension].titulo}>
         {selector}
 
+        {/* ---------------- Salario del programa filtrado ----------------
+            Independiente de si arriba hay tendencia madura: el salario sale
+            de GEIH+SPE, no de la fuente de vacantes que se esté mirando. Solo
+            aplica con UN programa elegido — el resumen sin programa no trae
+            un KPI puntual, trae un panorama distinto. */}
+        {programa !== TODOS && (
+          <div className="mb-8">
+            <div
+              className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4 max-w-sm"
+              style={{ borderColor: 'var(--sabana-navy)' }}
+            >
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
+                💰 Salario promedio — {programa}
+              </p>
+              {salarioLoading ? (
+                <p className="text-sm text-zinc-500 mt-2">Cargando…</p>
+              ) : salario?.tiene_geih && salario.kpis ? (
+                <>
+                  <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                    {salario.kpis.media.toLocaleString('es-CO', {
+                      style: 'currency',
+                      currency: 'COP',
+                      maximumFractionDigits: 0,
+                    })}
+                  </p>
+                  <p className="text-xs mt-1 text-zinc-500">
+                    Mensual · GEIH (DANE), muestra de {salario.kpis.n.toLocaleString('es-CO')} personas del gran
+                    grupo ocupacional asociado.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-zinc-500 mt-2">
+                  Sin datos salariales resolubles para este programa todavía.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* ---------------- KPIs ---------------- */}
         {hayTendencia && data && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -997,6 +1077,35 @@ export default function TendenciasPage() {
                   no los acumula. No es un error — es una fuente nueva que se sigue robusteciendo con
                   cada recolección periódica.
                 </p>
+
+                {/* Mientras no hay tendencia, mostrar al menos un ranking simple:
+                    los cargos que más se repiten en lo ya recolectado (sin serie
+                    de tiempo, solo conteo). Reusa `demanda`, que ya viene cargado
+                    independientemente de este bloque. */}
+                {demanda && demanda.cargos.length > 0 && (
+                  <div className="max-w-md mx-auto text-left pt-2">
+                    <p className="text-xs font-bold uppercase tracking-wide mb-2 text-center" style={{ color: 'var(--sabana-navy)' }}>
+                      Top 10 cargos más encontrados
+                    </p>
+                    <table className="w-full text-sm">
+                      <tbody>
+                        {demanda.cargos.slice(0, 10).map((c, i) => (
+                          <tr key={c.label} style={{ backgroundColor: i % 2 ? 'var(--sabana-sky-blue)' : 'transparent' }}>
+                            <td className="px-3 py-1.5 text-right font-semibold w-8" style={{ color: 'var(--sabana-navy)' }}>
+                              {i + 1}.
+                            </td>
+                            <td className="px-3 py-1.5" style={{ color: 'var(--sabana-dark-navy)' }}>
+                              {c.label}
+                            </td>
+                            <td className="px-3 py-1.5 text-right tabular-nums text-zinc-500">
+                              {c.count.toLocaleString('es-CO')} vac.
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </>
             ) : (
               <>
