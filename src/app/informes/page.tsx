@@ -108,6 +108,14 @@ interface InformeGuardado {
 
 export default function InformesPage() {
   const [informes, setInformes] = useState<InformeGuardado[]>([]);
+  // Distingue "todavía no hay informes" (catálogo vacío de verdad) de "no se
+  // pudo cargar el catálogo" (fetch falló): antes ambos casos mostraban el
+  // mismo mensaje de "sube un PDF para empezar", así que si la carga inicial
+  // fallaba (p. ej. el backend se reinició justo en ese momento) la página
+  // parecía vacía para siempre, aunque el catálogo real sí tuviera informes
+  // (el backend seguía detectando duplicados al subir, porque esa consulta
+  // funcionaba bien; solo el listado se había quedado sin refrescar).
+  const [catalogoError, setCatalogoError] = useState(false);
   const [borrador, setBorrador] = useState<Borrador | null>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,11 +141,15 @@ export default function InformesPage() {
   const cargarInformes = async () => {
     try {
       const r = await fetch(`${BACKEND_URL}/informes`);
-      if (!r.ok) return;
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
       setInformes(d.informes ?? []);
+      setCatalogoError(false);
     } catch {
-      /* el backend puede estar caído; la página sigue usable para subir */
+      // El backend puede estar caído o haberse reiniciado justo en este
+      // instante; la página sigue usable para subir, pero hay que decirlo:
+      // si no, el catálogo se ve permanentemente vacío sin explicación.
+      setCatalogoError(true);
     }
   };
 
@@ -167,6 +179,10 @@ export default function InformesPage() {
       setCobertura(m.cobertura ?? 'global');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo procesar el PDF');
+      // Si el rechazo fue "ya fue ingerido", el catálogo SÍ tiene ese informe
+      // aunque la lista se viera vacía (p. ej. porque la carga inicial falló).
+      // Reintentar aquí lo hace aparecer sin que el usuario tenga que recargar.
+      await cargarInformes();
     } finally {
       setCargando(false);
     }
@@ -418,7 +434,16 @@ export default function InformesPage() {
             Un informe solo aparece como fuente seleccionable cuando está <b>validado</b>.
           </p>
 
-          {informes.length === 0 ? (
+          {catalogoError ? (
+            <div className="text-sm text-center py-6" style={{ color: 'var(--sabana-black-50)' }}>
+              <p className="mb-2">No se pudo cargar el catálogo de informes (¿el backend está caído o se reinició?).</p>
+              <button onClick={cargarInformes}
+                className="text-xs font-semibold underline"
+                style={{ color: 'var(--sabana-navy)', cursor: 'pointer' }}>
+                Reintentar
+              </button>
+            </div>
+          ) : informes.length === 0 ? (
             <p className="text-sm text-center py-6" style={{ color: 'var(--sabana-black-50)' }}>
               Todavía no hay informes. Sube un PDF para empezar.
             </p>
