@@ -151,9 +151,9 @@ const SENIORITY_LABEL: Record<string, string> = {
 };
 
 // Etiquetas legibles de escolaridad. Es un filtro DISTINTO de seniority: no
-// mide experiencia sino tipo de ocupación (Grandes Grupos CIUO-08 + Junior y
-// Recién Graduado, que sí se solapan con seniority pero se repiten aquí
-// porque el título los señala igual de bien). Ver Tendencias/escolaridad.py.
+// mide experiencia sino tipo de ocupación (Grandes Grupos 1-5 de CIUO-08).
+// Ver Tendencias/escolaridad.py, que documenta por qué se dejaron fuera los
+// grupos de oficios/operarios y los niveles Junior y Recién graduado.
 const ESCOLARIDAD_LABEL: Record<string, string> = {
   TODOS: 'Todos',
   directivo: 'Directores y gerentes',
@@ -161,11 +161,6 @@ const ESCOLARIDAD_LABEL: Record<string, string> = {
   tecnico: 'Técnicos y profesionales de nivel medio',
   apoyo_administrativo: 'Personal de apoyo administrativo',
   servicios_ventas: 'Trabajadores de servicios y vendedores',
-  oficios: 'Oficiales, operarios y artesanos',
-  operadores: 'Operadores de máquinas y ensambladores',
-  elemental: 'Ocupaciones elementales',
-  junior: 'Junior',
-  graduado: 'Recién graduado',
 };
 
 const DIMENSIONES: Record<Dimension, { label: string; titulo: string; singular: string }> = {

@@ -112,7 +112,7 @@ MIN_MUESTRA_TOTAL = 15   # el término debe aparecer en >=15 vacantes reales en 
 # en 25 y solo se relaja al mirar un programa suelto. El piso de calidad no
 # desaparece: el término sigue necesitando `MIN_MUESTRA_TOTAL` apariciones
 # repartidas en `MIN_PERIODOS` meses.
-MIN_VACANTES_MES_PROGRAMA = 8
+MIN_VACANTES_MES_PROGRAMA = 5
 
 
 # ---------------------------------------------------------------------------
@@ -161,6 +161,7 @@ def agregar_observaciones(
     seniority: str = TODOS,
     fuente: str = FUENTE_DEFECTO,
     pais: str = PAIS_DEFECTO,
+    terminos_validos: set | None = None,
 ) -> List[Dict[str, Any]]:
     """Convierte la muestra cruda en filas de `tendencias_observaciones`.
 
@@ -250,6 +251,11 @@ def agregar_observaciones(
         # así que se conservan todas: descartar las pequeñas haría que los shares
         # no sumaran 1 y sesgaría el ranking de skills que se calcula con ellos.
         terminos_validos = set(muestra_por_termino)
+    elif terminos_validos is not None:
+        # Validez decidida AGUAS ARRIBA sobre todos los mercados juntos (ver
+        # `terminos_validos_combinados`). Solo se conserva lo que además
+        # aparece en ESTE mercado.
+        terminos_validos = terminos_validos & set(muestra_por_termino)
     else:
         terminos_validos = {
             t
@@ -287,6 +293,89 @@ def agregar_observaciones(
             }
         )
     return observaciones
+
+
+def terminos_validos_combinados(
+    filas: List[Dict[str, Any]],
+    dimensiones: List[str],
+    mercados: List[Tuple[str, str]],
+) -> Dict[Tuple[str, str, str], set]:
+    """Términos que superan el mínimo de calidad SUMANDO TODOS LOS MERCADOS.
+
+    POR QUÉ EXISTE
+    --------------
+    `agregar_observaciones` se llama una vez por mercado, así que su prefiltro
+    de calidad (`MIN_MUESTRA_TOTAL` apariciones en `MIN_PERIODOS` meses) sólo
+    veía las vacantes de ESE mercado. Pero `construir_tendencias` evalúa ese
+    mismo mínimo sobre la suma de todos los mercados seleccionados. El
+    resultado era que un término perfectamente válido se descartaba antes de
+    llegar a la tabla porque ningún mercado por separado lo alcanzaba.
+
+    Caso real medido: en Derecho, "Abogado" tiene 41 vacantes repartidas en 16
+    meses —de sobra para los mínimos—, pero al partirlas entre 5 mercados
+    ninguno llegaba a 15, así que el programa mostraba 0 cargos con tendencia.
+    Corrigiéndolo, los términos con tendencia pasan de 47 a 78 y los programas
+    sin ninguno bajan de 11 a 7.
+
+    Devuelve {(dimension, programa, seniority): {términos válidos}}.
+
+    Se recorren las filas UNA vez: cada vacante pertenece a un solo programa y
+    a un solo seniority, así que sólo contribuye a 4 combinaciones (su
+    programa/TODOS × su seniority/TODOS). La dimensión interna 'programa' no
+    se calcula aquí: conserva todos sus términos a propósito.
+    """
+    mercados_validos = set(mercados)
+    dims = [d for d in dimensiones if d != "programa"]
+
+    # (programa, seniority, mercado, periodo) -> vacantes muestreadas.
+    # No depende de la dimensión: cuenta filas, produzcan término o no.
+    muestra_mes: Dict[Tuple, int] = defaultdict(int)
+    for fila in filas:
+        if not fila.get("created_at") or not fila.get("pais"):
+            continue
+        mercado = (fila.get("fuente") or FUENTE_DEFECTO, fila["pais"])
+        if mercado not in mercados_validos:
+            continue
+        if not coincide_con_keyword(fila.get("keyword"), fila.get("title")):
+            continue
+        periodo = _periodo(fila["created_at"])
+        prog_fila = fila.get("programa_relacionado")
+        for prog in {TODOS, prog_fila} - {None}:
+            for sen in {TODOS, fila.get("_seniority")} - {None}:
+                muestra_mes[(prog, sen, mercado, periodo)] += 1
+
+    # (dimension, programa, seniority, término) -> apariciones y meses.
+    apariciones: Dict[Tuple, int] = defaultdict(int)
+    meses: Dict[Tuple, set] = defaultdict(set)
+    for fila in filas:
+        if not fila.get("created_at") or not fila.get("pais"):
+            continue
+        mercado = (fila.get("fuente") or FUENTE_DEFECTO, fila["pais"])
+        if mercado not in mercados_validos:
+            continue
+        if not coincide_con_keyword(fila.get("keyword"), fila.get("title")):
+            continue
+        periodo = _periodo(fila["created_at"])
+        prog_fila = fila.get("programa_relacionado")
+        for dimension in dims:
+            for termino in _terminos(fila, dimension):
+                for prog in {TODOS, prog_fila} - {None}:
+                    minimo = (
+                        MIN_VACANTES_MES if prog == TODOS
+                        else MIN_VACANTES_MES_PROGRAMA
+                    )
+                    for sen in {TODOS, fila.get("_seniority")} - {None}:
+                        if muestra_mes[(prog, sen, mercado, periodo)] < minimo:
+                            continue
+                        clave = (dimension, prog, sen, termino)
+                        apariciones[clave] += 1
+                        meses[clave].add(periodo)
+
+    validos: Dict[Tuple[str, str, str], set] = defaultdict(set)
+    for (dimension, prog, sen, termino), n in apariciones.items():
+        if n >= MIN_MUESTRA_TOTAL and len(meses[(dimension, prog, sen, termino)]) >= MIN_PERIODOS:
+            validos[(dimension, prog, sen)].add(termino)
+    return validos
 
 
 def guardar_observaciones(observaciones: List[Dict[str, Any]], limpiar: bool = False) -> int:
@@ -879,6 +968,13 @@ def recalcular_todo(
         print(f"  [!] Mercados excluidos (Adzuna sin volúmenes, incompletos): {excluidos}")
     mercados = [m for m in mercados if m not in excluidos]
 
+    # Qué términos merecen guardarse, decidido sobre TODOS los mercados juntos
+    # (que es como se leen después). Sin esto, el prefiltro por mercado
+    # descartaba términos válidos que ningún mercado alcanzaba por separado.
+    validos = terminos_validos_combinados(
+        filas_historicas, ["cargo", "sector", "skill"], mercados
+    )
+
     todas: List[Dict[str, Any]] = []
     for fuente, pais in mercados:
         filas_m = [
@@ -934,7 +1030,8 @@ def recalcular_todo(
 
                     todas.extend(
                         agregar_observaciones(
-                            filas_sen, dimension, vols_m, prog, sen, fuente, pais
+                            filas_sen, dimension, vols_m, prog, sen, fuente, pais,
+                            terminos_validos=validos.get((dimension, prog, sen), set()),
                         )
                     )
 

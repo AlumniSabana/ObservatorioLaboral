@@ -512,6 +512,34 @@ CARGOS: dict[str, str] = {
     "corporate counsel": "Abogado corporativo",
     "account executive": "Ejecutivo de cuenta",
     "community manager": "Community Manager",
+    # ── Detectados al revisar el filtro de Nivel de escolaridad ─────────────
+    # Casi todos entran por PREFIJO: el título real arrastra el nombre del
+    # departamento o del bufete ("Receptionist - Sepulveda Sanchez Accident
+    # Lawyers Los Angeles - Bilingual"), y la clave corta lo absorbe.
+    "administrative assistant": "Asistente administrativo",
+    "administrative associate": "Asistente administrativo",
+    "administrative coordinator": "Coordinador(a) administrativo(a)",
+    "receptionist": "Recepcionista",
+    "data entry clerk": "Auxiliar de digitación",
+    "office assistant": "Asistente de oficina",
+    "preschool assistant teacher": "Docente asistente de preescolar",
+    "preschool teacher assistant": "Docente asistente de preescolar",
+    "early childhood assistant teacher": "Docente asistente de primera infancia",
+    "early childhood teacher assistant": "Docente asistente de primera infancia",
+    "teacher assistant": "Docente asistente",
+    "assistant teacher": "Docente asistente",
+    "teaching assistant": "Docente asistente",
+    "tax services manager": "Gerente de servicios tributarios",
+    "tax manager": "Gerente tributario",
+    "registered practical nurse": "Enfermero(a) práctico(a)",
+    "practical nurse": "Enfermero(a) práctico(a)",
+    "nursing assistant": "Auxiliar de enfermería",
+    "certified nursing assistant": "Auxiliar de enfermería certificado(a)",
+    "physical therapist assistant": "Auxiliar de fisioterapia",
+    "medical assistant": "Auxiliar médico",
+    "case manager": "Gestor(a) de casos",
+    "care manager": "Gestor(a) de cuidados",
+    "clinical manager": "Coordinador(a) clínico(a)",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
