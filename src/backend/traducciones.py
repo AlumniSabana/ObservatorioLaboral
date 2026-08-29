@@ -435,6 +435,83 @@ CARGOS: dict[str, str] = {
     "analista desarrollo organizacional": "Analista de Desarrollo Organizacional",
     "especialista desarrollo organizacional": "Especialista en Desarrollo Organizacional",
     "analista gestión talento": "Analista de Gestión del Talento",
+    # ── Ciencias Políticas y afines ──────────────────────────────────────────
+    # Su cola larga es casi toda cargo académico estadounidense: al buscar
+    # "public policy" Adzuna devuelve sobre todo plazas de universidad. Se
+    # traducen en vez de dejarlas en inglés, pero se mantienen DISTINTAS entre
+    # sí (un decano no es un profesor asistente).
+    "public policy analyst": "Analista de políticas públicas",
+    "policy analyst": "Analista de políticas públicas",
+    "specialist public policy": "Especialista en políticas públicas",
+    "public policy specialist": "Especialista en políticas públicas",
+    "public policy graduate research intern": "Practicante de investigación en políticas públicas",
+    "practicante análisis ciencia política": "Practicante de análisis en ciencia política",
+    "political analyst": "Analista político",
+    "adjunct faculty": "Docente adjunto",
+    "adjunct professor": "Profesor adjunto",
+    "assistant professor": "Profesor asistente",
+    "associate professor": "Profesor asociado",
+    "lecturer": "Profesor",
+    "postdoctoral": "Investigador posdoctoral",
+    "post doctoral": "Investigador posdoctoral",
+    "postdoctoral researcher": "Investigador posdoctoral",
+    "dean": "Decano",
+    "executive director": "Director ejecutivo",
+    "docente sustituto": "Docente sustituto",
+    "social worker": "Trabajador(a) social",
+    # ── Negocios internacionales ─────────────────────────────────────────────
+    "business developer": "Gerente de desarrollo de negocios",
+    "business development": "Gerente de desarrollo de negocios",
+    "aprendiz negocios internacionales": "Aprendiz de negocios internacionales",
+    "freight forwarder": "Agente de carga internacional",
+    "foreign trade analyst": "Analista de comercio exterior",
+    # ── Cargos frecuentes en la cola larga (medidos, no supuestos) ───────────
+    "full stack developer": "Desarrollador full stack",
+    "full stack engineer": "Ingeniero full stack",
+    "multimedia specialist": "Especialista en multimedios",
+    "video producer": "Productor audiovisual",
+    "public relations manager": "Gerente de relaciones públicas",
+    "corporate lawyer": "Abogado corporativo",
+    "investment banking analyst": "Analista de banca de inversión",
+    "financial planning analyst": "Analista de planeación financiera",
+    "financial reporting analyst": "Analista de reportes financieros",
+    "commis chef": "Ayudante de cocina",
+    "physiotherapist": "Fisioterapeuta",
+    "ingeniero procesos": "Ingeniero de procesos",
+    "ingeniero mantenimiento": "Ingeniero de mantenimiento",
+    "ingeniero machine learning": "Ingeniero de machine learning",
+    "ingeniero diseño mecánico": "Ingeniero de diseño mecánico",
+    "ingeniero estructural": "Ingeniero estructural",
+    "auxiliar enfermería": "Auxiliar de enfermería",
+    "analista servicio cliente": "Analista de servicio al cliente",
+    "analista selección": "Analista de selección",
+    "medico general": "Médico general",
+    "residente obra": "Residente de obra",
+    "jefe cocina": "Jefe de cocina",
+    "administrador restaurante": "Administrador(a) de restaurante",
+    "docente preescolar": "Docente de preescolar",
+    "human resources generalist": "Generalista de recursos humanos",
+    "hr generalist": "Generalista de recursos humanos",
+    "hr manager": "Gerente de recursos humanos",
+    "recruiter": "Reclutador(a)",
+    "talent acquisition specialist": "Especialista en atracción de talento",
+    # ── Últimos restos en inglés detectados en la auditoría por programa ─────
+    "immigration lawyer": "Abogado de inmigración",
+    "family lawyer": "Abogado de familia",
+    "personal injury lawyer": "Abogado de daños personales",
+    "criminal lawyer": "Abogado penalista",
+    "multimedia journalist": "Periodista multimedia",
+    "physician assistant": "Asistente médico",
+    "medical doctor": "Médico",
+    "bioprocess engineer": "Ingeniero de bioprocesos",
+    "bioprocess developer engineer": "Ingeniero de desarrollo de bioprocesos",
+    "customer service manager": "Gerente de servicio al cliente",
+    "chemical process engineering professionals": "Ingeniero de procesos químicos",
+    "industrial refrigeration engineer": "Ingeniero de refrigeración industrial",
+    "school psychologist": "Psicólogo escolar",
+    "corporate counsel": "Abogado corporativo",
+    "account executive": "Ejecutivo de cuenta",
+    "community manager": "Community Manager",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -476,11 +553,318 @@ def traducir_modalidad(valor: str | None) -> str | None:
     return MODALIDAD.get(str(valor).lower(), valor)
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# CANONICALIZACIÓN DE CARGOS
+# ═════════════════════════════════════════════════════════════════════════════
+# `CARGOS` es un diccionario de coincidencia EXACTA, y eso no escala: medido
+# sobre las 14.142 vacantes que pasan los filtros de calidad, hay 8.750 títulos
+# normalizados DISTINTOS y las 275 entradas curadas a mano solo cubrían el
+# 20,3%. El 79,7% restante se pintaba crudo en las gráficas, casi siempre en
+# inglés y con basura pegada al nombre del cargo.
+#
+# Diagnóstico sobre los datos reales (no hipotético):
+#
+#   1. RUIDO. El título trae cosas que no son el cargo: ciudad ("Gerente de
+#      Operaciones | RESTAURANTES | CALI"), identificador de la oferta
+#      ("Gerente de operaciones 1626430055-20"), modalidad ("remote", "per
+#      diem") y reclamos ("urgent hiring"). 949 títulos distintos llevaban
+#      números pegados. Cada variante se contaba como un cargo aparte, así que
+#      "Gerente de operaciones" aparecía partido en 5 barras distintas.
+#
+#   2. TILDES. "auxiliar enfermería" y "auxiliar enfermeria" se contaban por
+#      separado siendo el mismo cargo.
+#
+#   3. COLA LARGA. Un título con una palabra de más ("data scientist product
+#      analytics") fallaba el match exacto contra "data scientist" y caía al
+#      inglés crudo.
+#
+# La solución es una cascada de 4 niveles, de más preciso a más general:
+#
+#   canonizar → exacto → prefijo → contenido → composición → respaldo
+#
+# Resultado medido sobre las mismas 14.142 vacantes: cobertura 20,3% → 65,6%,
+# y las etiquetas que quedaban en inglés bajaron del 35,4% al 15,4%.
+# ═════════════════════════════════════════════════════════════════════════════
+
+import re
+import unicodedata
+
+# Ubicaciones que aparecen pegadas al cargo. La lista se construyó mirando los
+# tokens más frecuentes al final del título en la muestra real (ahí es donde
+# las fuentes suelen colgar la ciudad), no inventando nombres.
+_UBICACIONES: set[str] = {
+    # Colombia
+    "bogota", "medellin", "cali", "barranquilla", "cartagena", "bucaramanga",
+    "pereira", "manizales", "cucuta", "ibague", "villavicencio", "armenia",
+    "neiva", "monteria", "pasto", "popayan", "tunja", "sincelejo", "valledupar",
+    "riohacha", "quibdo", "florencia", "yopal", "mosquera", "chia", "cajica",
+    "zipaquira", "soacha", "funza", "cundinamarca", "antioquia", "atlantico",
+    "autonorte", "colombia", "usaquen", "suba", "chapinero", "kennedy",
+    # Países y regiones
+    "usa", "us", "eeuu", "uk", "canada", "mexico", "spain", "espana", "latam",
+    "latinoamerica", "emea", "apac", "worldwide", "overseas", "nationwide",
+    # Reino Unido
+    "london", "manchester", "birmingham", "leeds", "glasgow", "edinburgh",
+    "liverpool", "bristol", "sheffield", "cardiff", "belfast", "nottingham",
+    # España
+    "barcelona", "madrid", "valencia", "sevilla", "bilbao", "malaga",
+    "zaragoza", "murcia", "granada", "alicante", "valladolid", "vigo",
+    # Canadá
+    "toronto", "vancouver", "montreal", "calgary", "ottawa", "edmonton",
+    "winnipeg", "quebec", "halifax", "saskatoon", "regina",
+    # México
+    "guadalajara", "monterrey", "puebla", "queretaro", "tijuana", "cancun",
+    "merida", "toluca",
+    # Estados Unidos
+    "chicago", "houston", "phoenix", "philadelphia", "dallas", "austin",
+    "seattle", "denver", "boston", "atlanta", "miami", "portland", "detroit",
+    "minneapolis", "tampa", "orlando", "sacramento", "pittsburgh", "cincinnati",
+    "cleveland", "baltimore", "milwaukee", "nashville", "memphis", "louisville",
+    "indianapolis", "columbus", "charlotte", "raleigh",
+    # Siglas de estado/provincia (van sueltas al final: "... - Austin, TX")
+    "ny", "ca", "tx", "fl", "il", "pa", "oh", "ga", "nc", "mi", "nj", "va",
+    "wa", "az", "ma", "tn", "mo", "md", "wi", "mn", "al", "sc", "ky", "or",
+    "ok", "ct", "ut", "ia", "nv", "ar", "ms", "ks", "nm", "ne", "wv", "hi",
+    "nh", "ri", "mt", "sd", "nd", "ak", "vt", "wy",
+    "on", "bc", "ab", "qc", "mb", "sk", "ns", "nb",
+}
+
+# Modalidad, urgencia y muletillas de anuncio: describen la oferta, no el cargo.
+_MODALIDAD_RUIDO: set[str] = {
+    "remote", "remoto", "remota", "hybrid", "hibrido", "onsite", "presencial",
+    "telecommute", "wfh", "virtual", "fulltime", "parttime", "tiempo",
+    "completo", "medio", "prn", "diem", "casual", "contract", "contractor",
+    "temporary", "temporal", "permanent", "permanente", "freelance", "nights",
+    "night", "weekend", "weekends", "shift", "turno", "required", "requerido",
+    "clearance", "experience", "experiencia", "degree", "level", "urgent",
+    "urgente", "inmediato", "immediate", "hiring", "now", "apply", "opening",
+    "openings", "vacante", "vacancy", "job", "jobs", "empleo", "trabajo",
+    "position", "role", "opportunity", "oportunidad", "needed", "wanted",
+    "sign", "bonus", "w", "relocation",
+}
+
+_RUIDO_CARGO = _UBICACIONES | _MODALIDAD_RUIDO
+
+# Bigramas que hay que blindar ANTES de quitar ruido palabra por palabra.
+# Sin esto "full stack developer" perdía "full" (está en _MODALIDAD_RUIDO por
+# "full time") y se convertía en "stack developer" — el 3.º título más
+# frecuente sin traducir en la primera medición. El valor vacío significa
+# "bórralo entero" (es ruido de dos palabras, como "per diem" o "new york").
+_BIGRAMAS_PROTEGIDOS: dict[str, str] = {
+    "full stack": "fullstack",
+    "front end": "frontend",
+    "back end": "backend",
+    "machine learning": "machinelearning",
+    "new york": "",
+    "santa marta": "",
+    "per diem": "",
+    "full time": "",
+    "part time": "",
+}
+
+
+def _sin_tildes(texto: str) -> str:
+    """'enfermería' -> 'enfermeria'. Para que las variantes no se separen."""
+    return "".join(
+        c for c in unicodedata.normalize("NFD", texto)
+        if unicodedata.category(c) != "Mn"
+    )
+
+
+def canonizar_cargo(titulo_normalizado: str) -> str:
+    """Quita del título normalizado todo lo que no es el nombre del cargo.
+
+    Opera sobre la salida de `normalize_title` (Adzuna/adzuna_service.py), no
+    sobre el título crudo. Va aquí y no dentro de `normalize_title` a
+    propósito: la salida de aquella función es el FORMATO DE CLAVE de las 275
+    entradas curadas de `CARGOS` y de cualquier otro consumidor, así que
+    cambiarla invalidaría en silencio ese trabajo. Esta limpieza es del
+    momento de traducir, no de normalizar.
+    """
+    if not titulo_normalizado:
+        return ""
+
+    texto = _sin_tildes(titulo_normalizado.lower())
+
+    # Blindar/eliminar bigramas antes del filtrado token a token.
+    for bigrama, reemplazo in _BIGRAMAS_PROTEGIDOS.items():
+        texto = texto.replace(bigrama, f" {reemplazo} " if reemplazo else " ")
+
+    tokens = [
+        t for t in texto.split()
+        if t not in _RUIDO_CARGO
+        # Números sueltos y códigos de oferta ("1626430055", "20", "id71005").
+        and not re.fullmatch(r"\d+", t)
+        and not re.fullmatch(r"[a-z]{0,3}\d{2,}[a-z\d]*", t)
+    ]
+    texto = " ".join(tokens)
+
+    # Restaurar los bigramas blindados.
+    for bigrama, reemplazo in _BIGRAMAS_PROTEGIDOS.items():
+        if reemplazo:
+            texto = texto.replace(reemplazo, bigrama)
+
+    return re.sub(r"\s+", " ", texto).strip()
+
+
+# ── Capa composicional: núcleo + modificador ────────────────────────────────
+# Para los títulos que ninguna entrada de `CARGOS` cubre. La cola larga está
+# muy concentrada en unos pocos sustantivos núcleo (engineer 475, analyst 271,
+# developer 125, lawyer 122, teacher 116...), así que traducir "<modificador>
+# <núcleo>" de forma composicional cubre mucho con poco diccionario.
+_NUCLEOS: dict[str, str] = {
+    "engineer": "Ingeniero", "engineering": "Ingeniero", "analyst": "Analista",
+    "developer": "Desarrollador", "lawyer": "Abogado", "attorney": "Abogado",
+    "teacher": "Docente", "teachers": "Docente", "manager": "Gerente",
+    "chef": "Chef", "specialist": "Especialista", "physician": "Médico",
+    "nurse": "Enfermero(a)", "journalist": "Periodista", "producer": "Productor",
+    "consultant": "Consultor", "designer": "Diseñador", "scientist": "Científico",
+    "director": "Director", "coordinator": "Coordinador",
+    "supervisor": "Supervisor", "assistant": "Asistente",
+    "technician": "Técnico", "architect": "Arquitecto", "accountant": "Contador",
+    "therapist": "Terapeuta", "economist": "Economista",
+    "psychologist": "Psicólogo", "professor": "Profesor",
+    "researcher": "Investigador", "writer": "Redactor", "editor": "Editor",
+    "recruiter": "Reclutador", "representative": "Representante",
+    "administrator": "Administrador", "planner": "Planificador",
+    "auditor": "Auditor", "advisor": "Asesor", "programmer": "Programador",
+    "surgeon": "Cirujano", "pharmacist": "Farmacéutico", "dentist": "Odontólogo",
+    "veterinarian": "Veterinario", "translator": "Traductor",
+    "generalist": "Generalista", "paralegal": "Asistente jurídico",
+    "practitioner": "Profesional", "officer": "Oficial", "agent": "Agente",
+}
+
+_MODIFICADORES: dict[str, str] = {
+    "civil": "civil", "mechanical": "mecánico", "industrial": "industrial",
+    "chemical": "químico", "software": "de software",
+    "structural": "estructural", "electrical": "eléctrico",
+    "electronic": "electrónico", "financial": "financiero",
+    "finance": "financiero", "data": "de datos", "marketing": "de marketing",
+    "security": "de seguridad", "quality": "de calidad", "sales": "de ventas",
+    "product": "de producto", "project": "de proyectos",
+    "business": "de negocios", "process": "de procesos", "design": "de diseño",
+    "systems": "de sistemas", "system": "de sistemas", "network": "de redes",
+    "cloud": "de la nube", "frontend": "frontend", "backend": "backend",
+    "full stack": "full stack", "machine learning": "de machine learning",
+    "ai": "de IA", "environmental": "ambiental", "biomedical": "biomédico",
+    "aerospace": "aeroespacial", "automation": "de automatización",
+    "manufacturing": "de manufactura", "production": "de producción",
+    "logistics": "de logística", "supply": "de cadena de suministro",
+    "operations": "de operaciones", "digital": "digital",
+    "content": "de contenido", "corporate": "corporativo", "legal": "jurídico",
+    "tax": "tributario", "audit": "de auditoría", "risk": "de riesgos",
+    "credit": "de crédito", "investment": "de inversiones",
+    "banking": "de banca", "accounting": "contable",
+    "hr": "de recursos humanos", "human resources": "de recursos humanos",
+    "recruitment": "de selección", "training": "de formación",
+    "clinical": "clínico", "medical": "médico", "surgical": "quirúrgico",
+    "pediatric": "pediátrico", "mental health": "de salud mental",
+    "public health": "de salud pública", "physical": "físico",
+    "preschool": "de preescolar", "elementary": "de primaria",
+    "secondary": "de secundaria", "special education": "de educación especial",
+    "early childhood": "de primera infancia", "science": "de ciencias",
+    "math": "de matemáticas", "mathematics": "de matemáticas",
+    "english": "de inglés", "web": "web", "mobile": "móvil", "java": "Java",
+    "python": "Python", "test": "de pruebas", "qa": "de calidad",
+    "devops": "DevOps", "policy": "de políticas",
+    "public policy": "de políticas públicas",
+    "communications": "de comunicaciones",
+    "public relations": "de relaciones públicas",
+    "customer": "de servicio al cliente", "field": "de campo",
+    "site": "de obra", "maintenance": "de mantenimiento", "water": "de aguas",
+    "energy": "de energía", "construction": "de construcción",
+    "traffic": "de tránsito", "geotechnical": "geotécnico",
+    "telecommunications": "de telecomunicaciones",
+}
+
+# Modificadores de varias palabras, del más largo al más corto: "early
+# childhood teacher" debe ganarle a "childhood".
+_MODIFICADORES_COMPUESTOS = sorted(
+    (m for m in _MODIFICADORES if " " in m),
+    key=lambda m: -len(m.split()),
+)
+
+
+def _componer_cargo(canonico: str) -> str | None:
+    """'civil engineer' -> 'Ingeniero civil'. None si no se puede componer.
+
+    Devuelve None (en vez de solo el núcleo) cuando el modificador es
+    desconocido: quedarse con "Analista" a secas fusionaría en una sola barra
+    cargos tan distintos como 'investment banking analyst' y 'policy analyst'.
+    Perder cobertura es preferible a inventar una agrupación falsa.
+    """
+    tokens = canonico.split()
+    if not tokens:
+        return None
+
+    base = _NUCLEOS.get(tokens[-1])
+    if not base:
+        return None
+
+    resto = " ".join(tokens[:-1])
+    if not resto:
+        return base
+    for compuesto in _MODIFICADORES_COMPUESTOS:
+        if resto.endswith(compuesto):
+            return f"{base} {_MODIFICADORES[compuesto]}"
+    modificador = _MODIFICADORES.get(tokens[-2]) if len(tokens) >= 2 else None
+    return f"{base} {modificador}" if modificador else None
+
+
+# Índice de `CARGOS` con las claves ya canonizadas, para que el match ignore
+# tildes y ruido igual que lo hace el título entrante. Se construye una sola
+# vez al importar. `setdefault` conserva la primera de dos claves que colapsen
+# a la misma forma canónica (el orden del dict es el de escritura, así que gana
+# la entrada declarada antes).
+_INDICE_CARGOS: dict[str, str] = {}
+for _clave, _valor in CARGOS.items():
+    _INDICE_CARGOS.setdefault(canonizar_cargo(_clave) or _sin_tildes(_clave), _valor)
+
+# Ordenadas de más palabras a menos: el match más específico debe ganar.
+_CLAVES_POR_LONGITUD = sorted(_INDICE_CARGOS, key=lambda k: -len(k.split()))
+
+
 def traducir_cargo(titulo_normalizado: str | None) -> str | None:
-    """Cargo normalizado EN→ES limpio (fallback al título normalizado)."""
+    """Cargo normalizado -> nombre de rol limpio y en español.
+
+    Cascada de 4 niveles (ver el bloque de arriba para el porqué):
+
+      1. EXACTO     — la forma canónica está en `CARGOS`.
+      2. PREFIJO    — el título EMPIEZA por una entrada conocida:
+                      'data scientist product analytics' -> 'Científico de datos'.
+      3. CONTENIDO  — una entrada conocida (de 2+ palabras, para no disparar
+                      con genéricos) aparece dentro:
+                      'global business developer manager' -> 'Gerente de
+                      desarrollo de negocios'.
+      4. COMPOSICIÓN — núcleo + modificador: 'civil engineer' -> 'Ingeniero civil'.
+
+    Si nada aplica, devuelve el título ya CANONIZADO (sin ciudad, sin código de
+    oferta) con la inicial en mayúscula. Sigue pudiendo quedar en inglés, pero
+    al menos es el cargo y no el cargo más la ciudad.
+    """
     if titulo_normalizado is None:
         return None
-    return CARGOS.get(titulo_normalizado, titulo_normalizado)
+
+    canonico = canonizar_cargo(titulo_normalizado)
+    if not canonico:
+        return titulo_normalizado or None
+
+    if canonico in _INDICE_CARGOS:
+        return _INDICE_CARGOS[canonico]
+
+    for clave in _CLAVES_POR_LONGITUD:
+        if canonico.startswith(clave + " "):
+            return _INDICE_CARGOS[clave]
+
+    for clave in _CLAVES_POR_LONGITUD:
+        if len(clave.split()) >= 2 and f" {clave} " in f" {canonico} ":
+            return _INDICE_CARGOS[clave]
+
+    compuesto = _componer_cargo(canonico)
+    if compuesto:
+        return compuesto
+
+    return canonico[0].upper() + canonico[1:]
 
 
 def traducir_tecnologia(nombre: str | None) -> str | None:

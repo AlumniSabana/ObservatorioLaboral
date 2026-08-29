@@ -98,6 +98,22 @@ MIN_VACANTES_MES = 25    # un mes con menos vacantes muestreadas no es represent
 MIN_PERIODOS = 3         # se necesitan >=3 meses válidos para hablar de tendencia
 MIN_MUESTRA_TOTAL = 15   # el término debe aparecer en >=15 vacantes reales en total
 
+# Umbral de representatividad cuando se mira UN programa concreto.
+#
+# `MIN_VACANTES_MES` se aplica al subconjunto YA filtrado, y `recalcular_todo`
+# corta por (mercado × programa × seniority). El recolector pide ~50 vacantes
+# por keyword y mes, y cada programa tiene 1-2 keywords, así que tras el filtro
+# de pertinencia (`coincide_con_keyword`, que descarta el ~78% de la muestra
+# cruda) una celda programa-mercado-mes casi nunca llega a 25.
+#
+# Medido sobre los datos reales: con 25, solo 9 de 29 programas conseguían los
+# 3 meses válidos que exige `MIN_PERIODOS`; con 8 lo consiguen 19. Por eso el
+# umbral del agregado sin filtrar (que sí tiene volumen de sobra) se mantiene
+# en 25 y solo se relaja al mirar un programa suelto. El piso de calidad no
+# desaparece: el término sigue necesitando `MIN_MUESTRA_TOTAL` apariciones
+# repartidas en `MIN_PERIODOS` meses.
+MIN_VACANTES_MES_PROGRAMA = 8
+
 
 # ---------------------------------------------------------------------------
 # 1. Agregación: muestra cruda -> observaciones (término, mes, share)
@@ -189,6 +205,10 @@ def agregar_observaciones(
     # (periodo, término) -> vacantes crudas muestreadas (soporte real)
     crudo: Dict[Tuple[str, str], int] = defaultdict(int)
 
+    # Al mirar un programa suelto la muestra es mucho más delgada que en el
+    # agregado; ver MIN_VACANTES_MES_PROGRAMA.
+    min_mes = MIN_VACANTES_MES if programa == TODOS else MIN_VACANTES_MES_PROGRAMA
+
     for fila in filas:
         if not fila.get("created_at"):
             continue
@@ -221,7 +241,7 @@ def agregar_observaciones(
     muestra_por_termino: Dict[str, int] = defaultdict(int)
     periodos_por_termino: Dict[str, set] = defaultdict(set)
     for (periodo, termino), n in crudo.items():
-        if muestra_por_periodo[periodo] >= MIN_VACANTES_MES:
+        if muestra_por_periodo[periodo] >= min_mes:
             muestra_por_termino[termino] += n
             periodos_por_termino[termino].add(periodo)
 
@@ -244,7 +264,7 @@ def agregar_observaciones(
             continue
         # Un mes con pocas vacantes REALMENTE muestreadas no es representativo,
         # por muy grande que sea su peso.
-        if muestra_por_periodo[periodo] < MIN_VACANTES_MES:
+        if muestra_por_periodo[periodo] < min_mes:
             continue
         total = total_por_periodo[periodo]
         if total <= 0:
