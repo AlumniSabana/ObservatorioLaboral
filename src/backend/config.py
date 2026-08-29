@@ -34,6 +34,10 @@ except ValueError:
 # Puede ser la misma key que usa el chat del frontend (CLAUDE_API_KEY).
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
+# API key de Gemini (Google) para el informe de insights de Informes/insights_service.py.
+# Puede ser la misma key que usa /api/chat en el frontend (modo 'empresas').
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
 # API key de O*NET Web Services para la sección "Competencias y habilidades".
 # Regístrate (gratis) en https://services.onetcenter.org/developer/signup
 # Sin ella, la sección de competencias muestra un aviso de "no configurado".

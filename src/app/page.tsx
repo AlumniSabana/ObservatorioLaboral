@@ -652,15 +652,20 @@ export default function TendenciasPage() {
   // es la estacionalidad del mercado, no el comportamiento de cada término.
   const [modoSpe, setModoSpe] = useState<'share' | 'volumen'>('share');
   const [tendSpe, setTendSpe] = useState<TendenciaSpe | null>(null);
+  const [speLoading, setSpeLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
+      setSpeLoading(true);
+      setTendSpe(null);
       try {
         const r = await fetch(`${BACKEND_URL}/spe/tendencias?dimension=${dimSpe}&top=6`);
         const d: TendenciaSpe | null = r.ok ? await r.json() : null;
         setTendSpe(d && !d.sin_datos ? d : null);
       } catch {
         setTendSpe(null);
+      } finally {
+        setSpeLoading(false);
       }
     })();
   }, [dimSpe]);
@@ -1438,6 +1443,11 @@ export default function TendenciasPage() {
             extranjeros (Adzuna) en su periodo reciente y esta es Colombia en
             oct-2022–sep-2023. Ponerlas juntas insinuaría una comparación que ni
             el periodo ni el universo medido permiten. */}
+        {speLoading && !tendSpe && (
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mb-8">
+            <Spinner label="Cargando serie del SPE..." />
+          </div>
+        )}
         {tendSpe && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mb-8">
             <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>

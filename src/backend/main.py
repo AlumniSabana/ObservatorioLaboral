@@ -57,6 +57,7 @@ from LinkedIn.linkedin_service import (
 )
 from Asistente.contexto_service import resumen_contexto
 from Informes import informes_service
+from Informes import insights_service
 from config import PROGRAMAS_KEYWORDS
 
 app = FastAPI(title="AlumniSabana Job API")
@@ -433,6 +434,31 @@ async def informes_contraste(informes: str, dimension: str = "skill", top: int =
     try:
         ids = [i.strip() for i in informes.split(",") if i.strip()]
         return informes_service.contraste(ids, dimension, top)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+class InformesInsightsRequest(BaseModel):
+    informe_ids: list[str]   # 1 o más ids de informes VALIDADOS
+
+
+@app.post("/informes/insights")
+def informes_insights(req: InformesInsightsRequest):
+    """
+    Informe de insights (Gemini) sobre 1+ informes ya ingeridos y validados.
+
+    Distinto del lector de documentos (/documento/*, con Claude): no sube un PDF
+    nuevo, lee los datos YA EXTRAÍDOS Y VERIFICADOS de la BD. Ver
+    Informes/insights_service.py.
+    """
+    if not req.informe_ids:
+        return JSONResponse(status_code=400, content={"error": "informe_ids no puede estar vacío"})
+    try:
+        return insights_service.generar_insights(req.informe_ids)
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
+    except RuntimeError as e:
+        return JSONResponse(status_code=502, content={"error": str(e)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 

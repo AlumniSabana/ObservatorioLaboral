@@ -20,6 +20,7 @@ import unicodedata
 from typing import Any
 
 from Adzuna.adzuna_service import supabase
+from Informes.power_skills import clasificar_habilidad
 
 TABLA_INFORMES = "informes"
 TABLA_OBS = "informes_observaciones"
@@ -227,6 +228,12 @@ def detalle_informe(informe_id: str, top: int = 20) -> dict[str, Any]:
     Devuelve el top de skills (ordenado por su posición dentro del informe) y el
     reparto por categoría. Es una vista del informe EN SÍ MISMO, sin cruzarlo con
     las vacantes: sirve para leer qué dice ese documento.
+
+    El reparto por categoría usa `clasificar_habilidad()` (Habilidades técnicas
+    vs Power Skills), NO la `categoria` de 4 valores (técnica/blanda/
+    conocimiento/destreza) que guarda cada observación: esa taxonomía viene de
+    O*NET/Ocupacol, pensada para vacantes, y sobre informes de tendencias
+    tecnológicas clasifica mal (ver docstring de Informes/power_skills.py).
     """
     if not tablas_disponibles():
         return {"informe": None, "items": [], "por_categoria": []}
@@ -253,9 +260,11 @@ def detalle_informe(informe_id: str, top: int = 20) -> dict[str, Any]:
     } for o in obs[:top]]
 
     # Reparto por categoría sobre TODAS las observaciones, no solo el top.
+    # Se clasifica por el TÉRMINO (canónico si existe, si no el original), no
+    # por la `categoria` guardada: ver docstring de arriba.
     conteo: dict[str, int] = {}
     for o in obs:
-        cat = o.get("categoria") or "sin categoría"
+        cat = clasificar_habilidad(o.get("termino") or o.get("termino_original"))
         conteo[cat] = conteo.get(cat, 0) + 1
 
     return {

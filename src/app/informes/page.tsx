@@ -18,8 +18,10 @@
  */
 
 import { PageLayout } from '@/lib/sidebar';
+import { AssistantContent } from '@/lib/markdown';
+import { Spinner } from '@/lib/spinner';
 import { useEffect, useRef, useState } from 'react';
-import { Upload, FileText, Check, Trash2, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Upload, FileText, Check, Trash2, AlertTriangle, BarChart3, Sparkles } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -61,6 +63,11 @@ interface Detalle {
 interface Comparativa {
   informes: { id: string; label: string }[];
   terminos: { termino: string; posiciones: Record<string, number | null> }[];
+}
+interface InsightsResp {
+  texto: string;
+  informes: { id: string; titulo: string; editor: string; anio_referencia: number; antiguo: boolean }[];
+  omitidos: string[];
 }
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -110,6 +117,12 @@ export default function InformesPage() {
   const [abierto, setAbierto] = useState<string | null>(null);
   const [detalle, setDetalle] = useState<Detalle | null>(null);
   const [comparativa, setComparativa] = useState<Comparativa | null>(null);
+
+  // Informe de insights (Gemini): selección de 1+ informes validados.
+  const [seleccionados, setSeleccionados] = useState<string[]>([]);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insights, setInsights] = useState<InsightsResp | null>(null);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
 
   // Metadatos editables del formulario de revisión.
   const [titulo, setTitulo] = useState('');
@@ -226,6 +239,33 @@ export default function InformesPage() {
       .catch(() => setComparativa(null));
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [informes]);
+
+  const toggleSeleccion = (id: string) => {
+    setSeleccionados((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
+  };
+
+  // Informe de insights (Gemini) sobre los informes validados marcados. Lee los
+  // datos YA extraídos y verificados de esos informes (no vuelve a leer el PDF).
+  const generarInsights = async () => {
+    if (seleccionados.length === 0) return;
+    setInsightsLoading(true);
+    setInsightsError(null);
+    setInsights(null);
+    try {
+      const r = await fetch(`${BACKEND_URL}/informes/insights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ informe_ids: seleccionados }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      setInsights(d);
+    } catch (e) {
+      setInsightsError(e instanceof Error ? e.message : 'No se pudo generar el informe de insights');
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
 
   const accion = async (id: string, ruta: string, metodo = 'POST') => {
     setError(null);
@@ -420,11 +460,19 @@ export default function InformesPage() {
                     </>
                   )}
                   {inf.estado === 'validado' && (
-                    <button onClick={() => accion(inf.id, '/retirar')}
-                      className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded border"
-                      style={{ borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)', cursor: 'pointer' }}>
-                      <AlertTriangle size={13} /> Retirar
-                    </button>
+                    <>
+                      <label className="flex items-center gap-1.5 text-xs font-semibold px-2 cursor-pointer"
+                        style={{ color: 'var(--sabana-dark-navy)' }}>
+                        <input type="checkbox" checked={seleccionados.includes(inf.id)}
+                          onChange={() => toggleSeleccion(inf.id)} className="cursor-pointer" />
+                        Para insights
+                      </label>
+                      <button onClick={() => accion(inf.id, '/retirar')}
+                        className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded border"
+                        style={{ borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)', cursor: 'pointer' }}>
+                        <AlertTriangle size={13} /> Retirar
+                      </button>
+                    </>
                   )}
 
                   <button onClick={() => abrirGraficas(inf.id)}
@@ -503,6 +551,44 @@ export default function InformesPage() {
             </div>
           )}
         </div>
+
+        {/* ---------- Informe de insights (Gemini) ---------- */}
+        {informes.some((i) => i.estado === 'validado') && (
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold mb-1 flex items-center gap-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+              <Sparkles size={18} /> Informe de insights (Gemini)
+            </h3>
+            <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+              Marca "Para insights" en uno o más informes validados y genera un análisis narrativo
+              a partir de sus skills ya extraídas y verificadas (no vuelve a leer el PDF).
+            </p>
+
+            <button onClick={generarInsights} disabled={seleccionados.length === 0 || insightsLoading}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-white disabled:opacity-50"
+              style={{ backgroundColor: 'var(--sabana-dark-navy)', cursor: seleccionados.length === 0 ? 'not-allowed' : 'pointer' }}>
+              <Sparkles size={16} />
+              {insightsLoading
+                ? 'Generando…'
+                : `Generar informe de insights${seleccionados.length ? ` (${seleccionados.length})` : ''}`}
+            </button>
+
+            {insightsLoading && <div className="mt-4"><Spinner label="Gemini está analizando los informes seleccionados..." /></div>}
+
+            {insightsError && (
+              <div className="mt-4 rounded-lg p-3 bg-red-50 text-red-700 text-sm">{insightsError}</div>
+            )}
+
+            {insights && !insightsLoading && (
+              <div className="mt-4 rounded-lg border p-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+                <p className="text-xs mb-3" style={{ color: 'var(--sabana-black-50)' }}>
+                  Basado en: {insights.informes.map((i) => `${i.editor} — ${i.titulo} (${i.anio_referencia})${i.antiguo ? ' ⚠ hace más de 2 años' : ''}`).join(' · ')}
+                  {insights.omitidos.length > 0 && ` — se omitieron ${insights.omitidos.length} id(s) por no existir o no estar validados.`}
+                </p>
+                <AssistantContent content={insights.texto} />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ---------- Comparativa entre informes (desde 2 validados) ---------- */}
         {comparativa && comparativa.terminos.length > 0 && (

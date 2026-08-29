@@ -20,6 +20,7 @@
 
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
+import { Spinner } from '@/lib/spinner';
 import { useState, useEffect, useMemo } from 'react';
 import {
   BarChart,
@@ -311,11 +312,7 @@ export default function SalariesPage() {
             <div className="rounded-lg p-4 bg-red-50 text-red-700 text-sm">{error}</div>
           )}
 
-          {loading && !analisis && (
-            <div className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>
-              Cargando…
-            </div>
-          )}
+          {loading && !analisis && <Spinner label="Cargando análisis salarial..." />}
 
           {analisis && kpis && analisis.cno && (
             <>
