@@ -540,6 +540,98 @@ CARGOS: dict[str, str] = {
     "case manager": "Gestor(a) de casos",
     "care manager": "Gestor(a) de cuidados",
     "clinical manager": "Coordinador(a) clínico(a)",
+    # ── Auditoría del top 10 por programa (sep 2026) ─────────────────────────
+    # Casi todas estas entradas existen para FUSIONAR barras duplicadas: el
+    # mismo cargo aparecía dos o tres veces porque el título en español no
+    # estaba en el diccionario (y caía al respaldo) mientras su equivalente en
+    # inglés sí se traducía. Las claves van sin tildes a propósito: el índice
+    # canoniza plegando, así que una sola clave cubre ambas escrituras.
+    # Ingenierías
+    "ingeniero mecanico": "Ingeniero mecánico",
+    "ingeniero quimico": "Ingeniero químico",
+    "ingeniero produccion": "Ingeniero de producción",
+    "ingeniero electrico": "Ingeniero eléctrico",
+    "ingeniero civil": "Ingeniero civil",
+    "ingeniero industrial": "Ingeniero industrial",
+    "ingeniero sistemas": "Ingeniero de sistemas",
+    "ingeniero diseno electrico": "Ingeniero de diseño eléctrico",
+    "ingeniero innovacion y desarrollo": "Ingeniero de innovación y desarrollo",
+    "mechanical designer engineer": "Ingeniero de diseño mecánico",
+    "mechanical design manager engineer": "Ingeniero de diseño mecánico",
+    "disenador producto": "Diseñador de producto",
+    # Salud
+    "jefe enfermeria": "Jefe de enfermería",
+    "enfermero jefe": "Jefe de enfermería",
+    "clinical nurse coordinator": "Coordinador(a) de enfermería",
+    "registered general nurse": "Enfermero(a) registrado(a)",
+    "terapeuta fisico fisioterapeuta": "Fisioterapeuta",
+    "terapeuta fisico integral": "Fisioterapeuta",
+    "fisioterapeuta domiciliario": "Fisioterapeuta domiciliario",
+    "locum physician": "Médico (locum)",
+    "locum physician do emergency medicine": "Médico de urgencias (locum)",
+    "obgyn physician": "Médico ginecobstetra",
+    # Comunicación
+    "editor video": "Editor de video",
+    "editor videos": "Editor de video",
+    "digital video content producer editor": "Editor de video",
+    "redactor contenidos": "Redactor de contenidos",
+    "creador contenido": "Creador de contenido",
+    "multiskilled journalist": "Periodista multimedia",
+    "multi media journalist": "Periodista multimedia",
+    "content strategist writer": "Estratega de contenidos",
+    "relaciones publicas": "Relaciones públicas",
+    # Negocios y administración
+    "jefe servicio cliente": "Jefe de servicio al cliente",
+    "coordinador cliente": "Coordinador(a) de servicio al cliente",
+    "client success manager": "Gerente de éxito del cliente",
+    "financial planning analysis analyst": "Analista de planeación financiera",
+    "specialist talent management": "Especialista en gestión del talento",
+    "hr ethics compliance officer": "Oficial de cumplimiento",
+    # Derecho
+    "employment lawyer": "Abogado laboralista",
+    "in house lawyer": "Abogado interno",
+    "asesor juridico": "Asesor jurídico",
+    "abogado litigios": "Abogado litigante",
+    # Educación y ciencias sociales
+    "early childhood education teacher": "Docente de primera infancia",
+    "docente filosofia": "Docente de filosofía",
+    "auxiliar pedagogico": "Auxiliar pedagógico",
+    "industrial organizational psychologist": "Psicólogo organizacional",
+    "psicologo organizacional": "Psicólogo organizacional",
+    "analista reclutamiento y seleccion": "Analista de selección",
+    "international relations": "Relaciones internacionales",
+    # ── Segunda pasada de la auditoría: títulos que subieron al top 10 al
+    #    fusionarse los duplicados de la primera ronda ────────────────────────
+    "physical therapist": "Fisioterapeuta",
+    # Más específicas que "physical therapist"/"nurse": el bucle de prefijo
+    # recorre las claves de más palabras a menos, así que estas ganan y el
+    # auxiliar no se cuenta como el profesional.
+    "physical therapist aide": "Auxiliar de fisioterapia",
+    "physical therapy aide": "Auxiliar de fisioterapia",
+    "nurse aide": "Auxiliar de enfermería",
+    # Plurales de los cargos con entrada propia: la regla general de plural
+    # solo actúa en la capa composicional, así que sin estas claves el plural
+    # caía en una etiqueta distinta a la del singular ("Physical Therapists"
+    # daba "Terapeuta físico" y "Physical Therapist", "Fisioterapeuta").
+    "physical therapists": "Fisioterapeuta",
+    "physiotherapists": "Fisioterapeuta",
+    "registered nurses": "Enfermero(a) registrado(a)",
+    "editores video": "Editor de video",
+    "physician do family practice": "Médico de familia",
+    "family practice physician": "Médico de familia",
+    "clinical psychologist": "Psicólogo clínico",
+    "neuropsychologist": "Neuropsicólogo",
+    "preschool pre k teacher": "Docente de preescolar",
+    "pre k teacher": "Docente de preescolar",
+    "corporate communications": "Comunicaciones corporativas",
+    "intern corporate communications": "Practicante de comunicaciones corporativas",
+    "electrochemical engineer": "Ingeniero electroquímico",
+    "ux writer": "Redactor UX",
+    "content designer": "Diseñador de contenido",
+    "clinical nurse educator": "Enfermero(a) educador(a)",
+    "ingenieros industriales": "Ingeniero industrial",
+    "analista servicio y cliente": "Analista de servicio al cliente",
+    "creador contenidos videos": "Creador de contenido",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -655,6 +747,18 @@ _UBICACIONES: set[str] = {
     "ok", "ct", "ut", "ia", "nv", "ar", "ms", "ks", "nm", "ne", "wv", "hi",
     "nh", "ri", "mt", "sd", "nd", "ak", "vt", "wy",
     "on", "bc", "ab", "qc", "mb", "sk", "ns", "nb",
+    # Estados de EE.UU. escritos completos. Se añadieron al detectar que las
+    # ofertas médicas de tipo "locum" traen el destino en el título ("Locum
+    # Physician DO Emergency Medicine In Florida"), lo que partía un mismo
+    # cargo en una barra por estado.
+    "florida", "texas", "minnesota", "california", "georgia", "virginia",
+    "carolina", "ohio", "michigan", "arizona", "nevada", "oregon",
+    "washington", "colorado", "kansas", "missouri", "indiana", "kentucky",
+    "tennessee", "alabama", "louisiana", "oklahoma", "arkansas",
+    "mississippi", "iowa", "nebraska", "utah", "idaho", "montana", "wyoming",
+    "dakota", "alaska", "hawaii", "maine", "vermont", "delaware", "maryland",
+    "massachusetts", "connecticut", "pennsylvania", "illinois", "wisconsin",
+    "sumter", "durham", "wilton", "lincoln",
 }
 
 # Modalidad, urgencia y muletillas de anuncio: describen la oferta, no el cargo.
@@ -669,6 +773,17 @@ _MODALIDAD_RUIDO: set[str] = {
     "openings", "vacante", "vacancy", "job", "jobs", "empleo", "trabajo",
     "position", "role", "opportunity", "oportunidad", "needed", "wanted",
     "sign", "bonus", "w", "relocation",
+    # 'full' suelto ("Full Physiotherapist") es un resto de "full time"; es
+    # seguro porque los bigramas protegidos ("full stack") se blindan ANTES
+    # del filtrado token a token. 'in' aparece como preposición en los
+    # títulos en inglés que traen destino ("... In Florida").
+    "full", "in", "to",
+    # Jerga del NHS británico, que publica el grado salarial en el título
+    # ("Band 6 Locum Outpatient MSK Physiotherapist").
+    "band", "msk", "outpatient", "inpatient",
+    # Restos del salario anunciado en el título ("... $90,000 to $120,000 per
+    # year"): el importe ya lo quita el filtro de números.
+    "per", "year", "annum", "hour", "hourly", "salary", "salario",
 }
 
 _RUIDO_CARGO = _UBICACIONES | _MODALIDAD_RUIDO
@@ -699,7 +814,7 @@ def _sin_tildes(texto: str) -> str:
     )
 
 
-def canonizar_cargo(titulo_normalizado: str) -> str:
+def canonizar_cargo(titulo_normalizado: str, plegar: bool = True) -> str:
     """Quita del título normalizado todo lo que no es el nombre del cargo.
 
     Opera sobre la salida de `normalize_title` (Adzuna/adzuna_service.py), no
@@ -708,23 +823,40 @@ def canonizar_cargo(titulo_normalizado: str) -> str:
     entradas curadas de `CARGOS` y de cualquier otro consumidor, así que
     cambiarla invalidaría en silencio ese trabajo. Esta limpieza es del
     momento de traducir, no de normalizar.
+
+    `plegar=True` (por defecto) devuelve el texto SIN TILDES: es la forma con
+    la que se COMPARA contra el diccionario, para que "Ingeniería" y
+    "Ingenieria" lleguen a la misma entrada.
+
+    `plegar=False` conserva tildes y ñ: es la forma que se MUESTRA cuando
+    ninguna entrada del diccionario aplica. Sin esta distinción, el respaldo
+    imprimía el texto plegado y salían nombres mutilados —"Ingeniero
+    mecanico", "Disenador producto", "Docente filosofia"— que además quedaban
+    como una barra SEPARADA de su equivalente ya traducido del inglés
+    ("Ingeniero mecánico"), partiendo en dos el mismo cargo.
     """
     if not titulo_normalizado:
         return ""
 
-    texto = _sin_tildes(titulo_normalizado.lower())
+    texto = titulo_normalizado.lower()
 
-    # Blindar/eliminar bigramas antes del filtrado token a token.
+    # Blindar/eliminar bigramas antes del filtrado token a token. Todos son
+    # ASCII, así que casan igual sobre el texto con tildes.
     for bigrama, reemplazo in _BIGRAMAS_PROTEGIDOS.items():
         texto = texto.replace(bigrama, f" {reemplazo} " if reemplazo else " ")
 
-    tokens = [
-        t for t in texto.split()
-        if t not in _RUIDO_CARGO
+    # El descarte SIEMPRE se decide sobre la forma plegada (los conjuntos de
+    # ruido están escritos sin tildes: 'bogota', 'medellin'), pero lo que se
+    # conserva depende de `plegar`.
+    tokens = []
+    for token in texto.split():
+        plano = _sin_tildes(token)
+        if plano in _RUIDO_CARGO:
+            continue
         # Números sueltos y códigos de oferta ("1626430055", "20", "id71005").
-        and not re.fullmatch(r"\d+", t)
-        and not re.fullmatch(r"[a-z]{0,3}\d{2,}[a-z\d]*", t)
-    ]
+        if re.fullmatch(r"\d+", plano) or re.fullmatch(r"[a-z]{0,3}\d{2,}[a-z\d]*", plano):
+            continue
+        tokens.append(plano if plegar else token)
     texto = " ".join(tokens)
 
     # Restaurar los bigramas blindados.
@@ -760,6 +892,7 @@ _NUCLEOS: dict[str, str] = {
     "veterinarian": "Veterinario", "translator": "Traductor",
     "generalist": "Generalista", "paralegal": "Asistente jurídico",
     "practitioner": "Profesional", "officer": "Oficial", "agent": "Agente",
+    "physiotherapist": "Fisioterapeuta",
 }
 
 _MODIFICADORES: dict[str, str] = {
@@ -773,6 +906,11 @@ _MODIFICADORES: dict[str, str] = {
     "business": "de negocios", "process": "de procesos", "design": "de diseño",
     "systems": "de sistemas", "system": "de sistemas", "network": "de redes",
     "cloud": "de la nube", "frontend": "frontend", "backend": "backend",
+    # Las formas de DOS palabras son necesarias además de las pegadas:
+    # `canonizar_cargo` restaura los bigramas protegidos antes de devolver, así
+    # que a la composición le llega "front end engineer", no "frontend
+    # engineer", y sin esta entrada no encontraba modificador.
+    "front end": "frontend", "back end": "backend",
     "full stack": "full stack", "machine learning": "de machine learning",
     "ai": "de IA", "environmental": "ambiental", "biomedical": "biomédico",
     "aerospace": "aeroespacial", "automation": "de automatización",
@@ -792,7 +930,8 @@ _MODIFICADORES: dict[str, str] = {
     "secondary": "de secundaria", "special education": "de educación especial",
     "early childhood": "de primera infancia", "science": "de ciencias",
     "math": "de matemáticas", "mathematics": "de matemáticas",
-    "english": "de inglés", "web": "web", "mobile": "móvil", "java": "Java",
+    "english": "de inglés", "music": "de música", "art": "de arte",
+    "web": "web", "mobile": "móvil", "java": "Java",
     "python": "Python", "test": "de pruebas", "qa": "de calidad",
     "devops": "DevOps", "policy": "de políticas",
     "public policy": "de políticas públicas",
@@ -812,6 +951,22 @@ _MODIFICADORES_COMPUESTOS = sorted(
     key=lambda m: -len(m.split()),
 )
 
+# Profesiones cuyo nombre A SECAS ya es un cargo completo y sin ambigüedad.
+# Solo para estas se acepta componer sin modificador conocido: da igual cuánta
+# jerga arrastre el título ("Band 6 Locum Outpatient MSK Physiotherapist
+# Lincoln"), sigue siendo un fisioterapeuta.
+#
+# Se dejan FUERA a propósito las genéricas —engineer, analyst, manager,
+# developer, specialist, teacher…—: ahí el modificador ES el cargo, y quedarse
+# con "Analista" a secas fusionaría 'investment banking analyst' con 'policy
+# analyst' en una sola barra sin sentido.
+_NUCLEOS_AUTONOMOS: frozenset[str] = frozenset({
+    "physiotherapist", "nurse", "physician", "lawyer", "attorney",
+    "psychologist", "journalist", "chef", "accountant", "architect",
+    "dentist", "veterinarian", "pharmacist", "surgeon", "economist",
+    "translator",
+})
+
 
 def _componer_cargo(canonico: str) -> str | None:
     """'civil engineer' -> 'Ingeniero civil'. None si no se puede componer.
@@ -825,7 +980,18 @@ def _componer_cargo(canonico: str) -> str | None:
     if not tokens:
         return None
 
-    base = _NUCLEOS.get(tokens[-1])
+    # El núcleo puede venir en plural ("Physical Therapists", "Ingenieros
+    # Industriales", "Editores de Video"): se prueba el singular antes de
+    # rendirse. Es seguro porque solo acierta si el singular resultante es un
+    # núcleo conocido.
+    nucleo = tokens[-1]
+    if nucleo not in _NUCLEOS:
+        for sufijo in ("es", "s"):
+            if nucleo.endswith(sufijo) and nucleo[: -len(sufijo)] in _NUCLEOS:
+                nucleo = nucleo[: -len(sufijo)]
+                break
+
+    base = _NUCLEOS.get(nucleo)
     if not base:
         return None
 
@@ -836,7 +1002,11 @@ def _componer_cargo(canonico: str) -> str | None:
         if resto.endswith(compuesto):
             return f"{base} {_MODIFICADORES[compuesto]}"
     modificador = _MODIFICADORES.get(tokens[-2]) if len(tokens) >= 2 else None
-    return f"{base} {modificador}" if modificador else None
+    if modificador:
+        return f"{base} {modificador}"
+    # Sin modificador conocido: solo se acepta el núcleo a secas si la
+    # profesión es autónoma (ver _NUCLEOS_AUTONOMOS).
+    return base if nucleo in _NUCLEOS_AUTONOMOS else None
 
 
 # Índice de `CARGOS` con las claves ya canonizadas, para que el match ignore
@@ -892,7 +1062,10 @@ def traducir_cargo(titulo_normalizado: str | None) -> str | None:
     if compuesto:
         return compuesto
 
-    return canonico[0].upper() + canonico[1:]
+    # Respaldo: se muestra la forma SIN PLEGAR (con tildes y ñ). Ver la nota de
+    # `canonizar_cargo` sobre por qué no se imprime `canonico`.
+    visible = canonizar_cargo(titulo_normalizado, plegar=False) or canonico
+    return visible[0].upper() + visible[1:]
 
 
 def traducir_tecnologia(nombre: str | None) -> str | None:
