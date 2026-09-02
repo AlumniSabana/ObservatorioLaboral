@@ -112,7 +112,24 @@ MIN_MUESTRA_TOTAL = 15   # el término debe aparecer en >=15 vacantes reales en 
 # en 25 y solo se relaja al mirar un programa suelto. El piso de calidad no
 # desaparece: el término sigue necesitando `MIN_MUESTRA_TOTAL` apariciones
 # repartidas en `MIN_PERIODOS` meses.
-MIN_VACANTES_MES_PROGRAMA = 5
+#
+# BAJADO DE 5 A 3 (sep 2026). Motivo medido: los programas cuya demanda es
+# sobre todo colombiana (Psicología 66% CO, Comportamiento Organizacional 77%,
+# Administración & Servicio 49%, Comunicación Corporativa 43%) dependen de
+# Google Jobs Colombia, que solo tiene 3 meses de historia (2026-06 a 2026-08).
+# Con MIN_PERIODOS=3 no hay margen: basta que UNO de esos tres meses quede por
+# debajo del umbral para que el cargo caiga a 2 meses y se descarte entero.
+# Pasaba con cargos que sobran en volumen — "Analista de selección" tiene 53
+# vacantes repartidas en los 3 meses y se perdía por eso.
+#
+# El barrido completo (5→1) muestra que 3 es el punto de rendimiento
+# decreciente: 91→106 términos y 7→3 programas sin tendencia; con 2 o 1 solo se
+# ganan 2-4 términos más y no se rescata ningún programa adicional.
+#
+# Los 3 programas que siguen en cero (Ciencias Políticas 24 vacantes,
+# Relaciones Internacionales 35, Ingeniería de Bioproducción 15) NO son un
+# problema de umbral sino de volumen: ningún valor los salva.
+MIN_VACANTES_MES_PROGRAMA = 3
 
 
 # ---------------------------------------------------------------------------

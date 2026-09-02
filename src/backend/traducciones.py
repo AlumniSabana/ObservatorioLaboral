@@ -617,7 +617,42 @@ CARGOS: dict[str, str] = {
     "physiotherapists": "Fisioterapeuta",
     "registered nurses": "Enfermero(a) registrado(a)",
     "editores video": "Editor de video",
+    # ── Plantilla "Physician (MD/DO) - <especialidad> - General/Other" ───────
+    # Un solo portal de empleo médico publica así ~200 vacantes. Sin estas
+    # claves cada especialidad quedaba en inglés y además partida por ciudad.
     "physician do family practice": "Médico de familia",
+    "physician do psychiatry": "Médico psiquiatra",
+    "physician do pediatrics": "Médico pediatra",
+    "physician do cardiology": "Médico cardiólogo",
+    "physician do internal medicine": "Médico internista",
+    "physician do radiology": "Médico radiólogo",
+    "physician do anesthesiology": "Médico anestesiólogo",
+    "physician do surgery": "Médico cirujano",
+    "physician do neurology": "Médico neurólogo",
+    "physician do urology": "Médico urólogo",
+    "physician do gastroenterology": "Médico gastroenterólogo",
+    "physician do obstetrics gynecology": "Médico ginecobstetra",
+    "physician do endocrinology": "Médico endocrinólogo",
+    "physician do rheumatology": "Médico reumatólogo",
+    "physician do hematology oncology": "Médico hematólogo y oncólogo",
+    # ── Experiencia del cliente / UX ─────────────────────────────────────────
+    # 'associate' lo borra normalize_title (es nivel), así que "Customer
+    # Experience Associate" llega aquí como "customer experience".
+    "customer experience": "Ejecutivo(a) de experiencia del cliente",
+    "customer experience manager": "Gerente de experiencia del cliente",
+    "customer experience specialist": "Especialista en experiencia del cliente",
+    "customer experience agent": "Agente de experiencia del cliente",
+    "customer experience lead": "Líder de experiencia del cliente",
+    "user experience designer": "Diseñador UX",
+    "user experience": "Diseñador UX",
+    # ── Cola larga de la recolección nueva ──────────────────────────────────
+    "asic design verification engineer": "Ingeniero de verificación de diseño ASIC",
+    "application engineer bioprocess mixing": "Ingeniero de aplicaciones de bioprocesos",
+    "applications engineering supervisor bioprocessing design": "Ingeniero de aplicaciones de bioprocesos",
+    "bioprocess npi engineer": "Ingeniero de bioprocesos",
+    "applications sales engineer chemical": "Ingeniero comercial de aplicaciones químicas",
+    "practicante relaciones internacionales y estudios politicos": "Practicante de relaciones internacionales y estudios políticos",
+    "profesional relaciones internacionales bilingue": "Profesional de relaciones internacionales bilingüe",
     "family practice physician": "Médico de familia",
     "clinical psychologist": "Psicólogo clínico",
     "neuropsychologist": "Neuropsicólogo",
@@ -781,6 +816,9 @@ _MODALIDAD_RUIDO: set[str] = {
     # Jerga del NHS británico, que publica el grado salarial en el título
     # ("Band 6 Locum Outpatient MSK Physiotherapist").
     "band", "msk", "outpatient", "inpatient",
+    # Avisos de banco de talento ("Customer Experience Associate - Future
+    # Opportunities"): no son el cargo, son la convocatoria.
+    "future", "opportunities",
     # Restos del salario anunciado en el título ("... $90,000 to $120,000 per
     # year"): el importe ya lo quita el filtro de números.
     "per", "year", "annum", "hour", "hourly", "salary", "salario",
@@ -798,6 +836,11 @@ _BIGRAMAS_PROTEGIDOS: dict[str, str] = {
     "front end": "frontend",
     "back end": "backend",
     "machine learning": "machinelearning",
+    # 'experience' está en el ruido para descartar "5 years experience", pero
+    # en estas dos es el NOMBRE del cargo: sin blindarlas, "Customer
+    # Experience Associate" quedaba en "Customer" (93 vacantes afectadas).
+    "customer experience": "customerexperience",
+    "user experience": "userexperience",
     "new york": "",
     "santa marta": "",
     "per diem": "",
