@@ -74,9 +74,33 @@ _HEADERS = {
     "Accept": "text/html",
 }
 
-_PAIS = "co"
-_LOCATION = "Colombia"
 _TIMEOUT = 30
+
+# Mercados habilitados y el nombre de ubicación que se manda al buscador
+# público de LinkedIn (texto libre, no un geoId — mismo mecanismo que ya
+# funcionaba para Colombia). Se usan las MISMAS keywords en español
+# (PROGRAMAS_KEYWORDS_CO): son válidas en todo el Hispanoamérica sin necesidad
+# de un diccionario por país, a diferencia de Adzuna (que sí distingue EN/ES).
+#
+# Arranque deliberadamente acotado a los mercados más grandes de LATAM además
+# de Colombia — ampliar la lista de países multiplica el número de peticiones
+# de una corrida ya limitada por diseño (ver encabezado del módulo); antes de
+# sumar más, mejor evaluar cómo se comporta esta primera ampliación.
+#
+# OJO con las tildes: verificado en vivo que LinkedIn NO resuelve "México" ni
+# "Perú" (con tilde) como ubicación — cae a un resultado genérico sin filtro
+# geográfico, dominado por ofertas de EE.UU. "Mexico"/"Peru" (sin tilde) sí
+# resuelven correctamente. "Colombia", "Argentina" y "Chile" no llevan tilde,
+# así que no les aplica el problema. Este bug ya contaminó una corrida real:
+# ver la nota de limpieza en Tendencias/linkedin_sync.py / el historial de
+# recolección de sep-2026.
+PAISES_LATAM: Dict[str, str] = {
+    "co": "Colombia",
+    "mx": "Mexico",
+    "ar": "Argentina",
+    "cl": "Chile",
+    "pe": "Peru",
+}
 
 
 class LinkedInDesactivado(RuntimeError):
@@ -113,7 +137,7 @@ def _texto(nodo) -> str | None:
     return nodo.get_text(strip=True) if nodo else None
 
 
-def _parsear_tarjetas(html: str, keyword: str, programa: str,
+def _parsear_tarjetas(html: str, keyword: str, programa: str, pais: str,
                       referencia: date | None = None) -> List[Dict[str, Any]]:
     """Convierte el HTML de resultados en filas listas para la BD."""
     sopa = BeautifulSoup(html, "html.parser")
@@ -156,18 +180,18 @@ def _parsear_tarjetas(html: str, keyword: str, programa: str,
             "apply_link": apply_link,
             "keyword": keyword,
             "programa_relacionado": programa,
-            "pais": _PAIS,
+            "pais": pais,
         })
     return filas
 
 
-def _buscar_pagina(keyword: str, start: int) -> str | None:
+def _buscar_pagina(keyword: str, start: int, location: str) -> str | None:
     """
     Una página de resultados (10 ofertas). Devuelve el HTML, o None si hay que
     detenerse (throttling o error). NUNCA reintenta ni rota IP: si LinkedIn pide
     parar, se para.
     """
-    params = {"keywords": keyword, "location": _LOCATION, "start": start}
+    params = {"keywords": keyword, "location": location, "start": start}
     try:
         r = requests.get(_URL_BUSQUEDA, params=params, headers=_HEADERS, timeout=_TIMEOUT)
     except Exception as e:
@@ -197,11 +221,15 @@ def guardar_ofertas(filas: List[Dict[str, Any]]) -> int:
 
 def recolectar_linkedin(programas: List[str] | None = None,
                         max_paginas: int | None = None,
-                        keywords_por_programa: int = 1) -> Dict[str, Any]:
+                        keywords_por_programa: int = 1,
+                        pais: str = "co") -> Dict[str, Any]:
     """
-    Corrida TRIMESTRAL de recolección de ofertas públicas en Colombia.
+    Corrida TRIMESTRAL de recolección de ofertas públicas en un mercado de LATAM.
 
     Lanza LinkedInDesactivado si no hay aprobación institucional (flag en false).
+    Lanza ValueError si `pais` no está en PAISES_LATAM (no se inventa una
+    ubicación: cada mercado nuevo se agrega ahí explícitamente).
+
     Por defecto usa solo la primera keyword en español de cada programa
     (PROGRAMAS_KEYWORDS_CO), para mantener la huella mínima: una búsqueda por
     programa. `keywords_por_programa` permite ampliar puntualmente (p. ej. antes
@@ -209,7 +237,13 @@ def recolectar_linkedin(programas: List[str] | None = None,
     trimestral automática.
     """
     _verificar_habilitado()
+    if pais not in PAISES_LATAM:
+        raise ValueError(
+            f"País '{pais}' no habilitado para LinkedIn. Disponibles: "
+            f"{', '.join(sorted(PAISES_LATAM))}."
+        )
 
+    location = PAISES_LATAM[pais]
     paginas = max_paginas or LINKEDIN_MAX_PAGINAS
     objetivo = programas or list(PROGRAMAS_KEYWORDS_CO)
     hoy = date.today()
@@ -218,7 +252,7 @@ def recolectar_linkedin(programas: List[str] | None = None,
     total_guardadas = 0
     abortado = False
 
-    print(f"🔎 LinkedIn (ofertas públicas, Colombia) — {len(objetivo)} programas, "
+    print(f"🔎 LinkedIn (ofertas públicas, {location}) — {len(objetivo)} programas, "
           f"{keywords_por_programa} keyword(s) c/u, máx {paginas} páginas c/u, "
           f"pausa {LINKEDIN_PAUSA_SEG}s")
 
@@ -231,12 +265,12 @@ def recolectar_linkedin(programas: List[str] | None = None,
             print(f"  • {programa} — '{keyword}'")
 
             for pagina in range(paginas):
-                html = _buscar_pagina(keyword, start=pagina * 10)
+                html = _buscar_pagina(keyword, start=pagina * 10, location=location)
                 if html is None:
                     abortado = True
                     break
 
-                filas = _parsear_tarjetas(html, keyword, programa, hoy)
+                filas = _parsear_tarjetas(html, keyword, programa, pais, hoy)
                 if not filas:
                     break  # sin más resultados para esta keyword
 
@@ -251,13 +285,14 @@ def recolectar_linkedin(programas: List[str] | None = None,
 
     resumen = {
         "fuente": "linkedin",
+        "pais": pais,
         "programas_procesados": len(objetivo),
         "ofertas_vistas": total_vistas,
         "ofertas_guardadas": total_guardadas,
         "abortado_por_throttling": abortado,
         "nota": "Solo ofertas de empleo públicas. No se recolectan datos de personas.",
     }
-    print(f"✅ Fin: {total_guardadas} ofertas guardadas"
+    print(f"✅ Fin ({location}): {total_guardadas} ofertas guardadas"
           f"{' (corrida abortada por throttling)' if abortado else ''}")
     return resumen
 

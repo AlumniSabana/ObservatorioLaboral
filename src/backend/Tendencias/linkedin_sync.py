@@ -32,17 +32,19 @@ from LinkedIn.linkedin_service import TABLA as TABLA_LINKEDIN
 from Tendencias.historical_collector import TABLA_HIST
 
 FUENTE = "linkedin"
-# NO se reutiliza "co": `leer_observaciones()` combina países IGNORANDO fuente a
-# propósito ("cada país lo cubre una sola fuente") y Colombia ya la cubre Google
-# Jobs. Si LinkedIn escribiera también bajo pais='co', sus filas y las de Google
-# Jobs compartirían el mismo balde en la lectura multi-país: la comparación
-# "cada país pesa igual" contaría a Colombia dos veces (una por fuente) frente a
-# una sola vez para el resto de mercados, sesgando cualquier combinación que
-# incluya 'co'. Se usa un código de país propio: mismo patrón que ya existe
-# (cada (fuente, país) es un mercado independiente), solo que este no coincide
-# con ningún ISO real a propósito, para no fingir ser la MISMA Colombia que ya
-# mide Google Jobs.
-PAIS = "co_li"
+# Se sufija CADA país de LinkedIn con '_li' (co -> co_li, mx -> mx_li...), nunca
+# se reutiliza el código ISO puro. Motivo: `leer_observaciones()` combina países
+# IGNORANDO fuente a propósito ("cada país lo cubre una sola fuente"), y varios
+# de estos mercados YA los cubre otra fuente (Colombia -> Google Jobs, México ->
+# Adzuna). Si LinkedIn escribiera bajo el mismo código ISO, sus filas
+# compartirían el balde de la lectura multi-país con las de esa otra fuente: la
+# comparación "cada país pesa igual" contaría ese mercado dos veces frente a una
+# sola vez para el resto, sesgando cualquier combinación que lo incluya. El
+# sufijo dice "esto es LinkedIn", no "esto es la MISMA Colombia/México que ya
+# mide otra fuente" — aplica igual a un país que hoy no tenga otra fuente
+# (evita que choque si esa fuente se agrega después).
+def _pais_linkedin(pais_bruto: str | None) -> str:
+    return f"{pais_bruto or 'co'}_li"
 
 
 def _leer_linkedin() -> List[Dict[str, Any]]:
@@ -52,7 +54,7 @@ def _leer_linkedin() -> List[Dict[str, Any]]:
         r = (
             supabase.table(TABLA_LINKEDIN)
             .select("job_id,title,company,fecha_publicacion,posted_at,"
-                    "keyword,programa_relacionado,recolectado_en")
+                    "keyword,programa_relacionado,recolectado_en,pais")
             .order("job_id")
             .range(start, start + page - 1)
             .execute()
@@ -104,7 +106,7 @@ def sincronizar(referencia: date | None = None) -> Dict[str, Any]:
             "category": None,
             "created_at": fecha,
             "fuente": FUENTE,
-            "pais": PAIS,
+            "pais": _pais_linkedin(f.get("pais")),
             "keyword": f.get("keyword"),
             "programa_relacionado": f.get("programa_relacionado"),
             "ref_externa": job_id,

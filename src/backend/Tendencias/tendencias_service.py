@@ -68,9 +68,13 @@ FUENTES_CATALOGO = [
     {"fuente": "adzuna", "pais": "mx", "label": "Adzuna — México"},
     {"fuente": "adzuna", "pais": "es", "label": "Adzuna — España"},
     {"fuente": "google_jobs", "pais": "co", "label": "Google Jobs — Colombia"},
-    # pais='co_li' (no 'co'): Colombia ya la cubre Google Jobs y la lectura
-    # multi-país combina ignorando `fuente` — ver Tendencias/linkedin_sync.py.
+    # Sufijo '_li' en TODOS los países de LinkedIn (no solo Colombia): la
+    # lectura multi-país combina ignorando `fuente` — ver Tendencias/linkedin_sync.py.
     {"fuente": "linkedin", "pais": "co_li", "label": "LinkedIn — Colombia"},
+    {"fuente": "linkedin", "pais": "mx_li", "label": "LinkedIn — México"},
+    {"fuente": "linkedin", "pais": "ar_li", "label": "LinkedIn — Argentina"},
+    {"fuente": "linkedin", "pais": "cl_li", "label": "LinkedIn — Chile"},
+    {"fuente": "linkedin", "pais": "pe_li", "label": "LinkedIn — Perú"},
 ]
 FUENTE_DEFECTO = "adzuna"
 PAIS_DEFECTO = "us"

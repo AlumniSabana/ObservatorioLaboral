@@ -417,11 +417,11 @@ CARGOS: dict[str, str] = {
     # inglés en este diccionario, se usa la MISMA traducción para que se
     # fusionen en un solo término en vez de aparecer como barras separadas.
     "administrador empresas": "Administrador(a) de Empresas",
-    "director desarrollo organizacional": "Director(a) de Desarrollo Organizacional",
+    "director desarrollo organizacional": "Director(a) de desarrollo organizacional",
     "científico datos": "Científico de datos",
     "cientifico datos": "Científico de datos",
-    "coordinador contable": "Coordinador(a) Contable",
-    "consultor sénior desarrollo organizacional": "Consultor(a) Sénior de Desarrollo Organizacional",
+    "coordinador contable": "Coordinador(a) contable",
+    "consultor sénior desarrollo organizacional": "Consultor(a) sénior de desarrollo organizacional",
     "gerente operaciones": "Gerente de operaciones",
     "analista administrativo": "Analista administrativo",
     "analista mercadeo": "Analista de mercadeo",
@@ -430,11 +430,11 @@ CARGOS: dict[str, str] = {
     "analista recursos humanos": "Analista de recursos humanos",
     "analista datos": "Analista de datos",
     "analista inteligencia negocios": "Analista de inteligencia de negocios",
-    "coordinador desarrollo organizacional": "Coordinador(a) de Desarrollo Organizacional",
-    "auxiliar desarrollo organizacional": "Auxiliar de Desarrollo Organizacional",
-    "analista desarrollo organizacional": "Analista de Desarrollo Organizacional",
-    "especialista desarrollo organizacional": "Especialista en Desarrollo Organizacional",
-    "analista gestión talento": "Analista de Gestión del Talento",
+    "coordinador desarrollo organizacional": "Coordinador(a) de desarrollo organizacional",
+    "auxiliar desarrollo organizacional": "Auxiliar de desarrollo organizacional",
+    "analista desarrollo organizacional": "Analista de desarrollo organizacional",
+    "especialista desarrollo organizacional": "Especialista en desarrollo organizacional",
+    "analista gestión talento": "Analista de gestión del talento",
     # ── Ciencias Políticas y afines ──────────────────────────────────────────
     # Su cola larga es casi toda cargo académico estadounidense: al buscar
     # "public policy" Adzuna devuelve sobre todo plazas de universidad. Se
@@ -653,6 +653,19 @@ CARGOS: dict[str, str] = {
     "applications sales engineer chemical": "Ingeniero comercial de aplicaciones químicas",
     "practicante relaciones internacionales y estudios politicos": "Practicante de relaciones internacionales y estudios políticos",
     "profesional relaciones internacionales bilingue": "Profesional de relaciones internacionales bilingüe",
+    # ── Auditoría tras sumar los mercados de LATAM (sep-2026) ────────────────
+    # Inglés que entró con las nuevas fuentes.
+    "manufacturing supply chain professional": "Profesional de manufactura y cadena de suministro",
+    "export area manager": "Gerente de exportaciones",
+    "export control manager": "Gerente de control de exportaciones",
+    # Variantes regionales: en Perú y el Cono Sur se dice "planeamiento" donde
+    # en Colombia/México se dice "planeación"; es el mismo cargo.
+    "analista planeamiento financiero": "Analista de planeación financiera",
+    "analista planeamiento": "Analista de planeación",
+    "jefe planeamiento": "Jefe de planeación",
+    # "Abogado/a Laboral" (Cono Sur) y "abogado laboralista" (Colombia) son el
+    # mismo rol: sin esta entrada quedaban en dos barras.
+    "abogado laboral": "Abogado laboralista",
     "family practice physician": "Médico de familia",
     "clinical psychologist": "Psicólogo clínico",
     "neuropsychologist": "Neuropsicólogo",
