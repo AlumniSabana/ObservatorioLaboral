@@ -25,7 +25,7 @@ from Salarios.salarios_service import salario_por_programa
 from ONet.onet_service import competencias_scored, perfil_onet
 from Tendencias.seniority_analisis import seniority_optimo
 from Tendencias.perfil_tendencia import tendencia_programa
-from traducciones import traducir_sector
+from traducciones import agrupar_sector, traducir_sector
 
 
 def _sectores(jobs_programa: list[dict]) -> list[dict]:
@@ -33,10 +33,14 @@ def _sectores(jobs_programa: list[dict]) -> list[dict]:
     Top sectores que contratan el perfil, contados directo de las vacantes ya
     cargadas (Adzuna, mercado internacional). El sector se traduce al vuelo porque
     en la BD viene en inglés. Evita una segunda lectura completa vía get_analytics.
+
+    Se agrupa en los 18 grupos económicos (`agrupar_sector`) para que el perfil
+    hable la misma taxonomía que Tendencias; antes esta vista mostraba los ~29
+    sectores finos de Adzuna y no coincidía con el resto del dashboard.
     """
     conteo = Counter()
     for j in jobs_programa:
-        cat = traducir_sector(j.get("category")) or "Sin especificar"
+        cat = agrupar_sector(traducir_sector(j.get("category"))) or "Sin especificar"
         conteo[cat] += 1
     return [{"category": c, "count": n} for c, n in conteo.most_common(6)]
 

@@ -46,16 +46,22 @@ const SUGERENCIAS = [
 ];
 
 // "Empresas por sector" ya NO es un único chip quemado a Tecnología (TI): son
-// los sectores REALES con más contratación en el Observatorio (verificado
-// contra /asistente/contexto — Ingeniería y Tecnología encabezan, no solo TI),
-// uno por botón, para que el usuario elija cuál explorar.
+// los sectores REALES con más contratación en el Observatorio, uno por botón,
+// para que el usuario elija cuál explorar.
+//
+// Deben ser nombres de los 18 GRUPOS ECONÓMICOS (ver GRUPOS_SECTOR_18 en
+// src/backend/traducciones.py), que es la taxonomía que ahora usa todo el
+// dashboard. Antes eran etiquetas finas de Adzuna ("Ingeniería",
+// "Tecnología (TI)"…) que ya no existen como sector en ninguna gráfica, así
+// que el chip preguntaba por algo que el usuario no podía ver en ningún lado.
+// Estos 6 son los de mayor volumen medido en BD.
 const SECTORES_SUGERIDOS = [
-  'Ingeniería',
-  'Tecnología (TI)',
-  'Salud y enfermería',
-  'Contabilidad y finanzas',
+  'Industria y manufactura',
+  'Tecnología, software, telecomunicaciones y datos',
+  'Salud y ciencias de la vida',
+  'Comercio, retail y consumo',
+  'Servicios financieros, seguros y Fintech',
   'Educación',
-  'Ventas',
 ];
 
 const preguntaPorSector = (sector: string) =>

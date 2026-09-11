@@ -154,13 +154,15 @@ const SENIORITY_LABEL: Record<string, string> = {
 // mide experiencia sino tipo de ocupación (Grandes Grupos 1-5 de CIUO-08).
 // Ver Tendencias/escolaridad.py, que documenta por qué se dejaron fuera los
 // grupos de oficios/operarios y los niveles Junior y Recién graduado.
+// Debe coincidir con ETIQUETAS en src/backend/Tendencias/escolaridad.py (el
+// backend no sirve esos textos, así que se duplican aquí a propósito).
 const ESCOLARIDAD_LABEL: Record<string, string> = {
   TODOS: 'Todos',
   directivo: 'Directores y gerentes',
   profesional: 'Profesionales, científicos e intelectuales',
-  tecnico: 'Técnicos y profesionales de nivel medio',
+  tecnico: 'Técnicos y profesionales del nivel medio',
   apoyo_administrativo: 'Personal de apoyo administrativo',
-  servicios_ventas: 'Trabajadores de servicios y vendedores',
+  servicios_ventas: 'Trabajadores de los servicios y vendedores',
 };
 
 const DIMENSIONES: Record<Dimension, { label: string; titulo: string; singular: string }> = {
@@ -801,7 +803,7 @@ export default function TendenciasPage() {
 
         <div className="flex-[1.6] min-w-[190px]">
           <label htmlFor="f-esc" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
-            Nivel de escolaridad
+            Grupos de la CUOC
           </label>
           <select
             id="f-esc"
@@ -1107,8 +1109,8 @@ export default function TendenciasPage() {
           </h2>
           <p className="text-sm text-zinc-500">
             {dimension === 'sector'
-              ? 'Los sectores con más vacantes en la muestra, según los filtros de arriba (país, programa, nivel de experiencia y nivel de escolaridad). El nivel de escolaridad solo afecta esta sección, no la tendencia temporal de arriba.'
-              : 'Los cargos con más vacantes en la muestra, según los filtros de arriba (país, programa, nivel de experiencia y nivel de escolaridad). El nivel de escolaridad solo afecta esta sección, no la tendencia temporal de arriba.'}
+              ? 'Los sectores con más vacantes en la muestra, según los filtros de arriba (país, programa, nivel de experiencia y grupo de la CUOC). El grupo de la CUOC solo afecta esta sección, no la tendencia temporal de arriba.'
+              : 'Los cargos con más vacantes en la muestra, según los filtros de arriba (país, programa, nivel de experiencia y grupo de la CUOC). El grupo de la CUOC solo afecta esta sección, no la tendencia temporal de arriba.'}
             {programa === TODOS ? ' Incluye además empresas y programas académicos.' : ''}
             {demanda ? ` Basado en ${demanda.meta.total.toLocaleString('es-CO')} vacantes.` : ''}
           </p>

@@ -46,10 +46,13 @@ from statistics import quantiles
 from typing import Any, Dict, List, Tuple
 
 from Adzuna.adzuna_service import normalize_title, supabase
+# Los mercados de LinkedIn del catálogo se derivan de aquí (ver FUENTES_CATALOGO).
+# Sin ciclo: linkedin_service no importa este módulo.
+from LinkedIn.linkedin_service import PAISES_LATAM as _PAISES_LINKEDIN
 from Tendencias.escolaridad import NIVELES as NIVELES_ESCOLARIDAD
 from Tendencias.seniority import NIVELES, detectar_seniority
 from config import es_pertinente, coincide_con_keyword
-from traducciones import traducir_sector, traducir_cargo
+from traducciones import agrupar_sector, traducir_sector, traducir_cargo
 
 TABLA_OBS = "tendencias_observaciones"
 
@@ -61,6 +64,12 @@ TODOS = "TODOS"
 # solo Adzuna alimenta el histórico. `opciones_disponibles` solo ofrece las que de
 # verdad tienen datos, así que añadir aquí una fuente futura (p. ej. Google Jobs)
 # no la muestra hasta que exista muestra suya.
+
+# Nombre en español para la etiqueta del selector. `PAISES_LATAM` guarda la
+# cadena que entiende el buscador de LinkedIn (sin tildes, porque con tilde no
+# resuelve la ubicación), que no siempre es como se escribe en español.
+_NOMBRE_ES_LINKEDIN = {"mx": "México", "pe": "Perú"}
+
 FUENTES_CATALOGO = [
     {"fuente": "adzuna", "pais": "us", "label": "Adzuna — Estados Unidos"},
     {"fuente": "adzuna", "pais": "gb", "label": "Adzuna — Reino Unido"},
@@ -68,13 +77,21 @@ FUENTES_CATALOGO = [
     {"fuente": "adzuna", "pais": "mx", "label": "Adzuna — México"},
     {"fuente": "adzuna", "pais": "es", "label": "Adzuna — España"},
     {"fuente": "google_jobs", "pais": "co", "label": "Google Jobs — Colombia"},
-    # Sufijo '_li' en TODOS los países de LinkedIn (no solo Colombia): la
-    # lectura multi-país combina ignorando `fuente` — ver Tendencias/linkedin_sync.py.
-    {"fuente": "linkedin", "pais": "co_li", "label": "LinkedIn — Colombia"},
-    {"fuente": "linkedin", "pais": "mx_li", "label": "LinkedIn — México"},
-    {"fuente": "linkedin", "pais": "ar_li", "label": "LinkedIn — Argentina"},
-    {"fuente": "linkedin", "pais": "cl_li", "label": "LinkedIn — Chile"},
-    {"fuente": "linkedin", "pais": "pe_li", "label": "LinkedIn — Perú"},
+    # Los mercados de LinkedIn se DERIVAN de PAISES_LATAM, no se listan a mano:
+    # agregar un país allí lo hace aparecer aquí (y por tanto en el selector)
+    # sin tocar este archivo. Antes esta lista era estática y un país nuevo se
+    # recolectaba y sincronizaba pero quedaba invisible en la UI.
+    #
+    # Sufijo '_li' en TODOS los países (no solo Colombia): la lectura
+    # multi-país combina ignorando `fuente` — ver Tendencias/linkedin_sync.py.
+    *[
+        {
+            "fuente": "linkedin",
+            "pais": f"{_cod}_li",
+            "label": f"LinkedIn — {_NOMBRE_ES_LINKEDIN.get(_cod, _loc)}",
+        }
+        for _cod, _loc in _PAISES_LINKEDIN.items()
+    ],
 ]
 FUENTE_DEFECTO = "adzuna"
 PAIS_DEFECTO = "us"
@@ -161,7 +178,11 @@ def _terminos(fila: Dict[str, Any], dimension: str) -> List[str]:
         t = traducir_cargo(normalize_title(fila.get("title") or ""))
         return [t] if t else []
     if dimension == "sector":
-        c = traducir_sector(fila.get("category"))
+        # Se agrupa en los 18 grupos económicos, igual que "Demanda actual".
+        # Antes esta serie usaba los ~29 sectores finos de Adzuna mientras la
+        # otra vista usaba grupos amplios: dos taxonomías para lo mismo, y el
+        # usuario veía nombres distintos según la sección.
+        c = agrupar_sector(traducir_sector(fila.get("category")))
         return [c] if c else []
     if dimension == "skill":
         skills = fila.get("skills")

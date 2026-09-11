@@ -58,65 +58,162 @@ SECTORES: dict[str, str] = {
     "Unknown": "Sin especificar",
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Agrupación amplia de sectores para "Sectores con mayor actividad de
-# contratación" (Tendencias > Demanda actual). Los ~29 sectores de Adzuna son
-# demasiado finos para leerse de un vistazo, así que se colapsan en 6 campos
-# amplios alineados con las áreas de los programas de la Sabana. Es una
-# decisión EDITORIAL, no una taxonomía oficial (a diferencia de SECTORES, que
-# sí es la traducción literal de Adzuna): un sector sin mejor encaje cae en
-# "Otros / general" en vez de forzarlo, y "Sin especificar" se deja aparte
-# porque es ausencia de dato, no un sector que no encaje.
-# ─────────────────────────────────────────────────────────────────────────────
+# ═════════════════════════════════════════════════════════════════════════════
+# AGRUPACIÓN DE SECTORES EN 18 GRUPOS ECONÓMICOS
+# ═════════════════════════════════════════════════════════════════════════════
+# Taxonomía única de sector de todo el Observatorio. Reemplaza dos cosas que
+# convivían mal: los ~29 sectores finos de Adzuna (demasiado granulares y en su
+# propia lógica de "job board") y una agrupación previa en 6 campos alineados a
+# las áreas académicas de la Sabana. Los 18 grupos son SECTORES ECONÓMICOS, que
+# es lo que se quiere leer en el dashboard.
+#
+# POR QUÉ SE NORMALIZA EL PREFIJO Y NO SE LISTAN TODAS LAS VARIANTES
+# Adzuna entrega 29 etiquetas fijas (ya traducidas por SECTORES), pero Google
+# Jobs y LinkedIn entregan las suyas con prefijo variable sobre el MISMO tema:
+# "Empleos en informática", "Trabajos en informática", "Empleos de
+# mantenimiento", "Trabajos de limpieza"... Medido en BD: 76 valores distintos
+# que se reducen a ~30 temas. Listar las 76 sería frágil (cada fuente nueva
+# inventa su prefijo); normalizar el prefijo y mapear el TEMA cubre las que ya
+# existen y las que vengan.
+#
+# LÍMITE HONESTO DE LA FUENTE: estas etiquetas son de bolsas de empleo, no una
+# clasificación industrial. Algunas mezclan dos de los 18 grupos y hay que
+# elegir; esas decisiones van comentadas abajo. Lo que no es un sector
+# (modalidad, nivel) cae en "Otros / general", y "Sin especificar" se deja
+# aparte porque es ausencia de dato, no un sector sin encaje.
+# ═════════════════════════════════════════════════════════════════════════════
+
+AGROPECUARIO = "Agroindustria y sector agropecuario"
+MINERIA = "Minería, petróleo y gas"
+INDUSTRIA = "Industria y manufactura"
+ENERGIA = "Energía, agua y servicios públicos"
+CONSTRUCCION = "Construcción e infraestructura"
+COMERCIO = "Comercio, retail y consumo"
+TRANSPORTE = "Transporte, logística y cadena de suministro"
+TURISMO = "Turismo, hotelería y gastronomía"
+MEDIOS = "Medios, comunicación y contenidos"
+TECNOLOGIA = "Tecnología, software, telecomunicaciones y datos"
+FINANCIERO = "Servicios financieros, seguros y Fintech"
+INMOBILIARIO = "Inmobiliario y bienes raíces"
+CONSULTORIA = "Consultoría y servicios profesionales"
+EMPRESARIALES = "Servicios empresariales, BPO y talento humano"
+GOBIERNO = "Gobierno y sector público"
+EDUCACION = "Educación"
+SALUD = "Salud y ciencias de la vida"
+CREATIVAS = "Industrias creativas, cultura, deporte y entretenimiento"
+
+# Los 18, en el orden en que se declararon (para UI o validación).
+GRUPOS_SECTOR_18: tuple[str, ...] = (
+    AGROPECUARIO, MINERIA, INDUSTRIA, ENERGIA, CONSTRUCCION, COMERCIO,
+    TRANSPORTE, TURISMO, MEDIOS, TECNOLOGIA, FINANCIERO, INMOBILIARIO,
+    CONSULTORIA, EMPRESARIALES, GOBIERNO, EDUCACION, SALUD, CREATIVAS,
+)
+
+# Residuales: NO son ninguno de los 18 y no se fuerzan a uno.
+OTROS_SECTOR = "Otros / general"
+SIN_ESPECIFICAR = "Sin especificar"
+
+# Prefijos con que Google Jobs / LinkedIn envuelven el tema.
+_PREFIJOS_TEMA = ("empleos en ", "trabajos en ", "empleos de ", "trabajos de ")
+
+# TEMA normalizado (minúsculas, sin tildes, sin prefijo) -> uno de los 18.
 GRUPOS_SECTOR: dict[str, str] = {
-    # Ciencias y de la ingeniería
-    "Ingeniería": "Ciencias y de la ingeniería",
-    "Ciencia y control de calidad": "Ciencias y de la ingeniería",
-    "Energía, petróleo y gas": "Ciencias y de la ingeniería",
-    "Manufactura": "Ciencias y de la ingeniería",
-    "Mantenimiento": "Ciencias y de la ingeniería",
-    "Oficios y construcción": "Ciencias y de la ingeniería",
-    "Diseño y creatividad": "Ciencias y de la ingeniería",
-    # Salud
-    "Salud y enfermería": "Salud",
+    # Tecnología
+    "tecnologia (ti)": TECNOLOGIA,
+    "informatica": TECNOLOGIA,
+    # Salud y ciencias de la vida. "Ciencia y control de calidad" (Scientific &
+    # QA) mezcla investigación científica con control de calidad industrial; se
+    # manda a ciencias de la vida porque la parte científica es la que domina.
+    "salud y enfermeria": SALUD,
+    "sanidad y salud": SALUD,
+    "ciencia y control de calidad": SALUD,
+    "ciencias y control de calidad": SALUD,
+    # Industria. "Ingeniería" es el sector más grande de Adzuna (9.991 filas) y
+    # es una FUNCIÓN, no un sector: cubre manufactura, obra y energía a la vez.
+    # Se asigna a industria por ser el destino industrial más frecuente; es la
+    # decisión más discutible de este mapa.
+    "ingenieria": INDUSTRIA,
+    "manufactura": INDUSTRIA,
+    "fabricacion y manufactura": INDUSTRIA,
+    "mantenimiento": INDUSTRIA,
+    # Construcción
+    "oficios y construccion": CONSTRUCCION,
+    "construccion": CONSTRUCCION,
+    # Minería, petróleo y gas. La etiqueta de Adzuna es "Energy, Oil & Gas":
+    # cae aquí y no en ENERGIA porque "petróleo y gas" es explícito en ella,
+    # mientras que servicios públicos (agua, redes) no aparece.
+    "energia, petroleo y gas": MINERIA,
+    # Comercio
+    "ventas": COMERCIO,
+    "comercio minorista": COMERCIO,
+    "tiendas": COMERCIO,
+    # Transporte y logística
+    "logistica y almacenamiento": TRANSPORTE,
+    "logistica y almacen": TRANSPORTE,
+    # Turismo
+    "hosteleria y gastronomia": TURISMO,
+    "hosteleria y restauracion": TURISMO,
+    "turismo y viajes": TURISMO,
+    "turismo": TURISMO,
+    # Medios y comunicación
+    "comunicacion, publicidad y marketing": MEDIOS,
+    "marketing, publicidad y relaciones publicas": MEDIOS,
+    # Financiero
+    "contabilidad y finanzas": FINANCIERO,
+    # Inmobiliario
+    "inmobiliario": INMOBILIARIO,
+    "inmobiliarias": INMOBILIARIO,
+    # Consultoría y servicios profesionales (incluye lo jurídico: despachos).
+    "consultoria": CONSULTORIA,
+    "juridico": CONSULTORIA,
+    "legal": CONSULTORIA,
+    # Servicios empresariales / BPO / talento humano. Aquí van administración,
+    # RR.HH., atención al cliente (el corazón del BPO colombiano) y servicios
+    # de aseo/facility.
+    "administracion": EMPRESARIALES,
+    "recursos humanos y seleccion": EMPRESARIALES,
+    "recursos humanos": EMPRESARIALES,
+    "servicio al cliente": EMPRESARIALES,
+    "atencion al cliente": EMPRESARIALES,
+    "servicio domestico y limpieza": EMPRESARIALES,
+    "limpieza": EMPRESARIALES,
+    # Gobierno y sector público: trabajo social y ONG son interés público.
+    "trabajo social": GOBIERNO,
+    "ong y voluntariado": GOBIERNO,
     # Educación
-    "Educación": "Educación",
-    # Negocios y Administración
-    "Contabilidad y finanzas": "Negocios y Administración",
-    "Ventas": "Negocios y Administración",
-    "Administración": "Negocios y Administración",
-    "Recursos humanos y selección": "Negocios y Administración",
-    "Consultoría": "Negocios y Administración",
-    "Logística y almacenamiento": "Negocios y Administración",
-    "Inmobiliario": "Negocios y Administración",
-    "Comercio minorista": "Negocios y Administración",
-    "Servicio al cliente": "Negocios y Administración",
-    "Comunicación, publicidad y marketing": "Negocios y Administración",
-    "Hostelería y gastronomía": "Negocios y Administración",
-    "Turismo y viajes": "Negocios y Administración",
-    # Tecnología de la información y las comunicaciones
-    "Tecnología (TI)": "Tecnología de la información y las comunicaciones",
-    # Derecho y Ciencias Sociales y Culturales
-    "Jurídico": "Derecho y Ciencias Sociales y Culturales",
-    "Trabajo social": "Derecho y Ciencias Sociales y Culturales",
-    "ONG y voluntariado": "Derecho y Ciencias Sociales y Culturales",
-    # No son sectores reales: Adzuna los cuela como "categoría" pero describen
-    # modalidad o nivel, no un rubro económico.
-    "Empleos de medio tiempo": "Otros / general",
-    "Recién graduados": "Otros / general",
+    "educacion": EDUCACION,
+    # Industrias creativas
+    "diseno y creatividad": CREATIVAS,
+    "diseno y artes graficas": CREATIVAS,
+    # NO son sectores: describen modalidad o nivel del puesto.
+    "empleos de medio tiempo": OTROS_SECTOR,
+    "medio tiempo": OTROS_SECTOR,
+    "recien graduados": OTROS_SECTOR,
+    "otros empleos": OTROS_SECTOR,
+    "otros trabajos": OTROS_SECTOR,
+    "otros / general": OTROS_SECTOR,
 }
+
+
+def _tema_sector(sector_es: str) -> str:
+    """'Empleos en Informática' -> 'informatica'. Quita prefijo de fuente."""
+    plano = _sin_tildes(sector_es.lower()).strip()
+    for prefijo in _PREFIJOS_TEMA:
+        if plano.startswith(prefijo):
+            return plano[len(prefijo):].strip()
+    return plano
 
 
 def agrupar_sector(sector_es: str | None) -> str | None:
     """Colapsa un sector YA TRADUCIDO (salida de `traducir_sector`) en uno de
-    los 6 campos amplios + "Otros / general".
+    los 18 grupos económicos.
 
-    "Sin especificar" se deja tal cual: es ausencia de dato, no un sector que
-    no encaje en ningún campo.
+    "Sin especificar" se deja tal cual (ausencia de dato) y lo que no encaja en
+    ningún grupo cae en "Otros / general" en vez de forzarlo.
     """
-    if not sector_es or sector_es == "Sin especificar":
+    if not sector_es or sector_es == SIN_ESPECIFICAR:
         return sector_es
-    return GRUPOS_SECTOR.get(sector_es, "Otros / general")
+    return GRUPOS_SECTOR.get(_tema_sector(sector_es), OTROS_SECTOR)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

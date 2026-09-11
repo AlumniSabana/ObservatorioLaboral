@@ -1,13 +1,18 @@
 """
-Nivel de escolaridad — clasificación OCUPACIONAL (no de experiencia) inferida
-del título de la vacante.
+Grupos de la CUOC — clasificación OCUPACIONAL (no de experiencia) inferida del
+título de la vacante.
+
+El nombre del archivo dice "escolaridad" por su origen histórico (así se llamó
+el filtro al crearlo); lo que mide son los Grandes Grupos de la CUOC
+(Clasificación Única de Ocupaciones para Colombia, Ministerio del Trabajo),
+que es la adaptación colombiana de la CIUO-08 y comparte con ella los mismos
+grandes grupos. Esa es la etiqueta que ve el usuario en la interfaz.
 
 Es un filtro DISTINTO de "Nivel de experiencia" (Tendencias/seniority.py):
 aquel mide SENIORITY (¿cuánta experiencia pide el puesto?, título con
-"senior"/"junior"...); este mide a qué TIPO de ocupación pertenece el cargo,
-según los Grandes Grupos de la Clasificación Internacional Uniforme de
-Ocupaciones (CIUO-08 / CNO colombiana) —la misma taxonomía que ya usa
-Salarios/salarios_service.py para pivotar GEIH por programa—.
+"senior"/"junior"...); este mide a qué TIPO de ocupación pertenece el cargo
+—la misma familia de taxonomía que ya usa Salarios/salarios_service.py para
+pivotar GEIH por programa—.
 
 CATEGORÍAS ACTIVAS (5)
 ----------------------
@@ -62,7 +67,7 @@ NIVELES: Final = (
 ETIQUETAS: Final = {
     DIRECTIVO: "Directores y gerentes",
     PROFESIONAL: "Profesionales, científicos e intelectuales",
-    TECNICO: "Técnicos y profesionales de nivel medio",
+    TECNICO: "Técnicos y profesionales del nivel medio",
     APOYO_ADMIN: "Personal de apoyo administrativo",
     SERVICIOS_VENTAS: "Trabajadores de los servicios y vendedores de comercios y mercados",
     NO_ESPECIFICADO: "No especificado",

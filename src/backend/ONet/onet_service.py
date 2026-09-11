@@ -546,7 +546,10 @@ def competencias_scored(programa: str):
 _RIASEC_ORDEN = ["Realistic", "Investigative", "Artistic", "Social", "Enterprising", "Conventional"]
 _RIASEC_ES = {
     "Realistic": ("R", "Realista"),
-    "Investigative": ("I", "Investigador"),
+    # "Investigativo" (no "Investigador"): es el nombre del TIPO de interés en
+    # el modelo de Holland, no el de la persona. Debe coincidir con la
+    # convención que muestra la página de Perfil ocupacional.
+    "Investigative": ("I", "Investigativo"),
     "Artistic": ("A", "Artístico"),
     "Social": ("S", "Social"),
     "Enterprising": ("E", "Emprendedor"),

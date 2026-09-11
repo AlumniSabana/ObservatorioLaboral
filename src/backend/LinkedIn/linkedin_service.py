@@ -297,6 +297,68 @@ def recolectar_linkedin(programas: List[str] | None = None,
     return resumen
 
 
+def recolectar_linkedin_latam(programas: List[str] | None = None,
+                              max_paginas: int | None = None,
+                              keywords_por_programa: int = 1,
+                              paises: List[str] | None = None) -> Dict[str, Any]:
+    """Recorre TODOS los mercados de `PAISES_LATAM` en una sola corrida.
+
+    Esta es la puerta que usa la repoblación: así, agregar un país a
+    `PAISES_LATAM` basta para que la siguiente corrida lo incluya, sin tener
+    que acordarse de llamar al endpoint una vez por país (que era el hueco:
+    `recolectar_linkedin` cubre UN mercado y su valor por omisión es Colombia,
+    de modo que una repoblación distraída dejaba los demás países congelados).
+
+    Si LinkedIn responde 429 en cualquier mercado, se detiene TODA la corrida y
+    no se pasa al siguiente: el throttling es una señal de la plataforma, no un
+    problema de ese país en particular.
+    """
+    objetivo_paises = paises or list(PAISES_LATAM)
+    desconocidos = [p for p in objetivo_paises if p not in PAISES_LATAM]
+    if desconocidos:
+        raise ValueError(
+            f"Países no habilitados para LinkedIn: {', '.join(desconocidos)}. "
+            f"Disponibles: {', '.join(sorted(PAISES_LATAM))}."
+        )
+
+    por_pais: Dict[str, Any] = {}
+    total_vistas = 0
+    total_guardadas = 0
+    abortado = False
+
+    for pais in objetivo_paises:
+        resumen = recolectar_linkedin(
+            programas=programas,
+            max_paginas=max_paginas,
+            keywords_por_programa=keywords_por_programa,
+            pais=pais,
+        )
+        por_pais[pais] = {
+            "ofertas_vistas": resumen["ofertas_vistas"],
+            "ofertas_guardadas": resumen["ofertas_guardadas"],
+            "abortado_por_throttling": resumen["abortado_por_throttling"],
+        }
+        total_vistas += resumen["ofertas_vistas"]
+        total_guardadas += resumen["ofertas_guardadas"]
+        if resumen["abortado_por_throttling"]:
+            abortado = True
+            print(f"⛔ Throttling en '{pais}': se detiene la corrida completa "
+                  f"(quedan sin recolectar: "
+                  f"{', '.join(objetivo_paises[objetivo_paises.index(pais) + 1:]) or 'ninguno'}).")
+            break
+
+    return {
+        "fuente": "linkedin",
+        "paises_pedidos": objetivo_paises,
+        "paises_recolectados": list(por_pais),
+        "por_pais": por_pais,
+        "ofertas_vistas": total_vistas,
+        "ofertas_guardadas": total_guardadas,
+        "abortado_por_throttling": abortado,
+        "nota": "Solo ofertas de empleo públicas. No se recolectan datos de personas.",
+    }
+
+
 def leer_ofertas_linkedin() -> List[Dict[str, Any]]:
     """Lee las ofertas de LinkedIn ya almacenadas (paginado)."""
     filas: List[Dict[str, Any]] = []

@@ -52,6 +52,7 @@ from Salarios.salarios_service import (
 from Perfil.perfil_service import construir_perfil_ocupacional
 from LinkedIn.linkedin_service import (
     recolectar_linkedin,
+    recolectar_linkedin_latam,
     estado_linkedin,
     LinkedInDesactivado,
 )
@@ -490,15 +491,21 @@ async def linkedin_estado():
 
 
 @app.post("/scrape/linkedin")
-async def scrape_linkedin(keywords_por_programa: int = 1, pais: str = "co"):
+async def scrape_linkedin(keywords_por_programa: int = 1, pais: str = "todos"):
     """
-    Recolecta OFERTAS DE EMPLEO públicas de LinkedIn en un mercado de LATAM
-    (`pais`: co|mx|ar|cl|pe — ver LinkedIn/linkedin_service.PAISES_LATAM).
+    Recolecta OFERTAS DE EMPLEO públicas de LinkedIn en los mercados de LATAM.
+
+    `pais='todos'` (POR OMISIÓN) recorre TODOS los mercados configurados en
+    LinkedIn/linkedin_service.PAISES_LATAM — hoy co|mx|ar|cl|pe. Así, agregar un
+    país allí basta para que la siguiente repoblación lo incluya sin tocar este
+    endpoint ni acordarse de llamarlo una vez por país. También acepta un país
+    suelto (`pais=cl`) para recolectar solo ese mercado.
+
     Cadencia prevista: TRIMESTRAL con `keywords_por_programa=1` (comportamiento
     por defecto). Un valor mayor amplía puntualmente el footprint (más tráfico
     contra un endpoint cubierto por los Términos de Uso de LinkedIn) — usar con
-    criterio, no como ajuste habitual. Una corrida cubre UN país; para varios,
-    llamar una vez por país.
+    criterio, no como ajuste habitual. Si LinkedIn responde 429 en cualquier
+    mercado, se detiene la corrida COMPLETA (no se pasa al siguiente país).
 
     Devuelve 403 mientras la fuente esté desactivada, que es el estado por defecto:
     hacerlo va contra los Términos de Uso de LinkedIn (asunto contractual), así que
@@ -506,6 +513,8 @@ async def scrape_linkedin(keywords_por_programa: int = 1, pais: str = "co"):
     Solo ofertas; nunca perfiles de personas.
     """
     try:
+        if pais == "todos":
+            return recolectar_linkedin_latam(keywords_por_programa=keywords_por_programa)
         return recolectar_linkedin(keywords_por_programa=keywords_por_programa, pais=pais)
     except LinkedInDesactivado as e:
         return JSONResponse(status_code=403, content={"error": str(e), "habilitado": False})
@@ -665,10 +674,9 @@ def tendencias_demanda(
     seniority, escolaridad). Alimenta las 4 gráficas "más demandados".
 
     `escolaridad` (directivo|profesional|tecnico|apoyo_administrativo|
-    servicios_ventas|oficios|operadores|elemental|junior|graduado) es un eje
-    distinto de `seniority`: agrupa por TIPO de ocupación (Grandes Grupos
-    CIUO-08 + Junior/Recién Graduado), no por experiencia. Ver
-    Tendencias/escolaridad.py.
+    servicios_ventas) es un eje distinto de `seniority`: agrupa por TIPO de
+    ocupación —Grandes Grupos de la CUOC, que es como se llama el filtro en la
+    interfaz—, no por experiencia. Ver Tendencias/escolaridad.py.
     """
     try:
         lista_paises = [p.strip() for p in paises.split(",") if p.strip()] or ["us"]

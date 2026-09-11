@@ -43,6 +43,40 @@ const TOOLTIP_STYLE = {
   borderRadius: '8px',
 };
 
+// Las 6 zonas del modelo de Holland: color propio + qué significa cada una.
+// El backend ya manda `codigo` ("R","I","A","S","E","C") en cada punto del
+// radar (ONet/onet_service.py) pero la UI solo usaba `nombre`, así que el
+// significado de las letras no aparecía en ninguna parte de la página.
+// Se indexa por código y no por nombre para no depender de la traducción.
+const RIASEC_ZONAS: Record<string, { letra: string; titulo: string; color: string; desc: string }> = {
+  R: {
+    letra: 'R', titulo: 'Realista', color: 'var(--cat-1)',
+    desc: 'Prefiere actividades prácticas, manuales y trabajar con objetos, herramientas, máquinas o animales.',
+  },
+  I: {
+    letra: 'I', titulo: 'Investigativo', color: 'var(--cat-2)',
+    desc: 'Disfruta observar, analizar, investigar y resolver problemas de carácter científico o abstracto.',
+  },
+  A: {
+    letra: 'A', titulo: 'Artístico', color: 'var(--cat-3)',
+    desc: 'Busca la expresión creativa, la imaginación y trabaja bien en entornos libres o poco estructurados.',
+  },
+  S: {
+    letra: 'S', titulo: 'Social', color: 'var(--cat-4)',
+    desc: 'Le motiva ayudar, enseñar, guiar, cuidar o trabajar directamente en beneficio de otras personas.',
+  },
+  E: {
+    letra: 'E', titulo: 'Emprendedor', color: 'var(--cat-5)',
+    desc: 'Le atrae liderar, persuadir, influir, vender y tomar iniciativas en proyectos o negocios.',
+  },
+  C: {
+    letra: 'C', titulo: 'Convencional', color: 'var(--cat-6)',
+    desc: 'Valora el orden, los datos, los sistemas, la precisión y el manejo estructurado de la información.',
+  },
+};
+
+const ORDEN_RIASEC = ['R', 'I', 'A', 'S', 'E', 'C'];
+
 // ---------------------------------------------------------------------------
 // Tipos (espejo del JSON del backend)
 // ---------------------------------------------------------------------------
@@ -373,15 +407,93 @@ export default function PerfilOcupacionalPage() {
                     <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Perfil de intereses (RIASEC)</h3>
                     <p className="text-sm mb-2" style={{ color: 'var(--sabana-black-50)' }}>Afinidad vocacional de la ocupación (modelo de Holland, Holland, J. L. (1997). Making vocational choices: A theory of vocational personalities and work environments (3rd ed.). Psychological Assessment Resources.).</p>
                     {data.onet.riasec.length > 0 ? (
-                      <ResponsiveContainer width="100%" height={280}>
-                        <RadarChart data={data.onet.riasec} outerRadius="72%">
-                          <PolarGrid stroke="var(--sabana-sky-blue)" />
-                          <PolarAngleAxis dataKey="nombre" tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }} />
-                          <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--sabana-black-50)' }} />
-                          <Radar dataKey="valor" stroke="var(--sabana-navy)" fill="var(--sabana-navy)" fillOpacity={0.25} />
-                          <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: 'var(--white-background)' }} labelStyle={{ color: 'var(--white-background)' }} formatter={(v) => [(v as number).toFixed(0), 'Afinidad']} />
-                        </RadarChart>
-                      </ResponsiveContainer>
+                      <>
+                        <ResponsiveContainer width="100%" height={280}>
+                          <RadarChart data={data.onet.riasec} outerRadius="72%">
+                            <PolarGrid stroke="var(--sabana-sky-blue)" />
+                            {/* Eje con la LETRA (no el nombre largo): así cabe sin
+                                encimarse y cada vértice va del color de su zona,
+                                que es la clave que usa la leyenda de abajo. */}
+                            <PolarAngleAxis
+                              dataKey="codigo"
+                              tick={(props) => {
+                                const { x, y, textAnchor, payload } = props;
+                                const zona = RIASEC_ZONAS[payload.value];
+                                return (
+                                  <text
+                                    x={x}
+                                    y={y}
+                                    textAnchor={textAnchor}
+                                    dominantBaseline="central"
+                                    fontSize={15}
+                                    fontWeight="bold"
+                                    fill={zona?.color ?? 'var(--sabana-dark-navy)'}
+                                  >
+                                    {payload.value}
+                                  </text>
+                                );
+                              }}
+                            />
+                            <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--sabana-black-50)' }} />
+                            <Radar
+                              dataKey="valor"
+                              stroke="var(--sabana-navy)"
+                              fill="var(--sabana-navy)"
+                              fillOpacity={0.2}
+                              dot={(props) => {
+                                const { cx, cy, payload, index } = props;
+                                // Recharts envuelve el dato: en el `dot` de Radar
+                                // el punto llega como payload.payload, no payload.
+                                // Sin el desenvuelto, `codigo` venía undefined y
+                                // los 6 puntos salían del color de respaldo.
+                                const cod =
+                                  payload?.payload?.codigo ?? payload?.codigo ?? ORDEN_RIASEC[index];
+                                const zona = RIASEC_ZONAS[cod];
+                                return (
+                                  <circle
+                                    key={`riasec-dot-${cod ?? index}`}
+                                    cx={cx}
+                                    cy={cy}
+                                    r={5}
+                                    fill={zona?.color ?? 'var(--sabana-navy)'}
+                                    stroke="var(--white-background)"
+                                    strokeWidth={1.5}
+                                  />
+                                );
+                              }}
+                            />
+                            <Tooltip
+                              contentStyle={TOOLTIP_STYLE}
+                              itemStyle={{ color: 'var(--white-background)' }}
+                              labelStyle={{ color: 'var(--white-background)' }}
+                              labelFormatter={(codigo) => RIASEC_ZONAS[codigo as string]?.titulo ?? String(codigo)}
+                              formatter={(v) => [(v as number).toFixed(0), 'Afinidad']}
+                            />
+                          </RadarChart>
+                        </ResponsiveContainer>
+
+                        {/* Convención de las 6 zonas. Antes el radar mostraba
+                            "Realista / Investigador / ..." sin explicar qué
+                            significaba cada una. */}
+                        <div className="mt-3 space-y-1.5">
+                          {ORDEN_RIASEC.map((cod) => {
+                            const z = RIASEC_ZONAS[cod];
+                            return (
+                              <p key={cod} className="text-xs leading-snug flex gap-2" style={{ color: 'var(--sabana-black-70)' }}>
+                                <span
+                                  className="shrink-0 font-bold rounded px-1.5 text-white"
+                                  style={{ backgroundColor: z.color, minWidth: '1.25rem', textAlign: 'center' }}
+                                >
+                                  {z.letra}
+                                </span>
+                                <span>
+                                  <b style={{ color: 'var(--sabana-dark-navy)' }}>{z.titulo}:</b> {z.desc}
+                                </span>
+                              </p>
+                            );
+                          })}
+                        </div>
+                      </>
                     ) : <p className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>Sin datos de intereses.</p>}
                     <a
                       href="https://personality.co/es/test/start?t=career&gclid=CjwKCAjw4dDTBhAqEiwAkHYmSvzxU3dHMp7MLg2PrXsAo2m86jpxoprK-5MmCXELR3t3t1IR8UC_nhoC6doQAvD_BwE&gclid=CjwKCAjw4dDTBhAqEiwAkHYmSvzxU3dHMp7MLg2PrXsAo2m86jpxoprK-5MmCXELR3t3t1IR8UC_nhoC6doQAvD_BwE&utm_source=google&utm_medium=cpc&utm_campaign=23301191485&utm_content=187856935574&utm_term=test+de+inter%C3%A9s+profesional+holland&matchtype=b&device=c&gad_source=1&gad_campaignid=23301191485&gbraid=0AAAABCDT4dz_AJ2DcVsdg4z10eimSvk6X"
