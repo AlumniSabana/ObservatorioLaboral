@@ -567,6 +567,16 @@ export default function TendenciasPage() {
   );
   const soloColombia = paisesSel.length > 0 && paisesColombia.length === paisesSel.length;
 
+  // Alterna entre la vista general (KPIs/demanda/evolución) y el análisis por
+  // departamento. Solo tiene sentido con `soloColombia`, así que si el usuario
+  // cambia de fuentes y deja de ser 100% colombiano se vuelve a 'general':
+  // si no, el toggle desaparece (deja de ofrecerse) pero la vista por
+  // departamento seguiría oculta con nada visible para volver a la general.
+  const [vistaTendencias, setVistaTendencias] = useState<'general' | 'departamento'>('general');
+  useEffect(() => {
+    if (!soloColombia) setVistaTendencias('general');
+  }, [soloColombia]);
+
   const terminos = useMemo(() => data?.terminos ?? {}, [data]);
   const periodos = useMemo(() => data?.meta.periodos ?? [], [data]);
 
@@ -1053,14 +1063,52 @@ export default function TendenciasPage() {
           </div>
         )}
 
-        {/* ---------------- Vacantes por departamento (solo Colombia) ----------
-            Va antes de los KPIs porque es el marco geográfico de todo lo que
-            sigue: primero dónde, después qué. Solo aparece con fuentes
-            colombianas (ver `soloColombia`). */}
+        {/* ---------------- Selector General / Por departamento ----------------
+            Solo tiene sentido con fuentes 100% colombianas: es la única
+            geografía que se puede desagregar (ver `soloColombia`). Con
+            mercados extranjeros no se ofrece el toggle y siempre se ve la
+            vista general. */}
         {soloColombia && (
+          <div className="flex items-center gap-2 mb-6">
+            <button
+              type="button"
+              onClick={() => setVistaTendencias('general')}
+              className="px-4 py-2 text-sm font-semibold rounded-lg border transition-colors cursor-pointer"
+              style={{
+                backgroundColor: vistaTendencias === 'general' ? 'var(--sabana-dark-navy)' : 'transparent',
+                color: vistaTendencias === 'general' ? 'white' : 'var(--sabana-navy)',
+                borderColor: 'var(--sabana-light-blue)',
+              }}
+            >
+              General
+            </button>
+            <button
+              type="button"
+              onClick={() => setVistaTendencias('departamento')}
+              className="px-4 py-2 text-sm font-semibold rounded-lg border transition-colors cursor-pointer"
+              style={{
+                backgroundColor: vistaTendencias === 'departamento' ? 'var(--sabana-dark-navy)' : 'transparent',
+                color: vistaTendencias === 'departamento' ? 'white' : 'var(--sabana-navy)',
+                borderColor: 'var(--sabana-light-blue)',
+              }}
+            >
+              Por departamento
+            </button>
+          </div>
+        )}
+
+        {/* ---------------- Vacantes por departamento (solo Colombia) ---------- */}
+        {soloColombia && vistaTendencias === 'departamento' && (
           <SeccionDepartamentos programa={programa} paises={paisesColombia} />
         )}
 
+        {/* ---------------- Vista general: KPIs, demanda actual, insights y
+            evolución temporal. Es todo lo que había antes del toggle; se oculta
+            SOLO cuando hay fuentes 100% colombianas y el usuario eligió "Por
+            departamento" (fuera de Colombia, `vistaTendencias` se mantiene en
+            'general' — ver el efecto que la resetea). ---------------- */}
+        {vistaTendencias === 'general' && (
+        <>
         {/* ---------------- KPIs ---------------- */}
         {hayTendencia && data && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -1459,6 +1507,8 @@ export default function TendenciasPage() {
             </ResponsiveContainer>
           )}
         </div>
+        </>
+        )}
 
         {/* ---------------- Serie mensual del SPE (Colombia) ----------------
             Aparte de la gráfica de arriba a propósito: aquella son mercados
