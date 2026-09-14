@@ -64,11 +64,21 @@ def _map_schedule_type(detected_extensions: Dict[str, Any]) -> str:
     return _SCHEDULE_MAP.get(schedule.strip().lower(), schedule.strip())
 
 
+_RE_SUFIJO_AGREGACION = re.compile(r"\s*\(y\s+\d+\s+ubicaci(?:ón|ones)\s+m[aá]s\)\s*$", re.IGNORECASE)
+
+
 def _extract_city(location: str) -> str:
-    """De 'Bogotá, Colombia' devuelve 'Bogotá'. Si no hay coma, devuelve el texto."""
+    """De 'Bogotá, Colombia' devuelve 'Bogotá'. Si no hay coma, devuelve el texto.
+
+    Cuando la vacante aplica a varias sedes, Google agrega un sufijo de
+    agregación al primer token, ej. 'Bogotá (y 17 ubicaciones más)'. Se recorta
+    para no fragmentar el conteo de ciudades con variantes de la misma ciudad.
+    """
     if not location:
         return None
-    return location.split(",")[0].strip()
+    ciudad = location.split(",")[0].strip()
+    ciudad = _RE_SUFIJO_AGREGACION.sub("", ciudad).strip()
+    return ciudad or None
 
 
 def _clean_via(via: str) -> str:

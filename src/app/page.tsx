@@ -22,6 +22,7 @@
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 import { SelectorFuentes, type FuenteOpcion as OpcionSelector } from '@/lib/selector-fuentes';
+import { SeccionDepartamentos } from '@/lib/seccion-departamentos';
 import { Spinner } from '@/lib/spinner';
 import { useState, useEffect, useMemo } from 'react';
 import {
@@ -555,6 +556,17 @@ export default function TendenciasPage() {
     return sel.length > 0 && sel.every((f) => f.fuente !== 'adzuna');
   }, [opciones.fuentes, paisesSel]);
 
+  // Mercados colombianos activos ('co' = Google Jobs, 'co_li' = LinkedIn CO).
+  // El análisis por departamento solo aparece cuando TODO lo seleccionado es
+  // colombiano: es la única geografía que las fuentes permiten desagregar, y
+  // mezclarla con mercados extranjeros daría un mapa que no representa la
+  // selección.
+  const paisesColombia = useMemo(
+    () => paisesSel.filter((p) => p === 'co' || p === 'co_li'),
+    [paisesSel],
+  );
+  const soloColombia = paisesSel.length > 0 && paisesColombia.length === paisesSel.length;
+
   const terminos = useMemo(() => data?.terminos ?? {}, [data]);
   const periodos = useMemo(() => data?.meta.periodos ?? [], [data]);
 
@@ -1039,6 +1051,14 @@ export default function TendenciasPage() {
               )}
             </div>
           </div>
+        )}
+
+        {/* ---------------- Vacantes por departamento (solo Colombia) ----------
+            Va antes de los KPIs porque es el marco geográfico de todo lo que
+            sigue: primero dónde, después qué. Solo aparece con fuentes
+            colombianas (ver `soloColombia`). */}
+        {soloColombia && (
+          <SeccionDepartamentos programa={programa} paises={paisesColombia} />
         )}
 
         {/* ---------------- KPIs ---------------- */}

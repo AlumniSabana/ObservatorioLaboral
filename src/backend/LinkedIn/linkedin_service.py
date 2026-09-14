@@ -137,6 +137,45 @@ def _texto(nodo) -> str | None:
     return nodo.get_text(strip=True) if nodo else None
 
 
+# Bogotá le llega a este parser en varios formatos distintos según la tarjeta
+# ("Bogota" sin tilde, "Bogotá D.C. Metropolitan Area", la traducción al inglés
+# de la subdivisión "Bogotá D.C." como "Capital District") y a veces LinkedIn
+# resuelve la localidad en vez de la ciudad (p.ej. "Chapinero"). Sin normalizar,
+# la ciudad más grande del país quedaba partida en el conteo de "ciudades" en
+# 4+ valores distintos. Verificado contra datos reales (2026-09-14): 972 filas
+# "Bogota" + 25 "Bogotá" + 20 "Bogotá D.C. Metropolitan Area" + 14
+# "Capital District" + localidades sueltas, todas la misma ciudad.
+_CIUDAD_CANONICA: Dict[str, str] = {
+    "bogota": "Bogotá",
+    "bogotá": "Bogotá",
+    "bogota d.c. metropolitan area": "Bogotá",
+    "bogotá d.c. metropolitan area": "Bogotá",
+    "capital district": "Bogotá",
+    # Localidades de Bogotá que LinkedIn a veces devuelve como si fueran la ciudad.
+    "teusaquillo": "Bogotá",
+    "chapinero": "Bogotá",
+    "suba": "Bogotá",
+    "kennedy": "Bogotá",
+    "barrios unidos": "Bogotá",
+    "puente aranda": "Bogotá",
+    "antonio nariño": "Bogotá",
+    "antonio narino": "Bogotá",
+    "ciudad bolivar": "Bogotá",
+    "ciudad bolívar": "Bogotá",
+}
+
+
+def _normalizar_ciudad(ciudad: str | None) -> str | None:
+    """Canoniza variantes conocidas de una misma ciudad a un único valor.
+
+    Por ahora solo cubre Bogotá (ver `_CIUDAD_CANONICA`); las demás ciudades
+    quedan tal como las entrega LinkedIn.
+    """
+    if not ciudad:
+        return ciudad
+    return _CIUDAD_CANONICA.get(ciudad.strip().lower(), ciudad)
+
+
 def _parsear_tarjetas(html: str, keyword: str, programa: str, pais: str,
                       referencia: date | None = None) -> List[Dict[str, Any]]:
     """Convierte el HTML de resultados en filas listas para la BD."""
@@ -174,7 +213,7 @@ def _parsear_tarjetas(html: str, keyword: str, programa: str, pais: str,
             "title": titulo,
             "company": empresa,
             "location": ubicacion,
-            "city": (ubicacion or "").split(",")[0].strip() or None,
+            "city": _normalizar_ciudad((ubicacion or "").split(",")[0].strip() or None),
             "posted_at": posted_at,
             "fecha_publicacion": fecha_abs,
             "apply_link": apply_link,

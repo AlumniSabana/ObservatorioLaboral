@@ -45,6 +45,7 @@ from Tendencias.skills_demandadas import (
 from Tendencias.google_jobs_sync import sincronizar as sincronizar_google_jobs
 from Tendencias.linkedin_sync import sincronizar as sincronizar_linkedin
 from Tendencias.demanda_actual import demanda_actual, salario_vacantes_cop, invalidar_cache as invalidar_demanda
+from Tendencias.geografia import resumen_departamentos, invalidar_cache as invalidar_geografia
 from Salarios.salarios_service import (
     salario_por_programa,
     resumen_salarios,
@@ -623,6 +624,7 @@ def tendencias_sincronizar_google():
         volumenes = leer_volumenes()
         resumen["recalculo"] = recalcular_todo(filas, volumenes)
         invalidar_demanda()  # el histórico cambió: refrescar las gráficas de demanda
+        invalidar_geografia()  # y el panel por departamento, que lee las tablas crudas
         limpiar_cache_skills()
         return resumen
     except Exception as e:
@@ -645,6 +647,7 @@ def tendencias_sincronizar_linkedin():
         volumenes = leer_volumenes()
         resumen["recalculo"] = recalcular_todo(filas, volumenes)
         invalidar_demanda()
+        invalidar_geografia()
         limpiar_cache_skills()
         return resumen
     except Exception as e:
@@ -681,6 +684,30 @@ def tendencias_demanda(
     try:
         lista_paises = [p.strip() for p in paises.split(",") if p.strip()] or ["us"]
         return demanda_actual(programa, seniority, lista_paises, top, escolaridad)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/tendencias/departamentos")
+def tendencias_departamentos(programa: str = "TODOS", paises: str = "co,co_li"):
+    """
+    Analítica de vacantes colombianas por DEPARTAMENTO (y ciudad dentro de él).
+
+    Alimenta el mapa de Colombia que abre la página de Tendencias cuando las
+    fuentes seleccionadas son solo colombianas. Devuelve de una vez el panel de
+    todos los departamentos, para que el clic en el mapa no dispare otra
+    petición.
+
+    Es una FOTO DEL ESTADO ACTUAL, no una serie: no trae crecimiento porque las
+    vacantes colombianas se concentran en 2 meses y la tendencia exige 3
+    periodos (ver el docstring de Tendencias/geografia.py).
+
+    `paises` acepta los mismos códigos de mercado del selector: 'co' (Google
+    Jobs) y 'co_li' (LinkedIn Colombia).
+    """
+    try:
+        fuentes = [p.strip() for p in paises.split(",") if p.strip() in ("co", "co_li")]
+        return resumen_departamentos(programa, fuentes or None)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -756,6 +783,7 @@ def tendencias_recolectar(
         volumenes = leer_volumenes()
         resumen["recalculo"] = recalcular_todo(filas, volumenes)
         invalidar_demanda()  # el histórico cambió: refrescar las gráficas de demanda
+        invalidar_geografia()  # y el panel por departamento, que lee las tablas crudas
         resumen["vacantes_historicas_totales"] = len(filas)
         # La demanda por programa cambió: invalida el caché del ranking de skills.
         limpiar_cache_skills()

@@ -44,6 +44,20 @@ export interface FuenteOpcion {
  *  a propósito para no mezclarse en la combinación de mercados. */
 const esColombiana = (f: FuenteOpcion) => (f.pais ?? '').toLowerCase().startsWith('co');
 
+/**
+ * ISO de los países de Latinoamérica. Se compara contra la RAÍZ del código de
+ * mercado ('mx_li' -> 'mx') y no contra el código completo, para que al sumar
+ * un país nuevo a PAISES_LATAM en el backend entre solo en este atajo sin tocar
+ * el frontend. Incluye Colombia: el botón "Colombia" es el recorte estrecho
+ * dentro de este, no su complemento.
+ */
+const ISO_LATAM = new Set([
+  'ar', 'bo', 'br', 'cl', 'co', 'cr', 'cu', 'do', 'ec', 'sv',
+  'gt', 'hn', 'mx', 'ni', 'pa', 'py', 'pe', 'pr', 'uy', 've',
+]);
+const esLatam = (f: FuenteOpcion) =>
+  ISO_LATAM.has((f.pais ?? '').toLowerCase().split('_')[0]);
+
 const GRUPOS: { clave: string; titulo: string; ayuda: string }[] = [
   { clave: 'vacantes', titulo: 'Vacantes publicadas', ayuda: 'Ofertas reales recolectadas del mercado' },
   { clave: 'normativo', titulo: 'Referencia ocupacional', ayuda: 'Qué requiere cada ocupación, no qué se demanda hoy' },
@@ -116,12 +130,20 @@ export function SelectorFuentes({
   const mercados = disponibles.filter((f) => (f.tipo ?? 'vacantes') === 'vacantes');
   const otras = disponibles.filter((f) => (f.tipo ?? 'vacantes') !== 'vacantes');
   const nacionales = mercados.filter(esColombiana);
+  const latam = mercados.filter(esLatam);
   const hayMezcla = nacionales.length > 0 && nacionales.length < mercados.length;
+  // El atajo de Latinoamérica solo tiene sentido si aporta algo que "Colombia"
+  // no da ya (hay mercados latinos fuera de Colombia) y no lo son todos.
+  const hayMezclaLatam = latam.length > nacionales.length && latam.length < mercados.length;
   const conservarOtras = otras.filter((f) => seleccionadas.includes(f.id)).map((f) => f.id);
   const soloNacionales =
     nacionales.length > 0 &&
     nacionales.every((f) => seleccionadas.includes(f.id)) &&
     mercados.filter((f) => !esColombiana(f)).every((f) => !seleccionadas.includes(f.id));
+  const soloLatam =
+    latam.length > 0 &&
+    latam.every((f) => seleccionadas.includes(f.id)) &&
+    mercados.filter((f) => !esLatam(f)).every((f) => !seleccionadas.includes(f.id));
 
   const claseAtajo = (activo: boolean) =>
     'px-2.5 py-1 text-[0.7rem] font-semibold rounded-md border cursor-pointer transition-colors ' +
@@ -153,6 +175,17 @@ export function SelectorFuentes({
             >
               Colombia
             </button>
+            {hayMezclaLatam && (
+              <button
+                type="button"
+                onClick={() => onChange([...latam.map((f) => f.id), ...conservarOtras])}
+                className={claseAtajo(soloLatam)}
+                style={estiloAtajo(soloLatam)}
+                title="Usar los mercados de Latinoamérica, Colombia incluida"
+              >
+                Latinoamérica
+              </button>
+            )}
             <button
               type="button"
               onClick={() => onChange(disponibles.map((f) => f.id))}
