@@ -10,9 +10,19 @@ de las dos fuentes colombianas (`vacantes_google` y `vacantes_linkedin`), que s�
 guardan `location` y `city`.
 
 Se lee de las tablas crudas a propósito, en vez de añadir una columna a
-`vacantes_historicas`: no requiere migración manual en Supabase y las dos tablas
-contienen exactamente las mismas vacantes colombianas que el histórico (mismo
-conteo, misma pertinencia aplicada al recolectar).
+`vacantes_historicas`: no requiere migración manual en Supabase.
+
+OJO — el conteo de este módulo tiene que coincidir con el resto de Tendencias
+para la misma Colombia (si no, el mapa y los KPIs de arriba cuentan cosas
+distintas y nadie sabe cuál creer). `demanda_actual` y el motor de tendencias
+temporales descartan las filas cuyo título no tiene relación real con la
+keyword que las encontró (`coincide_con_keyword`, ver config.py) — ese mismo
+descarte corre HOY al recolectar (`google_jobs_service.guardar_vacante_google`,
+`linkedin_service._parsear_tarjetas`), pero las tablas crudas también tienen
+vacantes más viejas guardadas ANTES de que ese guardia existiera. Por eso
+`_vacantes_colombianas()` vuelve a aplicar el mismo filtro aquí: sin él, este
+panel contaba miles de filas más que el resto de la página para la misma
+Colombia (verificado 2026-09-18: 5.918 vs 2.740 con "Todos los programas").
 
 DE DÓNDE SALE EL DEPARTAMENTO
 -----------------------------
@@ -27,8 +37,8 @@ según la fuente:
 
 La estrategia es buscar en CUALQUIER componente del texto un nombre de
 departamento conocido, lo que tolera las tres formas sin casos especiales.
-Medido sobre datos reales (2026-09-14): resuelve el 91% de Google Jobs y el 89%
-de LinkedIn Colombia.
+Medido sobre datos reales (2026-09-18, ya con el filtro de relevancia de
+arriba aplicado): resuelve el 90% de Google Jobs y el 92% de LinkedIn Colombia.
 
 Lo que queda sin departamento es casi todo vacantes cuyo `location` es
 literalmente "Colombia": son ofertas nacionales o remotas que no declaran
@@ -60,6 +70,7 @@ from collections import Counter
 from typing import Any, Dict, List
 
 from Adzuna.adzuna_service import normalize_title, supabase
+from config import coincide_con_keyword, es_pertinente
 # Se reutiliza la lista curada de empresas que no dicen su nombre en vez de
 # mantener otra aquí: son la misma regla y duplicarlas las hace divergir.
 from Tendencias.demanda_actual import _es_empresa_confidencial
@@ -240,25 +251,35 @@ def _vacantes_colombianas(fuentes: List[str] | None = None) -> List[Dict[str, An
 
     `fuentes` acepta los mismos códigos de mercado que usa el selector del
     frontend: 'co' (Google Jobs) y 'co_li' (LinkedIn Colombia). None = ambas.
+
+    Aplica `coincide_con_keyword` igual que `demanda_actual` y el motor de
+    tendencias temporales: descarta filas cuyo título no tiene relación real
+    con la keyword que las encontró. Es el mismo descarte que ya corre AL
+    RECOLECTAR (`google_jobs_service.guardar_vacante_google`,
+    `linkedin_service._parsear_tarjetas`) — se repite aquí solo para alcanzar
+    filas más viejas que se guardaron antes de que ese guardia existiera. Sin
+    este filtro, este panel contaba ~2.500 vacantes MÁS que el resto de
+    Tendencias para la misma Colombia: ruido que el resto del sistema ya sabía
+    descartar y este módulo no.
     """
     quiere = set(fuentes or ["co", "co_li"])
     salida: List[Dict[str, Any]] = []
 
     if "co" in quiere:
         for f in _leer_tabla(
-            "vacantes_google", "title,company,location,city,programa_relacionado"
+            "vacantes_google", "title,company,location,city,programa_relacionado,keyword"
         ):
             salida.append({**f, "fuente": "Google Jobs"})
 
     if "co_li" in quiere:
         for f in _leer_tabla(
             "vacantes_linkedin",
-            "title,company,location,city,programa_relacionado",
+            "title,company,location,city,programa_relacionado,keyword",
             ("pais", "co"),
         ):
             salida.append({**f, "fuente": "LinkedIn"})
 
-    return salida
+    return [f for f in salida if coincide_con_keyword(f.get("keyword"), f.get("title"))]
 
 
 def _enriquecer(filas: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -372,7 +393,16 @@ def resumen_departamentos(
     filas = _cache_vacantes(fuentes)
 
     if programa and programa != "TODOS":
-        filas = [f for f in filas if f.get("programa_relacionado") == programa]
+        # Dos condiciones, igual que `demanda_actual`: la etiqueta guardada
+        # (viene de la keyword buscada, no del título) Y que el título de
+        # verdad le corresponda a ESTE programa — sin la segunda, un título que
+        # arrastró la etiqueta equivocada al recolectar (ver `es_pertinente` en
+        # config.py) se seguiría contando aquí.
+        filas = [
+            f for f in filas
+            if f.get("programa_relacionado") == programa
+            and es_pertinente(programa, f.get("title"))
+        ]
 
     por_codigo: Dict[str, List[Dict[str, Any]]] = {}
     sin_departamento: List[Dict[str, Any]] = []
