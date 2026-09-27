@@ -20,6 +20,7 @@
 import { PageLayout } from '@/lib/sidebar';
 import { AssistantContent } from '@/lib/markdown';
 import { Spinner } from '@/lib/spinner';
+import { SobreObservatorio } from '@/lib/sobre-observatorio';
 import { useEffect, useRef, useState } from 'react';
 import { Upload, FileText, Check, Trash2, AlertTriangle, BarChart3, Sparkles } from 'lucide-react';
 import {
@@ -652,6 +653,17 @@ export default function InformesPage() {
           </div>
         )}
       </div>
+
+      {/* ---------------- Sobre el observatorio ----------------
+          Texto institucional al pie de Informes (antes tenía página propia).
+          Lo estila el Equipo 1 dentro de su componente; esta página solo lo
+          monta y debe seguir montándolo en la vista Admin y en la de Usuario. */}
+      <section className="mt-12 pt-8 border-t" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--sabana-dark-navy)' }}>
+          Sobre el observatorio
+        </h2>
+        <SobreObservatorio />
+      </section>
     </PageLayout>
   );
 }

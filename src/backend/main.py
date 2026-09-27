@@ -11,7 +11,7 @@ Para correrlo en local:  uvicorn main:app --reload --port 8000
 Documentación interactiva: http://localhost:8000/docs
 """
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import Depends, FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
@@ -61,6 +61,9 @@ from Asistente.contexto_service import resumen_contexto
 from Informes import informes_service
 from Informes import insights_service
 from config import PROGRAMAS_KEYWORDS
+# Roles: el guard `requiere_admin` y las rutas /auth/* viven en auth.py
+# (contrato compartido). Ver su docstring antes de proteger un endpoint.
+from auth import requiere_admin, router as auth_router
 
 app = FastAPI(title="AlumniSabana Job API")
 
@@ -74,6 +77,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Rutas de sesión (POST /auth/login, GET /auth/yo).
+app.include_router(auth_router)
+
 
 @app.get("/health")
 async def health_check():
@@ -81,7 +87,7 @@ async def health_check():
     return {"status": "ok"}
 
 
-@app.post("/scrape")
+@app.post("/scrape", dependencies=[Depends(requiere_admin)])
 async def scrape_jobs(borrar: bool = False, fuente: str = "adzuna"):
     """Recolecta vacantes de la fuente indicada (todo hacia su tabla).
 
@@ -263,7 +269,7 @@ async def informes_listar(estado: str = "todos"):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.post("/informes/{informe_id}/validar")
+@app.post("/informes/{informe_id}/validar", dependencies=[Depends(requiere_admin)])
 async def informes_validar(informe_id: str, validado_por: str = "alumni@unisabana.edu.co"):
     """
     Valida el informe: a partir de aquí aparece como fuente en el selector.
@@ -290,7 +296,7 @@ async def informes_validar(informe_id: str, validado_por: str = "alumni@unisaban
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.post("/informes/{informe_id}/retirar")
+@app.post("/informes/{informe_id}/retirar", dependencies=[Depends(requiere_admin)])
 async def informes_retirar(informe_id: str):
     """Saca el informe del selector sin borrar sus datos."""
     try:
@@ -299,7 +305,7 @@ async def informes_retirar(informe_id: str):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.delete("/informes/{informe_id}")
+@app.delete("/informes/{informe_id}", dependencies=[Depends(requiere_admin)])
 async def informes_eliminar(informe_id: str):
     """Elimina un informe. Solo si sigue en borrador."""
     try:
@@ -444,7 +450,7 @@ class InformesInsightsRequest(BaseModel):
     informe_ids: list[str]   # 1 o más ids de informes VALIDADOS
 
 
-@app.post("/informes/insights")
+@app.post("/informes/insights", dependencies=[Depends(requiere_admin)])
 def informes_insights(req: InformesInsightsRequest):
     """
     Informe de insights (Gemini) sobre 1+ informes ya ingeridos y validados.
@@ -491,7 +497,7 @@ async def linkedin_estado():
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.post("/scrape/linkedin")
+@app.post("/scrape/linkedin", dependencies=[Depends(requiere_admin)])
 async def scrape_linkedin(keywords_por_programa: int = 1, pais: str = "todos"):
     """
     Recolecta OFERTAS DE EMPLEO públicas de LinkedIn en los mercados de LATAM.
@@ -608,7 +614,7 @@ def skills_evolucion(
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.post("/tendencias/sincronizar-google")
+@app.post("/tendencias/sincronizar-google", dependencies=[Depends(requiere_admin)])
 def tendencias_sincronizar_google():
     """Lleva las vacantes de Google Jobs al módulo de Tendencias y recalcula.
 
@@ -631,7 +637,7 @@ def tendencias_sincronizar_google():
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.post("/tendencias/sincronizar-linkedin")
+@app.post("/tendencias/sincronizar-linkedin", dependencies=[Depends(requiere_admin)])
 def tendencias_sincronizar_linkedin():
     """Lleva las vacantes de LinkedIn al módulo de Tendencias y recalcula.
 
@@ -760,7 +766,7 @@ def tendencias(
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.post("/tendencias/recolectar")
+@app.post("/tendencias/recolectar", dependencies=[Depends(requiere_admin)])
 def tendencias_recolectar(
     meses: int = 24, presupuesto: int = 250, pais: str = "us", keywords_por_programa: int = 1
 ):
