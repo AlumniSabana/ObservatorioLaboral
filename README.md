@@ -119,7 +119,7 @@ src/
 | **Empresas (chat)** | `GET /asistente/contexto` |
 | **LinkedIn** | `GET /linkedin/estado` · `POST /scrape/linkedin?keywords_por_programa=` (403 si no está habilitado) |
 | **Programas** | `GET /programas` |
-| **Tendencias / Competencias** | `GET /tendencias?dimension=&programa=&seniority=&paises=&desde=&hasta=&top=` · `GET /tendencias/opciones` · `GET /tendencias/demanda?programa=&seniority=&paises=&top=` · `POST /tendencias/recolectar` · `GET /skills-demandadas?tipo=&programa=&seniority=&paises=&top=` · `GET /skills-demandadas/evolucion?...` · `POST /tendencias/sincronizar-google` · `POST /tendencias/sincronizar-linkedin` |
+| **Tendencias / Competencias** | `GET /tendencias?dimension=&programa=&seniority=&paises=&desde=&hasta=&top=` · `GET /tendencias/opciones` · `GET /tendencias/demanda?programa=&seniority=&paises=&top=` · `POST /tendencias/recolectar` (Admin; TODAS las fuentes y zonas + recálculo) · `GET /tendencias/fuentes/estado` · `GET /tendencias/serpapi/estado` · `GET /tendencias/actualizacion/estado` · `GET /tendencias/cargos-descartados` · `POST /asistente/preguntas` · `GET /asistente/preguntas/resumen` (Admin) · `GET /skills-demandadas?tipo=&programa=&seniority=&paises=&top=` · `GET /skills-demandadas/evolucion?...` · `POST /tendencias/sincronizar-google` · `POST /tendencias/sincronizar-linkedin` |
 | **Documentos (chat PDF)** | `POST /documento/subir` · `POST /documento/chat` (streaming) |
 
 Documentación interactiva completa (Swagger) en `http://localhost:8000/docs`.
@@ -238,6 +238,7 @@ siempre incluye representación de las 13 más "otras".
 | `008_spe_tendencias.sql` | `spe_tendencias` |
 | `009_sena_cno.sql` | `sena_cno_ocupaciones`, `sena_cno_atributos` |
 | `010_ole_ibc.sql` | `ole_ibc_sabana`, `ole_ibc_nacional` |
+| `011_preguntas_asistente.sql` | `preguntas_asistente` (registro anónimo de preguntas al chat; ver privacidad en la cabecera del SQL) |
 
 > Nota: `GoogleJobs/google_jobs_service.py` menciona un `001_vacantes_google.sql`
 > en su docstring que no existe en la carpeta — la tabla `vacantes_google` ya
@@ -256,6 +257,7 @@ siempre incluye representación de las 13 más "otras".
 | `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` | Adzuna | developer.adzuna.com |
 | `SERPAPI_KEY` | Google Jobs | serpapi.com/manage-api-key |
 | `SERPAPI_MAX_BUSQUEDAS` | Opcional | Presupuesto de búsquedas por corrida (def. `240`) |
+| `SERPAPI_BUSQUEDAS_MES` | Opcional | Cupo mensual del plan de SerpApi, solo para ESTIMAR el semáforo si la API de cuenta no responde (def. `250`) |
 | `LINKEDIN_HABILITADO` | Opcional | `true` activa la recolección (def. `false`) |
 | `LINKEDIN_MAX_PAGINAS` / `LINKEDIN_PAUSA_SEG` | Opcional | Tope de páginas (def. `3`) y pausa entre peticiones (def. `3` s) |
 | `ANTHROPIC_API_KEY` | Documentos | console.anthropic.com — lector de PDF ad-hoc |
@@ -270,6 +272,9 @@ siempre incluye representación de las 13 más "otras".
 | `NEXT_PUBLIC_BACKEND_URL` | URL del backend FastAPI (def. `http://localhost:8000`) |
 | `CLAUDE_API_KEY` (o `ANTHROPIC_API_KEY`) | Chat flotante (Claude), en `src/app/api/chat/route.ts` |
 | `GEMINI_API_KEY` | Chat de "Empresas" (Gemini), misma ruta con `modo='empresas'` |
+| `GEMINI_USD_POR_1M_ENTRADA` / `GEMINI_USD_POR_1M_SALIDA` | Precios (USD por millón de tokens) para el costo ESTIMADO de cada pregunta en `/api/chat`. Def. `0.75` / `3.75` (Gemini 3.6 Flash, ai.google.dev/gemini-api/docs/pricing, 2026-09-24; desde 2027-01-01 pasan a 1.50 / 7.50) |
+| `CLAUDE_USD_POR_1M_ENTRADA` / `CLAUDE_USD_POR_1M_SALIDA` | Ídem para la burbuja (Claude Sonnet 4.5). Def. `3` / `15` |
+| `BACKEND_URL` | URL del backend vista desde el SERVIDOR de Next (para registrar las preguntas en `POST /asistente/preguntas`); si falta usa `NEXT_PUBLIC_BACKEND_URL` |
 
 > Los archivos `.env` están en `.gitignore`. Cada fuente es independiente: si
 > falta una credencial, esa fuente se omite y el resto sigue funcionando.

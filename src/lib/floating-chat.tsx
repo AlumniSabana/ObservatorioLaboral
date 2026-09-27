@@ -23,6 +23,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, MessageCircle } from 'lucide-react';
 import { AssistantContent } from './markdown';
+import { useAuth } from './auth';
+import {
+  obtenerSesionId,
+  separarUso,
+  formatearUsd,
+  formatearTokens,
+  type UsoRespuesta,
+} from './chat-sesion';
 
 // Props: el contexto de la página donde se monta el chat.
 interface FloatingChatProps {
@@ -35,9 +43,13 @@ interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  // Tokens y costo estimado de la respuesta (llegan al final del stream en el
+  // tráiler de uso, ver ./chat-sesion.ts). Solo se muestran al Administrador.
+  uso?: UsoRespuesta | null;
 }
 
 export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
+  const { esAdmin } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -86,6 +98,9 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
           message: pregunta,
           pageTitle,
           pageContent,
+          // Id aleatorio de la pestaña: agrupa las preguntas de una misma
+          // sesión para medir su costo, sin identificar a la persona.
+          sessionId: obtenerSesionId(),
         }),
       });
 
@@ -121,8 +136,11 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
           primerFragmento = false;
         }
 
+        // El tráiler de uso (tokens/costo) viaja al final del mismo stream:
+        // se separa del texto visible en cada fragmento.
+        const { texto, uso } = separarUso(acumulado);
         setMessages((prev) =>
-          prev.map((m) => (m.id === assistantId ? { ...m, content: acumulado } : m)),
+          prev.map((m) => (m.id === assistantId ? { ...m, content: texto, uso } : m)),
         );
       }
     } catch (error) {
@@ -208,7 +226,16 @@ export function FloatingChat({ pageTitle, pageContent }: FloatingChatProps) {
                 >
                   {message.role === 'assistant' ? (
                     message.content ? (
-                      <AssistantContent content={message.content} />
+                      <>
+                        <AssistantContent content={message.content} />
+                        {/* Costo por pregunta: información operativa, solo Admin. */}
+                        {esAdmin && message.uso && (
+                          <p className="text-[10px] text-zinc-500 mt-2" title="Estimado con los precios configurados en el servidor; no es la factura.">
+                            ≈ {formatearUsd(message.uso.costo_usd_estimado)} · {formatearTokens(message.uso.tokens_entrada)} tokens de entrada ·{' '}
+                            {formatearTokens(message.uso.tokens_salida)} de salida · {message.uso.modelo} · estimado
+                          </p>
+                        )}
+                      </>
                     ) : (
                       // Cursor parpadeante mientras llega el primer fragmento del stream.
                       <span className="inline-block w-2 h-4 bg-zinc-500 animate-pulse align-middle" />

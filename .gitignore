@@ -62,4 +62,7 @@ src/backend/OLE/data/*.xlsx
 # una versión vieja committeada en vez de recalcularla.
 src/backend/Tendencias/_cache_onet.json
 src/backend/Tendencias/_cache_opciones.json
+src/backend/Tendencias/_cache_ubicaciones.json
+# Uso local de búsquedas de SerpApi (respaldo del semáforo de cuota): estado operativo.
+src/backend/GoogleJobs/_uso_serpapi.json
 src/backend/ONet/_cache_perfil_onet.json
