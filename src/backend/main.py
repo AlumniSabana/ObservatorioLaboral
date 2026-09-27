@@ -60,6 +60,8 @@ from LinkedIn.linkedin_service import (
 from Asistente.contexto_service import resumen_contexto
 from Informes import informes_service
 from Informes import insights_service
+from Informes import insights_conjuntos
+from Informes import insights_repo
 from config import PROGRAMAS_KEYWORDS
 # Roles: el guard `requiere_admin` y las rutas /auth/* viven en auth.py
 # (contrato compartido). Ver su docstring antes de proteger un endpoint.
@@ -236,15 +238,22 @@ async def informes_extraer(file: UploadFile = File(...)):
         from Informes.informe_extractor import procesar_pdf
 
         contenido = await file.read()
-        # Un PDF ya ingerido no se reprocesa: gasta tokens y duplicaría el informe.
+        # Un PDF ya ingerido y ACTIVO (borrador/validado) no se reprocesa: gasta
+        # tokens y duplicaría el informe. Si el que lo usó está RETIRADO, sí se
+        # deja pasar: al guardarlo se reactiva ese registro (mismo id) y la UI
+        # avisa con `reactiva`. Antes se bloqueaba en ambos casos, y un informe
+        # retirado quedaba imposible de volver a subir.
         import hashlib
-        existente = informes_service.existe_hash(hashlib.sha256(contenido).hexdigest())
-        if existente:
+        previo = informes_service.informe_por_hash(hashlib.sha256(contenido).hexdigest())
+        if previo and previo["estado"] != informes_service.ESTADO_RETIRADO:
             return JSONResponse(
                 status_code=400,
-                content={"error": f"Ese informe ya fue ingerido: {existente}"},
+                content={"error": f"Ese informe ya fue ingerido: {previo['id']}"},
             )
-        return procesar_pdf(contenido, file.filename or "informe.pdf")
+        borrador = procesar_pdf(contenido, file.filename or "informe.pdf")
+        if previo:
+            borrador["reactiva"] = previo
+        return borrador
     except ValueError as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
     except Exception as e:
@@ -253,9 +262,15 @@ async def informes_extraer(file: UploadFile = File(...)):
 
 @app.post("/informes")
 async def informes_guardar(req: InformeGuardar):
-    """Persiste el informe revisado (queda en estado 'borrador')."""
+    """
+    Persiste el informe revisado (queda en estado 'borrador'). Si el PDF
+    corresponde a un informe retirado, lo reactiva (`reactivado: true`).
+    """
     try:
         return informes_service.guardar_informe(req.catalogo, req.items)
+    except ValueError as e:
+        # Duplicado de un informe activo: es un error del cliente, no del servidor.
+        return JSONResponse(status_code=400, content={"error": str(e)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -292,15 +307,20 @@ async def informes_validar(informe_id: str, validado_por: str = "alumni@unisaban
         except Exception:
             pass
         return r
+    except ValueError as e:
+        # El id no existe: antes respondía 200 "validado" sin haber tocado nada.
+        return JSONResponse(status_code=404, content={"error": str(e)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 @app.post("/informes/{informe_id}/retirar", dependencies=[Depends(requiere_admin)])
 async def informes_retirar(informe_id: str):
-    """Saca el informe del selector sin borrar sus datos."""
+    """Saca el informe del selector sin borrar sus datos (reversible: re-subir el PDF lo reactiva)."""
     try:
         return informes_service.retirar_informe(informe_id)
+    except ValueError as e:
+        return JSONResponse(status_code=404, content={"error": str(e)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -433,6 +453,20 @@ async def informe_detalle(informe_id: str, top: int = 20):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+@app.get("/informes/{informe_id}/similares")
+async def informe_similares(informe_id: str, top: int = 5):
+    """
+    Informes VALIDADOS que más skills comparten con el dado (Jaccard sobre los
+    términos canónicos). Sin IA: es la sección "Reportes similares" de la vista
+    de Usuario y se consulta cada vez que abre un informe, así que debe ser
+    barata. Lectura pública.
+    """
+    try:
+        return informes_service.similares(informe_id, top)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 @app.get("/informes/contraste")
 async def informes_contraste(informes: str, dimension: str = "skill", top: int = 25):
     """
@@ -467,6 +501,68 @@ def informes_insights(req: InformesInsightsRequest):
         return JSONResponse(status_code=400, content={"error": str(e)})
     except RuntimeError as e:
         return JSONResponse(status_code=502, content={"error": str(e)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+# --- Insights Conjuntos (exclusivo Admin) --------------------------------------
+# Dos pasos: la IA propone grupos de informes validados afines (candidatos) y el
+# Admin elige cuál sintetizar. Ver Informes/insights_conjuntos.py.
+
+@app.post("/informes/insights-conjuntos/candidatos", dependencies=[Depends(requiere_admin)])
+def informes_insights_conjuntos_candidatos():
+    """
+    Grupos de informes validados candidatos a un insight conjunto, con el motivo
+    en una frase. Híbrido: solapamiento de skills calculado aquí + Gemini para
+    agrupar y explicar. Con menos de 2 validados no llama al modelo.
+    """
+    try:
+        return insights_conjuntos.candidatos()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+class InsightConjuntoRequest(BaseModel):
+    informe_ids: list[str]          # 2 o más ids de informes VALIDADOS
+    motivo_grupo: str | None = None  # el motivo propuesto en candidatos, si se usó
+
+
+@app.post("/informes/insights-conjuntos", dependencies=[Depends(requiere_admin)])
+def informes_insights_conjuntos_generar(req: InsightConjuntoRequest):
+    """
+    Genera el insight conjunto (Gemini, prompt comparativo) y lo persiste en
+    `insights_generados` con tipo 'conjunto'. Si falta la migración 012 responde
+    igual con `persistido: false`.
+    """
+    if len(req.informe_ids) < 2:
+        return JSONResponse(status_code=400, content={"error": "Se necesitan al menos 2 informe_ids"})
+    try:
+        return insights_conjuntos.generar_conjunto(req.informe_ids, req.motivo_grupo)
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
+    except RuntimeError as e:
+        return JSONResponse(status_code=502, content={"error": str(e)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/informes/insights-generados")
+async def informes_insights_generados(
+    informe_id: str | None = None, tipo: str | None = None, limite: int = 50
+):
+    """
+    Insights ya generados (individuales y conjuntos), más recientes primero.
+    Lectura pública: es lo que la vista de Usuario muestra en solo lectura.
+    `informe_id` devuelve los que mencionan ese informe; `tipo` filtra
+    individual | conjunto. `disponible: false` si falta la migración 012.
+    """
+    try:
+        disponible = insights_repo.tabla_disponible()
+        return {
+            "disponible": disponible,
+            "insights": insights_repo.listar(informe_id, tipo, limite) if disponible else [],
+            "aviso": None if disponible else insights_repo.AVISO_SIN_TABLA,
+        }
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 

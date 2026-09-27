@@ -16,21 +16,38 @@ la misma variable de entorno GEMINI_API_KEY.
 Solo acepta informes en estado 'validado': un borrador no ha pasado el control
 humano de `informe_extractor.py` y no debería alimentar ningún reporte, ni
 siquiera uno narrativo.
+
+PERSISTENCIA: cada insight generado se guarda en `insights_generados`
+(migración 012, vía Informes/insights_repo.py) con tipo 'individual', porque la
+vista de Usuario de /informes lo lee después en modo solo lectura. Si la tabla
+no existe, el texto se devuelve igual con `persistido: false`.
+
+`llamar_gemini()` es la única función de este proyecto que habla con la API de
+Gemini desde el backend; insights_conjuntos.py la reutiliza en vez de duplicar
+el manejo de cuota, errores y respuestas vacías.
 """
 
 from __future__ import annotations
 
+import json
+import time
 from typing import Any
 
 import requests
 
 from Adzuna.adzuna_service import supabase
 from config import GEMINI_API_KEY
+from Informes import insights_repo
 from Informes.informes_service import TABLA_INFORMES, TABLA_OBS, tablas_disponibles
 from Informes.power_skills import clasificar_habilidad
 
 MODELO = "gemini-3.6-flash"
 _URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODELO}:generateContent"
+
+# Reintentos ante 503 UNAVAILABLE (ver llamar_gemini). Pocos y cortos: el
+# endpoint es síncrono y el usuario está esperando con un spinner.
+_REINTENTOS_503 = 2
+_ESPERA_503_SEG = 4
 
 SYSTEM_PROMPT = """
 Eres un analista experto del Observatorio Laboral de Alumni Sabana. Se te entregan
@@ -139,40 +156,51 @@ def _armar_prompt(informes: list[dict[str, Any]]) -> str:
     return "\n\n".join(bloques)
 
 
-def generar_insights(informe_ids: list[str]) -> dict[str, Any]:
-    """Genera (síncronamente) el informe de insights con Gemini.
+def llamar_gemini(
+    system_prompt: str,
+    texto_usuario: str,
+    max_tokens: int = 8192,
+    json_mode: bool = False,
+    timeout: int = 90,
+) -> str:
+    """
+    Una llamada síncrona a Gemini (REST) y el texto de la respuesta.
 
-    Lanza ValueError si no hay ningún informe VALIDADO entre los ids pedidos, o
-    RuntimeError si falta la API key o Gemini responde con error.
+    `json_mode=True` pide `responseMimeType: application/json`, que obliga al
+    modelo a devolver JSON válido — lo usan los candidatos a insights conjuntos,
+    donde hay que parsear la salida en vez de mostrarla.
+
+    Lanza RuntimeError si falta la API key, si se agotó la cuota o si la
+    respuesta viene vacía/bloqueada. No captura nada más: el endpoint decide el
+    código HTTP.
     """
     if not GEMINI_API_KEY:
         raise RuntimeError(
             "GEMINI_API_KEY no está configurada en el backend (src/backend/.env)."
         )
 
-    informes = _obtener_informes_validados(informe_ids)
-    if not informes:
-        raise ValueError(
-            "Ninguno de los informes indicados existe y está validado. "
-            "Solo se pueden usar informes en estado 'validado'."
-        )
+    generation: dict[str, Any] = {"maxOutputTokens": max_tokens}
+    if json_mode:
+        generation["responseMimeType"] = "application/json"
 
-    encontrados = {i["id"] for i in informes}
-    omitidos = [i for i in informe_ids if i not in encontrados]
-
-    prompt_datos = _armar_prompt(informes)
     body = {
-        "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
-        "contents": [{
-            "role": "user",
-            "parts": [{"text": f"Datos de los informes seleccionados:\n\n{prompt_datos}"}],
-        }],
-        "generationConfig": {"maxOutputTokens": 8192},
+        "system_instruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"role": "user", "parts": [{"text": texto_usuario}]}],
+        "generationConfig": generation,
     }
 
-    r = requests.post(_URL, params={"key": GEMINI_API_KEY}, json=body, timeout=60)
-    if not r.ok:
+    # Un 503 UNAVAILABLE ("high demand") es transitorio y frecuente en horas
+    # pico: se reintenta un par de veces con espera creciente antes de fallar.
+    # La cuota agotada (429) NO se reintenta: repetir solo empeora el problema.
+    for intento in range(_REINTENTOS_503 + 1):
+        r = requests.post(_URL, params={"key": GEMINI_API_KEY}, json=body, timeout=timeout)
+        if r.ok:
+            break
         detalle = r.text[:500]
+        transitorio = r.status_code == 503 or "UNAVAILABLE" in detalle
+        if transitorio and intento < _REINTENTOS_503:
+            time.sleep(_ESPERA_503_SEG * (intento + 1))
+            continue
         sin_cuota = r.status_code == 429 or "RESOURCE_EXHAUSTED" in detalle
         if sin_cuota:
             raise RuntimeError(
@@ -186,6 +214,63 @@ def generar_insights(informe_ids: list[str]) -> dict[str, Any]:
     texto = "".join(p.get("text", "") for p in partes).strip()
     if not texto:
         raise RuntimeError("Gemini no devolvió texto (respuesta vacía o bloqueada).")
+    return texto
+
+
+def parsear_json_modelo(texto: str) -> Any:
+    """
+    JSON de una respuesta del modelo, tolerando el envoltorio ```json ... ```
+    que a veces añade aunque se pida JSON puro. Lanza ValueError si no parsea.
+    """
+    limpio = texto.strip()
+    if limpio.startswith("```"):
+        limpio = limpio.strip("`")
+        if limpio.lower().startswith("json"):
+            limpio = limpio[4:]
+    try:
+        return json.loads(limpio)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"El modelo no devolvió JSON válido: {e}") from e
+
+
+def titulo_para(informes: list[dict[str, Any]], prefijo: str) -> str:
+    """'Insights: Coursera 2025 · WEF 2026' — etiqueta corta y estable para listar."""
+    return f"{prefijo}: " + " · ".join(
+        f"{i['editor']} {i['anio_referencia']}" for i in informes
+    )
+
+
+def generar_insights(informe_ids: list[str], creado_por: str | None = None) -> dict[str, Any]:
+    """Genera (síncronamente) el informe de insights con Gemini y lo persiste.
+
+    Lanza ValueError si no hay ningún informe VALIDADO entre los ids pedidos, o
+    RuntimeError si falta la API key o Gemini responde con error.
+    """
+    informes = _obtener_informes_validados(informe_ids)
+    if not informes:
+        raise ValueError(
+            "Ninguno de los informes indicados existe y está validado. "
+            "Solo se pueden usar informes en estado 'validado'."
+        )
+
+    encontrados = {i["id"] for i in informes}
+    omitidos = [i for i in informe_ids if i not in encontrados]
+
+    prompt_datos = _armar_prompt(informes)
+    texto = llamar_gemini(
+        SYSTEM_PROMPT, f"Datos de los informes seleccionados:\n\n{prompt_datos}"
+    )
+
+    # Se guarda DESPUÉS de tener el texto: si Gemini falla no queda basura.
+    guardado = insights_repo.guardar(
+        tipo=insights_repo.TIPO_INDIVIDUAL,
+        informe_ids=[i["id"] for i in informes],
+        titulo=titulo_para(informes, "Insights"),
+        contenido=texto,
+        modelo=MODELO,
+        informes=informes,
+        creado_por=creado_por,
+    )
 
     return {
         "texto": texto,
@@ -194,4 +279,7 @@ def generar_insights(informe_ids: list[str]) -> dict[str, Any]:
             "anio_referencia": i["anio_referencia"], "antiguo": i["antiguo"],
         } for i in informes],
         "omitidos": omitidos,
+        "persistido": guardado is not None,
+        "insight_id": guardado["id"] if guardado else None,
+        "aviso": None if guardado else insights_repo.AVISO_SIN_TABLA,
     }

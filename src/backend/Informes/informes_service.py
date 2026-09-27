@@ -11,12 +11,26 @@ DOS REGLAS QUE NO SE DEBEN ROMPER
    son la misma magnitud; combinarlos produciría un número sin significado.
 2. Nada llega al selector hasta que un humano lo valida (`estado='validado'`).
    La extracción automática deja el informe en 'borrador'.
+
+CICLO DE VIDA DE UN INFORME Y EL HASH DEL PDF
+  borrador -> validado -> retirado -> (re-subir el mismo PDF) -> borrador ...
+
+El sha256 del PDF (`hash_pdf`, índice único en la BD) evita ingerir dos veces
+el mismo documento. Pero "retirado" significa "sacado del selector, datos
+conservados", NO "prohibido para siempre": si el Administrador vuelve a subir
+ese PDF (por ejemplo tras ampliar el diccionario de skills o corregir el
+título), el informe retirado se REACTIVA: conserva su `id` (así los insights
+ya generados que lo citan siguen apuntando al documento correcto), se
+reemplazan sus observaciones por las nuevas y vuelve a 'borrador' para pasar
+otra vez por la validación humana. Ver `informe_por_hash()` y
+`guardar_informe()`.
 """
 
 from __future__ import annotations
 
 import re
 import unicodedata
+from datetime import datetime, timezone
 from typing import Any
 
 from Adzuna.adzuna_service import supabase
@@ -24,6 +38,10 @@ from Informes.power_skills import clasificar_habilidad
 
 TABLA_INFORMES = "informes"
 TABLA_OBS = "informes_observaciones"
+
+ESTADO_BORRADOR = "borrador"
+ESTADO_VALIDADO = "validado"
+ESTADO_RETIRADO = "retirado"
 
 # Métricas que definen un ORDEN dentro del informe y por tanto pueden ponerse al
 # lado del ranking de vacantes (se compara la POSICIÓN, nunca el valor bruto: el
@@ -89,15 +107,37 @@ def guardar_informe(catalogo: dict[str, Any], items: list[dict]) -> dict[str, An
 
     from Tendencias.skills_extractor import canonicalizar, get_categoria
 
-    informe_id = catalogo.get("id") or slug(
-        catalogo.get("editor", "informe"),
-        catalogo.get("titulo", ""),
-        int(catalogo.get("anio_referencia") or 0),
-    )
+    # ¿Este PDF ya pasó por aquí? Un informe ACTIVO (borrador/validado) bloquea;
+    # uno RETIRADO se reactiva conservando su id (ver docstring del módulo).
+    previo = informe_por_hash(catalogo.get("hash_pdf") or "")
+    reactivado = False
+    if previo and previo["estado"] != ESTADO_RETIRADO:
+        raise ValueError(f"Ese informe ya fue ingerido: {previo['id']}")
+    if previo:
+        informe_id = previo["id"]
+        reactivado = True
+        # Las observaciones viejas se borran ENTERAS, no se funden: si el
+        # diccionario cambió, una skill que ya no se detecta no debe sobrevivir
+        # del ingreso anterior (el upsert de abajo solo añade/actualiza).
+        supabase.table(TABLA_OBS).delete().eq("informe_id", informe_id).execute()
+    else:
+        informe_id = catalogo.get("id") or slug(
+            catalogo.get("editor", "informe"),
+            catalogo.get("titulo", ""),
+            int(catalogo.get("anio_referencia") or 0),
+        )
     # `universo` ya no se pide en la UI, pero la columna es NOT NULL en la BD; se
     # manda vacío para no exigir otra migración. Si algún informe lo trae, se guarda.
-    fila = {**catalogo, "id": informe_id, "estado": "borrador"}
+    fila = {**catalogo, "id": informe_id, "estado": ESTADO_BORRADOR}
     fila.setdefault("universo", "")
+    if reactivado:
+        # Vuelve a empezar el ciclo: la validación anterior ya no aplica a los
+        # datos nuevos, y la fecha de ingesta debe reflejar esta re-subida.
+        fila.update({
+            "validado_por": None,
+            "validado_en": None,
+            "ingestado_en": datetime.now(timezone.utc).isoformat(),
+        })
     supabase.table(TABLA_INFORMES).upsert(fila, on_conflict="id").execute()
 
     observaciones = []
@@ -128,25 +168,51 @@ def guardar_informe(catalogo: dict[str, Any], items: list[dict]) -> dict[str, An
             observaciones, on_conflict="informe_id,dimension,termino_original,metrica"
         ).execute()
 
-    return {"id": informe_id, "estado": "borrador", "observaciones": len(observaciones)}
+    return {
+        "id": informe_id,
+        "estado": ESTADO_BORRADOR,
+        "observaciones": len(observaciones),
+        "reactivado": reactivado,
+    }
+
+
+def _exigir_existente(informe_id: str) -> dict[str, Any]:
+    """
+    Fila mínima (id, estado) del informe, o ValueError si no existe.
+
+    Un UPDATE ... WHERE id = X sobre un id inexistente no falla en PostgREST:
+    afecta 0 filas y devuelve 200. Sin esta comprobación, validar o retirar un
+    id mal escrito respondía {"estado": "validado"} como si hubiera ocurrido.
+    """
+    r = supabase.table(TABLA_INFORMES).select("id,estado").eq("id", informe_id).execute()
+    if not r.data:
+        raise ValueError(f"No existe el informe '{informe_id}'.")
+    return r.data[0]
 
 
 def validar_informe(informe_id: str, validado_por: str) -> dict[str, Any]:
     """Marca el informe como validado: recién ahí aparece en el selector de fuentes."""
     if not tablas_disponibles():
         raise RuntimeError("Las tablas de informes no existen (migración 006).")
+    _exigir_existente(informe_id)
     supabase.table(TABLA_INFORMES).update({
-        "estado": "validado",
+        "estado": ESTADO_VALIDADO,
         "validado_por": validado_por,
-        "validado_en": "now()",
+        "validado_en": datetime.now(timezone.utc).isoformat(),
     }).eq("id", informe_id).execute()
-    return {"id": informe_id, "estado": "validado"}
+    return {"id": informe_id, "estado": ESTADO_VALIDADO}
 
 
 def retirar_informe(informe_id: str) -> dict[str, Any]:
-    """Saca el informe del selector sin borrar sus datos."""
-    supabase.table(TABLA_INFORMES).update({"estado": "retirado"}).eq("id", informe_id).execute()
-    return {"id": informe_id, "estado": "retirado"}
+    """
+    Saca el informe del selector sin borrar sus datos. Es reversible: volver a
+    subir el mismo PDF lo reactiva (ver docstring del módulo).
+    """
+    if not tablas_disponibles():
+        raise RuntimeError("Las tablas de informes no existen (migración 006).")
+    _exigir_existente(informe_id)
+    supabase.table(TABLA_INFORMES).update({"estado": ESTADO_RETIRADO}).eq("id", informe_id).execute()
+    return {"id": informe_id, "estado": ESTADO_RETIRADO}
 
 
 def eliminar_informe(informe_id: str) -> dict[str, Any]:
@@ -160,12 +226,34 @@ def eliminar_informe(informe_id: str) -> dict[str, Any]:
     return {"id": informe_id, "eliminado": True}
 
 
-def existe_hash(hash_pdf: str) -> str | None:
-    """Id del informe que ya usó ese PDF, o None. Evita ingerir dos veces lo mismo."""
+def informe_por_hash(hash_pdf: str) -> dict[str, Any] | None:
+    """
+    Ficha mínima (id, estado, titulo, editor, anio_referencia) del informe que ya
+    usó ese PDF, o None. Devuelve el ESTADO a propósito: el llamador decide si
+    bloquea (activo) o reactiva (retirado).
+    """
     if not tablas_disponibles() or not hash_pdf:
         return None
-    r = supabase.table(TABLA_INFORMES).select("id").eq("hash_pdf", hash_pdf).limit(1).execute()
-    return r.data[0]["id"] if r.data else None
+    r = (
+        supabase.table(TABLA_INFORMES)
+        .select("id,estado,titulo,editor,anio_referencia")
+        .eq("hash_pdf", hash_pdf).limit(1).execute()
+    )
+    return r.data[0] if r.data else None
+
+
+def existe_hash(hash_pdf: str) -> str | None:
+    """
+    Id del informe ACTIVO (borrador o validado) que ya usó ese PDF, o None.
+
+    Un informe RETIRADO no cuenta como existente: antes sí lo hacía y eso
+    bloqueaba para siempre volver a subir un PDF retirado ("Ese informe ya fue
+    ingerido"), porque el hash seguía en la tabla. Retirar es reversible.
+    """
+    fila = informe_por_hash(hash_pdf)
+    if fila and fila["estado"] != ESTADO_RETIRADO:
+        return fila["id"]
+    return None
 
 
 # ── Lectura ─────────────────────────────────────────────────────────────────
@@ -399,3 +487,92 @@ def contraste(informes_ids: list[str], dimension: str = "skill", top: int = 25) 
         "terminos": terminos,
         "no_mapeados": no_mapeados[:20],
     }
+
+
+# ── Similitud entre informes (sin IA) ───────────────────────────────────────
+#
+# Base común de "Reportes similares" (vista de Usuario) y de los candidatos a
+# Insights Conjuntos (Admin). Se calcula con el solapamiento de SKILLS, no con
+# el texto del PDF: las observaciones ya están extraídas y verificadas, así que
+# es barato (dos consultas) y determinista, y no hay que pagar una llamada a un
+# modelo cada vez que un Usuario abre su informe.
+
+def terminos_por_informe(ids: list[str]) -> dict[str, dict[str, int | None]]:
+    """
+    {informe_id: {termino: posicion}} para la dimensión 'skill'.
+
+    Se usa el término canónico cuando existe (así "Communication" y
+    "comunicación" cuentan como la misma skill) y el original si no mapea.
+    """
+    if not tablas_disponibles() or not ids:
+        return {}
+    obs = (
+        supabase.table(TABLA_OBS)
+        .select("informe_id,termino,termino_original,posicion")
+        .in_("informe_id", ids).eq("dimension", "skill")
+        .execute().data
+    ) or []
+    salida: dict[str, dict[str, int | None]] = {i: {} for i in ids}
+    for o in obs:
+        clave = (o.get("termino") or o["termino_original"]).strip().lower()
+        salida.setdefault(o["informe_id"], {})[clave] = o.get("posicion")
+    return salida
+
+
+def afinidad_jaccard(a: set[str], b: set[str]) -> float:
+    """|A ∩ B| / |A ∪ B|, en [0, 1]. 0 si alguno está vacío."""
+    if not a or not b:
+        return 0.0
+    return round(len(a & b) / len(a | b), 3)
+
+
+def _compartidas_ordenadas(ta: dict[str, int | None], tb: dict[str, int | None], top: int) -> list[str]:
+    """Skills comunes, primero las mejor posicionadas en AMBOS informes."""
+    comunes = set(ta) & set(tb)
+    return sorted(comunes, key=lambda t: (ta.get(t) or 999) + (tb.get(t) or 999))[:top]
+
+
+def similares(informe_id: str, top: int = 5, top_skills: int = 8) -> dict[str, Any]:
+    """
+    Informes VALIDADOS que más skills comparten con el dado.
+
+    Solo se comparan contra validados: un Usuario no debe ver como "similar" un
+    borrador que nadie ha revisado. El informe de partida puede estar en
+    cualquier estado (el Usuario consulta el suyo mientras sigue pendiente).
+    """
+    vacio = {"informe_id": informe_id, "similares": [], "n_candidatos": 0}
+    if not tablas_disponibles():
+        return vacio
+
+    candidatos = (
+        supabase.table(TABLA_INFORMES)
+        .select("id,titulo,editor,anio_referencia,cobertura")
+        .eq("estado", ESTADO_VALIDADO).neq("id", informe_id)
+        .execute().data
+    ) or []
+    if not candidatos:
+        return vacio
+
+    terminos = terminos_por_informe([informe_id] + [c["id"] for c in candidatos])
+    base = terminos.get(informe_id) or {}
+    if not base:
+        return {**vacio, "n_candidatos": len(candidatos)}
+
+    filas = []
+    for c in candidatos:
+        otros = terminos.get(c["id"]) or {}
+        afinidad = afinidad_jaccard(set(base), set(otros))
+        if afinidad <= 0:
+            continue   # sin ninguna skill en común no hay nada que mostrar
+        filas.append({
+            "id": c["id"],
+            "titulo": c["titulo"],
+            "editor": c["editor"],
+            "anio_referencia": c["anio_referencia"],
+            "cobertura": c.get("cobertura"),
+            "afinidad": afinidad,
+            "n_compartidas": len(set(base) & set(otros)),
+            "compartidas": _compartidas_ordenadas(base, otros, top_skills),
+        })
+    filas.sort(key=lambda f: -f["afinidad"])
+    return {"informe_id": informe_id, "similares": filas[:top], "n_candidatos": len(candidatos)}
