@@ -69,3 +69,8 @@ src/backend/ONet/_cache_perfil_onet.json
 src/backend/Tendencias/_cache_ubicaciones.json
 # Uso local de búsquedas de SerpApi (respaldo del semáforo de cuota): estado operativo.
 src/backend/GoogleJobs/_uso_serpapi.json
+
+# Bytecode de Python: se regenera en cada arranque y solo ensucia git status.
+# (Había 51 .pyc versionados que aparecían modificados en cada worktree.)
+__pycache__/
+*.pyc
