@@ -297,6 +297,7 @@ CARGOS: dict[str, str] = {
     "director international business developer defense sector": "Director de desarrollo de negocios internacionales",
     "auto glass installation technician trainee": "Técnico instalador de vidrios (aprendiz)",
     "software engineer": "Ingeniero de software",
+    "software developer": "Desarrollador de software",
     "registered nurse": "Enfermero(a) registrado(a)",
     # Tercera tanda: los cargos que efectivamente afloran en la vista de
     # TENDENCIAS (pasan los umbrales de calidad). Es un conjunto acotado (~120),
@@ -797,6 +798,16 @@ CARGOS: dict[str, str] = {
     "responsable marketing digital": "Responsable de marketing digital",
     "ingeniero inteligencia artificial": "Ingeniero de inteligencia artificial",
     "ingeniero software": "Ingeniero de software",
+    # Títulos colombianos con la sigla "IA" (programa Ing. en Inteligencia
+    # Artificial). Van explícitos porque el respaldo los dejaba en minúscula y
+    # sin preposición ("Especialista ia"): 104 títulos medidos por QA 2026-09-27.
+    "especialista ia": "Especialista en IA",
+    "ingeniero ia": "Ingeniero de IA",
+    "analista ia": "Analista de IA",
+    "analista ia y datos": "Analista de IA y datos",
+    "desarrollador ia": "Desarrollador de IA",
+    "cientifico ia": "Científico de IA",
+    "desarrollador software": "Desarrollador de software",
     "analista financiero y planeacion": "Analista de planeación financiera",
     "analista riesgos financieros": "Analista de riesgos financieros",
     "analista riesgos": "Analista de riesgos",
@@ -921,6 +932,13 @@ from typing import Iterable
 # Ubicaciones que aparecen pegadas al cargo. La lista se construyó mirando los
 # tokens más frecuentes al final del título en la muestra real (ahí es donde
 # las fuentes suelen colgar la ciudad), no inventando nombres.
+# OJO — siglas de estado de EE. UU./Canadá de 2 letras: se quitaron "ia", "al",
+# "ma", "ok", "on", "or" y "us" porque se aplican como token suelto y también
+# son palabras o siglas en español. Medido por QA (2026-09-27): "ia" mutilaba
+# 104 títulos colombianos ("Especialista en IA" -> "Especialista", "Analista de
+# IA y Datos" -> "Analista y datos"); "al" aparecía en 178. El costo es que un
+# título de EE. UU. que termine en ", IA" conserve esa sigla: es mucho menos
+# visible que romper el cargo de todo un programa (Ing. en Inteligencia Artificial).
 _UBICACIONES: set[str] = {
     # Colombia
     "bogota", "medellin", "cali", "barranquilla", "cartagena", "bucaramanga",
@@ -930,7 +948,7 @@ _UBICACIONES: set[str] = {
     "zipaquira", "soacha", "funza", "cundinamarca", "antioquia", "atlantico",
     "autonorte", "colombia", "usaquen", "suba", "chapinero", "kennedy",
     # Países y regiones
-    "usa", "us", "eeuu", "uk", "canada", "mexico", "spain", "espana", "latam",
+    "usa", "eeuu", "uk", "canada", "mexico", "spain", "espana", "latam",
     "latinoamerica", "emea", "apac", "worldwide", "overseas", "nationwide",
     # Reino Unido
     "london", "manchester", "birmingham", "leeds", "glasgow", "edinburgh",
@@ -952,10 +970,9 @@ _UBICACIONES: set[str] = {
     "indianapolis", "columbus", "charlotte", "raleigh",
     # Siglas de estado/provincia (van sueltas al final: "... - Austin, TX")
     "ny", "ca", "tx", "fl", "il", "pa", "oh", "ga", "nc", "mi", "nj", "va",
-    "wa", "az", "ma", "tn", "mo", "md", "wi", "mn", "al", "sc", "ky", "or",
-    "ok", "ct", "ut", "ia", "nv", "ar", "ms", "ks", "nm", "ne", "wv", "hi",
+    "wa", "az", "tn", "mo", "md", "wi", "mn", "sc", "ky", "ct", "ut", "nv", "ar", "ms", "ks", "nm", "ne", "wv", "hi",
     "nh", "ri", "mt", "sd", "nd", "ak", "vt", "wy",
-    "on", "bc", "ab", "qc", "mb", "sk", "ns", "nb",
+    "bc", "ab", "qc", "mb", "sk", "ns", "nb",
     # Estados de EE.UU. escritos completos. Se añadieron al detectar que las
     # ofertas médicas de tipo "locum" traen el destino en el título ("Locum
     # Physician DO Emergency Medicine In Florida"), lo que partía un mismo

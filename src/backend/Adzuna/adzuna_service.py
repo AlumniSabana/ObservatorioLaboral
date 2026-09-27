@@ -312,8 +312,14 @@ def normalize_title(title: str) -> str:
     title = re.sub(r'\s+', ' ', title).strip()
     
     # Estandarizar términos comunes
-    title = re.sub(r'\b(software\s+)?develop(er|ment|ing)\b', 'developer', title)
-    title = re.sub(r'\b(software\s+)?engine(er|eering)\b', 'engineer', title)
+    # OJO: aquí NO se absorbe "software". Antes el patrón era
+    # `(software\s+)?engine(er|eering)` y convertía "Software Engineer" en
+    # "engineer": la barra #1 de Tendencias salía como "Ingeniero" (942) cuando
+    # 891 de esos títulos traían "software" (QA 2026-09-27). El diccionario
+    # `CARGOS` ya sabe traducir "software engineer" / "software developer";
+    # solo hay que dejarle llegar el título entero.
+    title = re.sub(r'\bdevelop(er|ment|ing)\b', 'developer', title)
+    title = re.sub(r'\bengine(er|eering)\b', 'engineer', title)
     title = re.sub(r'\bdata\s+(scientist|analyst|engineer)\b', lambda m: f"data {m.group(1)}", title)
     title = re.sub(r'\bweb\s+develop(er|ment)\b', 'web developer', title)
     title = re.sub(r'\bmobile\s+develop(er|ment)\b', 'mobile developer', title)

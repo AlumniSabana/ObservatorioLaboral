@@ -206,6 +206,16 @@ def _ciudad_de(location: str | None, city: str | None) -> str | None:
     return bruto
 
 
+def ciudad_visible(city: str | None) -> str | None:
+    """Versión pública de `_ciudad_de` para otros módulos (p. ej. el Perfil).
+
+    Devuelve la ciudad legible, o None cuando el valor no es una ciudad: el
+    país ("Colombia"), un departamento ("Cundinamarca") o vacío. Así cualquier
+    ranking de ciudades del proyecto aplica el mismo criterio que este panel.
+    """
+    return _ciudad_de(None, city)
+
+
 def _top_ciudades(spellings: Dict[str, Counter], n: int = TOP_N) -> List[Dict[str, Any]]:
     """Ranking de ciudades unificando las grafías de una misma ciudad.
 

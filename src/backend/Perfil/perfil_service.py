@@ -25,6 +25,7 @@ from Salarios.salarios_service import salario_por_programa
 from ONet.onet_service import competencias_scored, perfil_onet
 from Tendencias.seniority_analisis import seniority_optimo
 from Tendencias.perfil_tendencia import tendencia_programa
+from Tendencias.geografia import ciudad_visible
 from traducciones import agrupar_sector, traducir_sector
 
 
@@ -68,7 +69,15 @@ def _ciudades_colombia(programa: str) -> list[dict]:
     normalizadas: dict[str, tuple[Counter[str], int]] = {}
 
     def _sumar(ciudad_cruda: str, peso: int) -> None:
-        clave = _normalizar_texto(ciudad_cruda)
+        # Mismo criterio que el mapa por departamentos (Tendencias/geografia.py):
+        # "Colombia" a secas y los departamentos NO son ciudades. Sin esto,
+        # "Colombia" salía como ciudad #1 en los 29 programas (393 filas de
+        # Google Jobs con city='Colombia') y "Valle del Cauca"/"Cundinamarca"
+        # competían con Cali y Chía (QA 2026-09-27).
+        ciudad = ciudad_visible(ciudad_cruda)
+        if not ciudad:
+            return
+        clave = _normalizar_texto(ciudad)
         if not clave:
             return
         grafias, total = normalizadas.get(clave, (Counter(), 0))
@@ -78,7 +87,7 @@ def _ciudades_colombia(programa: str) -> list[dict]:
         # menos en vacantes reales — ya pasó: "Bogota" sin tilde ganaba con
         # 19 filas de LinkedIn frente a la única fila "Bogotá" (57) de
         # Google Jobs, pese a representar menos de un tercio del volumen.
-        grafias[ciudad_cruda] += peso
+        grafias[ciudad] += peso
         normalizadas[clave] = (grafias, total + peso)
 
     try:
@@ -94,6 +103,10 @@ def _ciudades_colombia(programa: str) -> list[dict]:
         from LinkedIn.linkedin_service import leer_ofertas_linkedin
         for oferta in leer_ofertas_linkedin():
             if oferta.get("programa_relacionado") != programa:
+                continue
+            # LinkedIn recolecta 5 mercados desde sep-2026: sin este filtro
+            # Lima y Santiago salían como ciudades colombianas (QA 2026-09-27).
+            if (oferta.get("pais") or "co") != "co":
                 continue
             ciudad = oferta.get("city")
             if ciudad:
