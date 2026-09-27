@@ -63,3 +63,6 @@ src/backend/OLE/data/*.xlsx
 src/backend/Tendencias/_cache_onet.json
 src/backend/Tendencias/_cache_opciones.json
 src/backend/ONet/_cache_perfil_onet.json
+# ...y la plantilla del .env del backend SI va al repo: sin ella nadie sabe que
+# variables hacen falta para levantar el backend (ver src/backend/.env.example).
+!src/backend/.env.example
