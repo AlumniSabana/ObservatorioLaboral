@@ -14,27 +14,130 @@
  * cuando sale de él), y devuelve la respuesta en texto plano por streaming —
  * mismo contrato de salida para ambos modelos, así el frontend no cambia.
  *
+ * USO Y COSTO (sep-2026). Al terminar el stream se añade un "tráiler de uso":
+ * un carácter NUL + `uso:` + JSON con los tokens que reportó el modelo
+ * (Gemini: `usageMetadata` de los chunks SSE; Claude: `usage` del mensaje
+ * final) y el costo ESTIMADO con precios configurables por variable de
+ * entorno. Los dos clientes lo separan con `separarUso` (src/lib/chat-sesion.ts).
+ * Además, cada pregunta se registra en el backend (`POST /asistente/preguntas`)
+ * con su categoría (derivada del título de la página), tokens, costo y un id de
+ * sesión aleatorio del navegador — nunca IP ni correo. Si el backend o la
+ * migración 011 no están, el chat sigue funcionando igual.
+ *
  * Las API keys se leen de variables de entorno (nunca se exponen al navegador,
  * porque este código corre del lado del servidor):
  *   GEMINI_API_KEY     -> modo='empresas'
  *   CLAUDE_API_KEY / ANTHROPIC_API_KEY -> el resto
+ *   GEMINI_USD_POR_1M_ENTRADA / GEMINI_USD_POR_1M_SALIDA  -> precios (def. 0.75 / 3.75)
+ *   CLAUDE_USD_POR_1M_ENTRADA / CLAUDE_USD_POR_1M_SALIDA  -> precios (def. 3 / 15)
+ *   BACKEND_URL (o NEXT_PUBLIC_BACKEND_URL)               -> dónde registrar la pregunta
  *
- * NOTA: el proyecto se exporta como sitio estático (next.config.ts -> output:
- * 'export'), modo en el que las rutas API de Next no se ejecutan como servidor.
- * Para que el chat funcione en producción se requiere un entorno que sí ejecute
- * esta ruta (verificar el hosting al desplegar).
+ * Precios por defecto y su fuente (ver `PRECIOS`):
+ *   - Gemini 3.6 Flash: US$ 0,75 / 1M tokens de entrada y US$ 3,75 / 1M de
+ *     salida, precio estándar vigente hasta el 31-dic-2026 (desde el 1-ene-2027
+ *     pasa a 1,50 / 7,50). Fuente: ai.google.dev/gemini-api/docs/pricing,
+ *     "Last updated 2026-09-24", consultada el 2026-09-27. Los tokens de
+ *     razonamiento (`thoughtsTokenCount`) se facturan como salida y aquí se
+ *     suman a la salida.
+ *   - Claude Sonnet 4.5: US$ 3 / 1M entrada y US$ 15 / 1M salida (tarifa de la
+ *     API de Anthropic para la familia Sonnet 4.x; claude.com/pricing,
+ *     consultada el 2026-09-27). No se descuenta el caché de prompts.
+ *   Son ESTIMACIONES: la factura real la fija cada proveedor.
  */
 
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { MARCADOR_USO, type UsoRespuesta } from "@/lib/chat-sesion";
 
 const GEMINI_MODEL = "gemini-3.6-flash";
+const CLAUDE_MODEL = "claude-sonnet-4-5";
+
+const BACKEND_URL =
+  process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 type Turno = { role: "user" | "assistant"; content: string };
 
+// ---------------------------------------------------------------------------
+// Precios por millón de tokens (USD). Configurables por entorno; los valores
+// por defecto y su fuente están en la cabecera del archivo.
+// ---------------------------------------------------------------------------
+function precio(nombre: string, porDefecto: number): number {
+  const v = Number(process.env[nombre]);
+  return Number.isFinite(v) && v >= 0 ? v : porDefecto;
+}
+
+const PRECIOS = {
+  gemini: {
+    entrada: precio("GEMINI_USD_POR_1M_ENTRADA", 0.75),
+    salida: precio("GEMINI_USD_POR_1M_SALIDA", 3.75),
+  },
+  claude: {
+    entrada: precio("CLAUDE_USD_POR_1M_ENTRADA", 3),
+    salida: precio("CLAUDE_USD_POR_1M_SALIDA", 15),
+  },
+};
+
+function costoUsd(
+  precios: { entrada: number; salida: number },
+  entrada: number | null,
+  salida: number | null,
+): number | null {
+  if (entrada === null && salida === null) return null;
+  const costo = ((entrada ?? 0) * precios.entrada + (salida ?? 0) * precios.salida) / 1_000_000;
+  return Math.round(costo * 1e8) / 1e8;
+}
+
+/** Datos de la pregunta que se registran en el backend (sin nada personal). */
+interface RegistroPregunta {
+  pregunta: string;
+  pagina: string | undefined;
+  categoria: string | undefined;
+  sesionId: string | undefined;
+}
+
+/**
+ * Guarda la pregunta en `POST /asistente/preguntas`. Devuelve si quedó
+ * guardada. Nunca lanza y no tarda más de 3 s: la analítica no puede
+ * retrasar ni romper la respuesta al usuario.
+ */
+async function registrarPregunta(reg: RegistroPregunta, uso: Omit<UsoRespuesta, "registrada">): Promise<boolean> {
+  try {
+    const r = await fetch(`${BACKEND_URL}/asistente/preguntas`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pregunta: reg.pregunta.slice(0, 500),
+        pagina: reg.pagina,
+        categoria: reg.categoria,
+        sesion_id: reg.sesionId,
+        modelo: uso.modelo,
+        tokens_entrada: uso.tokens_entrada,
+        tokens_salida: uso.tokens_salida,
+        costo_usd_estimado: uso.costo_usd_estimado,
+      }),
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!r.ok) return false;
+    const d = (await r.json().catch(() => ({}))) as { guardada?: boolean };
+    return !!d.guardada;
+  } catch {
+    return false;
+  }
+}
+
+/** Serializa el tráiler de uso que va al final del stream de texto. */
+function trailerUso(uso: UsoRespuesta): Uint8Array {
+  return new TextEncoder().encode(MARCADOR_USO + JSON.stringify(uso));
+}
+
+/** Un id de sesión válido es corto y opaco; cualquier otra cosa se ignora. */
+function sesionValida(v: unknown): string | undefined {
+  return typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : undefined;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { message, pageTitle, pageContent, modo, history } = await req.json();
+    const { message, pageTitle, pageContent, modo, history, sessionId } = await req.json();
 
     if (!message) {
       return NextResponse.json(
@@ -163,9 +266,18 @@ export async function POST(req: NextRequest) {
           .slice(-20) // tope de turnos: evita prompts gigantes en charlas largas
       : [];
 
+    // Lo que se registra de la pregunta: texto, página (de ella sale la
+    // categoría en el backend) y el id de sesión opaco del navegador.
+    const registro: RegistroPregunta = {
+      pregunta: String(message),
+      pagina: typeof pageTitle === "string" ? pageTitle.slice(0, 120) : undefined,
+      categoria: esEmpresas ? "empresas" : undefined,
+      sesionId: sesionValida(sessionId),
+    };
+
     return esEmpresas
-      ? await responderConGemini(systemPrompt, historial, message)
-      : await responderConClaude(systemPrompt, historial, message);
+      ? await responderConGemini(systemPrompt, historial, message, registro)
+      : await responderConClaude(systemPrompt, historial, message, registro);
   } catch (error) {
     console.error("Error calling chat API:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -183,6 +295,7 @@ async function responderConClaude(
   systemPrompt: string,
   historial: Turno[],
   message: string,
+  registro: RegistroPregunta,
 ): Promise<Response> {
   const apiKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -200,7 +313,7 @@ async function responderConClaude(
   // en vez de esperar la respuesta completa. `system` define el rol/reglas;
   // `messages` lleva la pregunta. Para cambiar de modelo, ajusta `model`.
   const claudeStream = client.messages.stream({
-    model: "claude-sonnet-4-5",
+    model: CLAUDE_MODEL,
     max_tokens: 8192,
     system: systemPrompt,
     messages: [...historial, { role: "user", content: message }],
@@ -220,6 +333,26 @@ async function responderConClaude(
             controller.enqueue(encoder.encode(event.delta.text));
           }
         }
+        // Tokens reales del turno: el SDK los acumula en el mensaje final
+        // (`usage.input_tokens` / `usage.output_tokens`).
+        let entrada: number | null = null;
+        let salida: number | null = null;
+        try {
+          const final = await claudeStream.finalMessage();
+          entrada = final.usage?.input_tokens ?? null;
+          salida = final.usage?.output_tokens ?? null;
+        } catch {
+          /* sin usage: se registra la pregunta igual, sin tokens */
+        }
+        const uso: UsoRespuesta = {
+          modelo: CLAUDE_MODEL,
+          tokens_entrada: entrada,
+          tokens_salida: salida,
+          costo_usd_estimado: costoUsd(PRECIOS.claude, entrada, salida),
+          estimado: true,
+        };
+        uso.registrada = await registrarPregunta(registro, uso);
+        controller.enqueue(trailerUso(uso));
         controller.close();
       } catch (err) {
         // La respuesta ya salió con 200, así que aquí no se puede cambiar el
@@ -258,6 +391,15 @@ interface GeminiChunk {
     content?: { parts?: { text?: string }[] };
     finishReason?: string;
   }[];
+  // Gemini incluye el conteo de tokens en los chunks (el último trae el total
+  // definitivo). `thoughtsTokenCount` son los tokens de razonamiento de los
+  // modelos con "thinking": se facturan como salida.
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    thoughtsTokenCount?: number;
+    totalTokenCount?: number;
+  };
   error?: { message?: string; status?: string };
 }
 
@@ -265,6 +407,7 @@ async function responderConGemini(
   systemPrompt: string,
   historial: Turno[],
   message: string,
+  registro: RegistroPregunta,
 ): Promise<Response> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -327,6 +470,8 @@ async function responderConGemini(
       const decoder = new TextDecoder();
       let buffer = "";
       let huboTexto = false;
+      // Último `usageMetadata` visto: Gemini lo repite y el final es el total.
+      let usage: GeminiChunk["usageMetadata"] | undefined;
       try {
         while (true) {
           const { done, value } = await reader.read();
@@ -346,6 +491,7 @@ async function responderConGemini(
               if (chunk.error) {
                 throw new Error(chunk.error.message || chunk.error.status || "Error de Gemini");
               }
+              if (chunk.usageMetadata) usage = chunk.usageMetadata;
               const texto = chunk.candidates?.[0]?.content?.parts?.[0]?.text;
               if (texto) {
                 huboTexto = true;
@@ -356,6 +502,20 @@ async function responderConGemini(
             }
           }
         }
+        const entrada = usage?.promptTokenCount ?? null;
+        const salida =
+          usage && (usage.candidatesTokenCount !== undefined || usage.thoughtsTokenCount !== undefined)
+            ? (usage.candidatesTokenCount ?? 0) + (usage.thoughtsTokenCount ?? 0)
+            : null;
+        const uso: UsoRespuesta = {
+          modelo: GEMINI_MODEL,
+          tokens_entrada: entrada,
+          tokens_salida: salida,
+          costo_usd_estimado: costoUsd(PRECIOS.gemini, entrada, salida),
+          estimado: true,
+        };
+        uso.registrada = await registrarPregunta(registro, uso);
+        controller.enqueue(trailerUso(uso));
         controller.close();
       } catch (err) {
         console.error("Error durante el streaming de Gemini:", err);

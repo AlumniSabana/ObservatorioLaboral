@@ -68,6 +68,54 @@ def _leer_historico_demanda() -> list[dict]:
 def invalidar_cache() -> None:
     """Fuerza la relectura en la próxima llamada (tras recolectar histórico)."""
     _cache.update(ts=0.0, rows=None)
+    _cache_descartados.update(ts=0.0, datos=None)
+
+
+# Cargos que `traducir_cargo` DESCARTA por estar en inglés sin traducción
+# (ver "DETECCIÓN AUTOMÁTICA DE TÍTULOS EN INGLÉS" en traducciones.py). Se
+# calcula bajo demanda sobre la misma muestra cacheada y se guarda aparte: el
+# Admin lo consulta para decidir qué añadir al diccionario `CARGOS`.
+_cache_descartados: dict[str, Any] = {"ts": 0.0, "datos": None}
+
+
+def cargos_descartados(top: int = 50) -> dict[str, Any]:
+    """Top de títulos canonizados que hoy no producen barra por estar en inglés.
+
+    Devuelve por cada uno cuántas vacantes lo traen, un título crudo de
+    ejemplo y los mercados donde aparece: es la lista de trabajo para curar
+    `traducciones.CARGOS`. Solo cuenta filas que pasan `coincide_con_keyword`,
+    igual que las gráficas.
+    """
+    from traducciones import canonizar_cargo
+
+    ahora = _time.time()
+    if _cache_descartados["datos"] is None or (ahora - _cache_descartados["ts"]) >= _TTL:
+        conteo: Counter = Counter()
+        ejemplo: dict[str, str] = {}
+        paises: dict[str, set] = {}
+        total = 0
+        for f in _leer_historico_demanda():
+            if not coincide_con_keyword(f.get("keyword"), f.get("title")):
+                continue
+            total += 1
+            n = normalize_title(f.get("title") or "")
+            if traducir_cargo(n) is not None:
+                continue
+            clave = canonizar_cargo(n) or n
+            conteo[clave] += 1
+            ejemplo.setdefault(clave, f.get("title") or "")
+            paises.setdefault(clave, set()).add(f.get("pais") or "?")
+        _cache_descartados.update(ts=ahora, datos={
+            "total_vacantes": total,
+            "descartadas": sum(conteo.values()),
+            "titulos_distintos": len(conteo),
+            "items": [
+                {"canonico": k, "vacantes": v, "ejemplo": ejemplo[k], "paises": sorted(paises[k])}
+                for k, v in conteo.most_common()
+            ],
+        })
+    d = _cache_descartados["datos"]
+    return {**d, "items": d["items"][:top]}
 
 
 # Nombres placeholder que algunas fuentes ponen cuando el empleador pidió

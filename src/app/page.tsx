@@ -22,6 +22,12 @@
 import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 import { SelectorFuentes, type FuenteOpcion as OpcionSelector } from '@/lib/selector-fuentes';
+import { SoloAdmin, authHeaders, useAuth } from '@/lib/auth';
+import {
+  PanelActualizacion,
+  MENSAJE_SESION_EXPIRADA,
+  type ResumenActualizacion,
+} from '@/lib/panel-actualizacion';
 import { SeccionDepartamentos } from '@/lib/seccion-departamentos';
 import { Spinner } from '@/lib/spinner';
 import { useState, useEffect, useMemo } from 'react';
@@ -320,6 +326,13 @@ export default function TendenciasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recolectando, setRecolectando] = useState(false);
+  // "Actualizar histórico" (solo Admin): resumen por fuente/zona de la última
+  // corrida, su error (aparte del error global, que vaciaría la página entera)
+  // y un contador que fuerza la recarga de tendencias y demanda al terminar.
+  const { logout } = useAuth();
+  const [resultadoActualizacion, setResultadoActualizacion] = useState<ResumenActualizacion | null>(null);
+  const [errorActualizacion, setErrorActualizacion] = useState<string | null>(null);
+  const [recarga, setRecarga] = useState(0);
   const [filtro, setFiltro] = useState<Tendencia | 'todas'>('todas');
   const [seleccionados, setSeleccionados] = useState<string[]>([]);
   // La tabla de detalle muestra solo las primeras filas; el resto se despliega.
@@ -377,18 +390,43 @@ export default function TendenciasPage() {
     }
   };
 
+  // "Actualizar histórico": recorre TODAS las fuentes y zonas (Adzuna ×5,
+  // Google Jobs, LinkedIn ×5), recalcula y devuelve un resumen por fuente
+  // (ver src/backend/Tendencias/actualizacion.py). Es un endpoint protegido:
+  // va con `authHeaders()`; un 401 significa que el token dejó de valer (p. ej.
+  // el backend se reinició sin AUTH_SECRET fijo) y se cierra la sesión local
+  // en vez de mostrar un error genérico.
+  //
+  // Al terminar con éxito se recargan las opciones (pueden aparecer fuentes
+  // nuevas) y se incrementa `recarga`, del que dependen los efectos de
+  // tendencias y demanda: así se vuelven a pedir con el estado ACTUAL de los
+  // filtros y todos los KPIs y las barras quedan al día.
   const recolectar = async () => {
     setRecolectando(true);
-    setError(null);
+    setErrorActualizacion(null);
     try {
       const r = await fetch(`${BACKEND_URL}/tendencias/recolectar?meses=24&presupuesto=250`, {
         method: 'POST',
+        headers: authHeaders(),
       });
-      if (!r.ok) throw new Error('Falló la recolección histórica');
+      if (r.status === 401) {
+        logout();
+        setErrorActualizacion(MENSAJE_SESION_EXPIRADA);
+        return;
+      }
+      const cuerpo = await r.json().catch(() => null);
+      if (r.status === 409) {
+        setErrorActualizacion('Ya hay una actualización del histórico en curso; espera a que termine.');
+        return;
+      }
+      if (!r.ok) {
+        throw new Error(cuerpo?.error || `Falló la actualización del histórico (HTTP ${r.status})`);
+      }
+      setResultadoActualizacion(cuerpo as ResumenActualizacion);
       await cargarOpciones();
-      await cargar(dimension, programa, seniority, desde, hasta, paisesSel);
+      setRecarga((v) => v + 1);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido');
+      setErrorActualizacion(e instanceof Error ? e.message : 'Error desconocido');
     } finally {
       setRecolectando(false);
     }
@@ -402,8 +440,16 @@ export default function TendenciasPage() {
       setOpciones(d);
       // Arranca con TODAS las fuentes combinadas. Se descartan las que no tienen
       // país (O*NET, informes): colarlas dejaba entradas vacías en `?paises=`.
-      const paises = (d.fuentes ?? []).map((f) => f.pais).filter(Boolean);
-      if (paises.length) setPaisesSel([...new Set(paises)]);
+      const paises = [...new Set((d.fuentes ?? []).map((f) => f.pais).filter(Boolean))];
+      // Solo se reemplaza el estado si el CONJUNTO cambió: un array nuevo con
+      // los mismos países dispararía otra vez todos los efectos que dependen
+      // de `paisesSel` (tendencias, demanda, salario) sin necesidad — y tras
+      // "Actualizar histórico" ya los relanza `recarga`.
+      if (paises.length) {
+        setPaisesSel((prev) =>
+          prev.length === paises.length && prev.every((p) => paises.includes(p)) ? prev : paises,
+        );
+      }
     } catch {
       // Sin opciones, los selectores quedan solo con 'TODOS': la página sigue usable.
     }
@@ -413,11 +459,13 @@ export default function TendenciasPage() {
     cargarOpciones();
   }, []);
 
+  // `recarga` no se usa dentro: está en las dependencias a propósito para
+  // volver a pedir los datos tras "Actualizar histórico".
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     cargar(dimension, programa, seniority, desde, hasta, paisesSel);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [dimension, programa, seniority, desde, hasta, paisesSel]);
+  }, [dimension, programa, seniority, desde, hasta, paisesSel, recarga]);
 
   // Demanda actual: usa los mismos filtros (programa, seniority, países) + Top N.
   // No depende de la dimensión ni del rango de fechas (es una foto, no una serie).
@@ -450,7 +498,7 @@ export default function TendenciasPage() {
     /* eslint-disable react-hooks/set-state-in-effect */
     cargarDemanda(programa, seniority, escolaridad, paisesSel, topN);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [programa, seniority, escolaridad, paisesSel, topN]);
+  }, [programa, seniority, escolaridad, paisesSel, topN, recarga]);
 
   // Salario: solo tiene sentido con un programa concreto (el endpoint sin
   // `programa` devuelve un resumen distinto, no un KPI puntual).
@@ -980,6 +1028,22 @@ export default function TendenciasPage() {
   // abajo dónde se usa.
   const hayTendencia = !!data && !data.meta.sin_datos && data.meta.total_terminos > 0;
 
+  // Panel de Administrador: fuentes consultadas + semáforo SerpApi + botón
+  // "Actualizar histórico" + resultado. Se pinta UNA vez, donde antes estaba
+  // el botón (abajo si hay tendencia; en el aviso de "sin historia" si no).
+  // <SoloAdmin> lo oculta al resto de usuarios.
+  const panelAdmin = (
+    <SoloAdmin>
+      <PanelActualizacion
+        onActualizar={recolectar}
+        actualizando={recolectando}
+        resultado={resultadoActualizacion}
+        errorActualizacion={errorActualizacion}
+        version={recarga}
+      />
+    </SoloAdmin>
+  );
+
   // -------------------------------------------------------------------------
   // Vista principal
   // -------------------------------------------------------------------------
@@ -1109,8 +1173,17 @@ export default function TendenciasPage() {
             'general' — ver el efecto que la resetea). ---------------- */}
         {vistaTendencias === 'general' && (
         <>
-        {/* ---------------- KPIs ---------------- */}
-        {hayTendencia && data && (
+        {/* ---------------- KPIs ----------------
+            Antes toda la fila estaba condicionada a `hayTendencia`, así que con
+            fuentes sin historia mensual (Google Jobs, LinkedIn) o justo después
+            de actualizar desaparecían los cinco KPIs — incluido "Vacantes
+            analizadas", que no depende de la tendencia sino de la demanda
+            actual, y que además salía en "—" mientras la demanda recargaba.
+            Ahora la fila se muestra siempre que haya respuesta de tendencias:
+            los conteos de tendencia valen 0 cuando no hay historia suficiente
+            (y el subtítulo lo dice), y "Vacantes analizadas" muestra el
+            indicador de carga en vez de "—". Ninguno se filtra. */}
+        {data && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             {/* Volumen crudo detrás del análisis. Va primero porque es la cifra
                 que da escala: los "cargos con tendencia" de al lado son solo
@@ -1121,9 +1194,15 @@ export default function TendenciasPage() {
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
                 Vacantes analizadas
               </p>
-              <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-                {demanda ? demanda.meta.total.toLocaleString('es-CO') : '—'}
-              </p>
+              {demandaLoading && !demanda ? (
+                <div className="mt-2">
+                  <Spinner size="sm" compact label="Contando..." />
+                </div>
+              ) : (
+                <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  {demanda ? demanda.meta.total.toLocaleString('es-CO') : '0'}
+                </p>
+              )}
               <p className="text-xs mt-1" style={{ color: 'var(--sabana-navy)' }}>
                 ofertas recolectadas
               </p>
@@ -1137,7 +1216,9 @@ export default function TendenciasPage() {
                 {data.meta.total_terminos}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--sabana-navy)' }}>
-                con suficiente historia en {periodos.length} meses
+                {hayTendencia
+                  ? `con suficiente historia en ${periodos.length} meses`
+                  : 'sin historia mensual suficiente todavía'}
               </p>
             </div>
 
@@ -1280,21 +1361,17 @@ export default function TendenciasPage() {
                 </p>
                 <p className="text-sm text-zinc-500 max-w-2xl mx-auto">
                   Una tendencia necesita varios meses de vacantes con su fecha de publicación real. El
-                  botón de abajo muestrea los últimos 24 meses en Adzuna (unas 250 llamadas) y calcula
-                  la serie. Se puede repetir sin duplicar datos.
+                  Administrador puede actualizar el histórico (todas las fuentes y zonas) desde su panel;
+                  se puede repetir sin duplicar datos.
                 </p>
-                <button
-                  onClick={recolectar}
-                  disabled={recolectando}
-                  className="px-6 py-2 rounded-lg font-semibold disabled:opacity-60"
-                  style={{ backgroundColor: 'var(--sabana-navy)', color: 'white', cursor: 'pointer' }}
-                >
-                  {recolectando ? 'Recolectando histórico...' : 'Recolectar histórico (24 meses)'}
-                </button>
               </>
             )}
           </div>
         )}
+
+        {/* El panel de actualización acompaña al aviso de "sin historia": es
+            justo cuando el Admin necesita recolectar. Solo lo ve el Admin. */}
+        {!hayTendencia && panelAdmin}
 
         {hayTendencia && data && (
           <>
@@ -1715,16 +1792,8 @@ export default function TendenciasPage() {
           )}
         </div>
 
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={recolectar}
-            disabled={recolectando}
-            className="px-6 py-2 rounded-lg font-semibold disabled:opacity-60"
-            style={{ backgroundColor: 'var(--sabana-navy)', color: 'white', cursor: 'pointer' }}
-          >
-            {recolectando ? 'Actualizando histórico...' : 'Actualizar histórico'}
-          </button>
-        </div>
+        {/* Panel de actualización (solo Admin) donde antes estaba el botón. */}
+        <div className="mt-8">{panelAdmin}</div>
           </>
         )}
       </PageLayout>

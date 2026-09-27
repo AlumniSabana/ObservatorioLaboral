@@ -46,6 +46,14 @@ from Tendencias.google_jobs_sync import sincronizar as sincronizar_google_jobs
 from Tendencias.linkedin_sync import sincronizar as sincronizar_linkedin
 from Tendencias.demanda_actual import demanda_actual, salario_vacantes_cop, invalidar_cache as invalidar_demanda
 from Tendencias.geografia import resumen_departamentos, invalidar_cache as invalidar_geografia
+# Módulo Admin de Tendencias: orquestador de "Actualizar histórico", estado de
+# las fuentes, semáforo de SerpApi y cargos descartados por estar en inglés.
+from Tendencias.actualizacion import actualizar_todo, estado_actualizacion, ActualizacionEnCurso
+from Tendencias.fuentes_estado import estado_fuentes
+from Tendencias.demanda_actual import cargos_descartados
+from GoogleJobs.serpapi_cuota import estado_cuota as estado_cuota_serpapi
+# Registro de preguntas al asistente (migración 011) y su resumen para el Admin.
+from Asistente import preguntas_service
 from Salarios.salarios_service import (
     salario_por_programa,
     resumen_salarios,
@@ -581,6 +589,51 @@ async def asistente_contexto():
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+class PreguntaAsistente(BaseModel):
+    pregunta: str
+    categoria: str | None = None      # perfil_ocupacional | analisis_salarial | cursos | competencias | empresas | otras
+    pagina: str | None = None         # título de la página (se deriva la categoría si falta)
+    sesion_id: str | None = None      # aleatorio del navegador, sin datos personales
+    modelo: str | None = None
+    tokens_entrada: int | None = None
+    tokens_salida: int | None = None
+    costo_usd_estimado: float | None = None
+
+
+@app.post("/asistente/preguntas")
+def asistente_registrar_pregunta(req: PreguntaAsistente):
+    """
+    Registra UNA pregunta hecha al asistente (la llama /api/chat de Next.js
+    desde el servidor, con los tokens y el costo estimado si el modelo los
+    devolvió). No guarda IP, correo ni identificador de persona: ver la
+    cabecera de migrations/011_preguntas_asistente.sql.
+
+    Abierto a propósito (no es Admin): lo invoca el flujo de cualquier usuario.
+    Si la migración 011 no está aplicada responde `guardada=false` sin error,
+    porque la analítica nunca debe romper el chat.
+    """
+    try:
+        return preguntas_service.registrar(req.model_dump())
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/asistente/preguntas/resumen", dependencies=[Depends(requiere_admin)])
+def asistente_resumen_preguntas(top: int = 10, dias: int | None = None):
+    """
+    Dashboard del Admin: preguntas más realizadas por categoría (Perfil
+    ocupacional, Análisis salarial, Cursos, Competencias, Empresas) y totales
+    de tokens/costo estimado. `dias` acota la ventana (por defecto, todo).
+    Sin la migración 011 responde `disponible=false` ("pendiente de aplicar…").
+    """
+    try:
+        return preguntas_service.resumen(top=max(1, min(top, 50)), dias=dias)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 @app.get("/linkedin/estado")
 async def linkedin_estado():
     """
@@ -864,32 +917,93 @@ def tendencias(
 
 @app.post("/tendencias/recolectar", dependencies=[Depends(requiere_admin)])
 def tendencias_recolectar(
-    meses: int = 24, presupuesto: int = 250, pais: str = "us", keywords_por_programa: int = 1
+    meses: int = 24,
+    presupuesto: int = 250,
+    pais: str | None = None,
+    keywords_por_programa: int = 1,
+    fuentes: str | None = None,
 ):
-    """Backfill histórico contra Adzuna y recálculo de la serie agregada.
+    """"Actualizar histórico": TODAS las fuentes y zonas, y recálculo.
 
-    Muestrea los últimos `meses` meses usando max_days_old + sort_direction=up
-    (ver Tendencias/historical_collector.py) sin gastar más de `presupuesto`
-    llamadas a la API. Luego reagrega todo en `tendencias_observaciones`.
+    Antes este endpoint solo hacía el backfill de Adzuna para `pais` (EE.UU.
+    por defecto). Ahora delega en Tendencias/actualizacion.py, que recorre
+    Adzuna (5 mercados), Google Jobs (co) y LinkedIn (co, mx, ar, cl, pe),
+    sincroniza, refresca ubicaciones y recalcula, y devuelve un resumen por
+    fuente/zona (estado, filas, llamadas, error, duración). Si una fuente
+    falla, sigue con la siguiente.
 
-    Es idempotente: se puede reejecutar para ampliar/refrescar la muestra.
+    Parámetros compatibles con la llamada del frontend: `meses` y
+    `presupuesto` conservan su significado para Adzuna (presupuesto de
+    llamadas POR MERCADO, como antes lo era para EE.UU.). `pais` limita
+    Adzuna a un mercado (compatibilidad); `fuentes` limita la corrida
+    ('adzuna,google_jobs,linkedin').
+
+    Reglas de seguridad: semáforo SerpApi antes de Google Jobs (429 = cupo
+    agotado, se aborta), LinkedIn requiere LINKEDIN_HABILITADO y aborta con
+    429, nunca se reintenta. Una sola corrida a la vez: 409 si ya hay una.
+    """
+    lista_fuentes = [f.strip() for f in fuentes.split(",") if f.strip()] if fuentes else None
+    try:
+        return actualizar_todo(
+            meses=meses,
+            presupuesto=presupuesto,
+            keywords_por_programa=keywords_por_programa,
+            fuentes=lista_fuentes,
+            pais_adzuna=pais,
+        )
+    except ActualizacionEnCurso as e:
+        return JSONResponse(status_code=409, content={"error": str(e), "estado": estado_actualizacion()})
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/tendencias/actualizacion/estado", dependencies=[Depends(requiere_admin)])
+def tendencias_actualizacion_estado():
+    """Si hay una actualización en curso y el resumen de la última (memoria del proceso).
+
+    Sirve para que la interfaz recupere el resultado si la petición larga de
+    `POST /tendencias/recolectar` se cortó por el camino.
+    """
+    return estado_actualizacion()
+
+
+@app.get("/tendencias/fuentes/estado", dependencies=[Depends(requiere_admin)])
+def tendencias_fuentes_estado():
+    """Última búsqueda por fuente/zona del catálogo y cuáles nunca se consultaron.
+
+    Se calcula desde los datos (`recolectado_en` de las tablas y
+    `muestreo_volumen.actualizado_en`), ver Tendencias/fuentes_estado.py.
+    Alimenta el bloque "Fuentes consultadas" del Admin en Tendencias.
     """
     try:
-        resumen = recolectar_historico(
-            meses_atras=meses,
-            presupuesto=presupuesto,
-            pais=pais,
-            keywords_por_programa=keywords_por_programa,
-        )
-        filas = leer_historico()
-        volumenes = leer_volumenes()
-        resumen["recalculo"] = recalcular_todo(filas, volumenes)
-        invalidar_demanda()  # el histórico cambió: refrescar las gráficas de demanda
-        invalidar_geografia()  # y el panel por departamento, que lee las tablas crudas
-        resumen["vacantes_historicas_totales"] = len(filas)
-        # La demanda por programa cambió: invalida el caché del ranking de skills.
-        limpiar_cache_skills()
-        return resumen
+        return estado_fuentes()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/tendencias/serpapi/estado", dependencies=[Depends(requiere_admin)])
+def tendencias_serpapi_estado():
+    """Semáforo de la cuota de SerpApi (Google Jobs). Solo lectura: NO consume búsquedas.
+
+    Regla y campos en GoogleJobs/serpapi_cuota.py. El cupo se renueva el día 19.
+    """
+    try:
+        return estado_cuota_serpapi()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/tendencias/cargos-descartados", dependencies=[Depends(requiere_admin)])
+def tendencias_cargos_descartados(top: int = 50):
+    """Títulos que la normalización descarta por estar en inglés sin traducción.
+
+    Lista de trabajo para curar `traducciones.CARGOS`: cuántas vacantes trae
+    cada uno, un ejemplo crudo y en qué mercados aparece.
+    """
+    try:
+        return cargos_descartados(top=max(1, min(top, 500)))
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 

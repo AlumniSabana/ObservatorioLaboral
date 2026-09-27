@@ -66,3 +66,6 @@ src/backend/ONet/_cache_perfil_onet.json
 # ...y la plantilla del .env del backend SI va al repo: sin ella nadie sabe que
 # variables hacen falta para levantar el backend (ver src/backend/.env.example).
 !src/backend/.env.example
+src/backend/Tendencias/_cache_ubicaciones.json
+# Uso local de búsquedas de SerpApi (respaldo del semáforo de cuota): estado operativo.
+src/backend/GoogleJobs/_uso_serpapi.json

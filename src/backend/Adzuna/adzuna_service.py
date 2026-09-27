@@ -431,7 +431,10 @@ def get_job_titles_with_normalization(jobs: List[Dict[str, Any]], top_n: int = 2
         # ruidosas de EE.UU. (p. ej. distintas "class a ... delivery driver ...")
         # bajo un mismo rol ("Conductor de reparto").
         cargo = traducir_cargo(normalize_title(original_title))
-        title_counter[cargo] += 1
+        # None = título en inglés sin traducción, descartado de la dimensión
+        # cargo (ver traducciones.py). La vacante sigue contando en el total.
+        if cargo:
+            title_counter[cargo] += 1
     
     # Mostrar estadísticas de normalización (debug)
     print(f"📊 Títulos originales únicos: {len(set(job.get('title', 'Sin título') for job in jobs))}")
