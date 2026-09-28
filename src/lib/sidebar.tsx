@@ -21,6 +21,7 @@ import {
   ClipboardList,
   MessagesSquare,
   FileText,
+  Info,
   LogIn,
   LogOut,
   ShieldCheck,
@@ -37,13 +38,17 @@ const navigationItems = [
   { href: '/perfil-ocupacional', label: 'Perfil ocupacional', icon: ClipboardList },
   { href: '/asistente', label: 'Empresas', icon: MessagesSquare },
   { href: '/informes', label: 'Informes', icon: FileText },
+  // Menú propio (decisión del usuario, 2026-09-28): antes vivía al pie de
+  // Informes, mezclado con el flujo de subir/curar PDFs. Es contenido
+  // informativo, no un análisis de datos, pero visible para AMBOS roles —
+  // por eso va aquí y no en el bloque de sesión de abajo.
+  { href: '/sobre', label: 'Sobre el observatorio', icon: Info },
 ];
 
 // Aparte del arreglo de arriba: no es una sección de datos sino el acceso de
 // sesión del Administrador, así que va separado visualmente al fondo del menú.
-// Ocupa el sitio que antes tenía "Sobre el observatorio" (ese texto vive ahora
-// al pie de Informes). Solo se muestra cuando NO hay sesión; con sesión, en su
-// lugar aparece "Administrador" + "Cerrar sesión" (ver el <nav> de abajo).
+// Solo se muestra cuando NO hay sesión; con sesión, en su lugar aparece
+// "Administrador" + "Cerrar sesión" (ver el <nav> de abajo).
 const iniciarSesion = { href: '/login', label: 'Iniciar sesión', icon: LogIn };
 
 // Un mismo botón de enlace para las secciones de datos y para "Iniciar

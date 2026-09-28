@@ -3,10 +3,11 @@
 /**
  * <SobreObservatorio /> — el texto institucional "qué es el Observatorio".
  *
- * Vive como componente (y no como página) porque se monta al pie de la
- * sección Informes; la antigua ruta /sobre dejó de existir cuando su lugar en
- * el menú pasó a ser el acceso de sesión. Es contenido estático, sin llamadas
- * al backend.
+ * Montado en la ruta /sobre (src/app/sobre/page.tsx), con su propio enlace en
+ * el menú lateral, visible para ambos roles (decisión del usuario,
+ * 2026-09-28). Antes vivía al pie de la página de Informes; se sacó de ahí
+ * porque es contenido informativo, no parte del flujo de informes. Es
+ * contenido estático, sin llamadas al backend.
  *
  * Diseño: ancho completo de la página (sin max-w) y tarjetas en dos columnas
  * a partir de `xl`; por debajo, una sola — la barra lateral fija se lleva

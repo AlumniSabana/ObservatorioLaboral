@@ -22,12 +22,13 @@
  * esta carpeta. Mientras useAuth aún no leyó localStorage se muestra un
  * spinner, para no pintar la vista de Usuario y luego saltar a la de Admin.
  *
- * Al pie va siempre "Sobre el observatorio", en ambas vistas.
+ * "Sobre el observatorio" tiene su propio enlace en el menú (ruta /sobre,
+ * decisión del usuario 2026-09-28): antes se montaba al pie de esta página,
+ * pero es contenido informativo ajeno al flujo de informes, así que se sacó.
  */
 
 import { PageLayout } from '@/lib/sidebar';
 import { Spinner } from '@/lib/spinner';
-import { SobreObservatorio } from '@/lib/sobre-observatorio';
 import { useAuth } from '@/lib/auth';
 import { VistaAdmin } from './vista-admin';
 import { VistaUsuario } from './vista-usuario';
@@ -38,17 +39,6 @@ export default function InformesPage() {
   return (
     <PageLayout title="Informes">
       {cargando ? <Spinner label="Cargando…" /> : esAdmin ? <VistaAdmin /> : <VistaUsuario />}
-
-      {/* ---------------- Sobre el observatorio ----------------
-          Texto institucional al pie de Informes (antes tenía página propia).
-          Lo estila el Equipo 1 dentro de su componente; esta página solo lo
-          monta y debe seguir montándolo en la vista Admin y en la de Usuario. */}
-      <section className="mt-12 pt-8 border-t" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--sabana-dark-navy)' }}>
-          Sobre el observatorio
-        </h2>
-        <SobreObservatorio />
-      </section>
     </PageLayout>
   );
 }
