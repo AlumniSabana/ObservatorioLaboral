@@ -5,14 +5,17 @@
  *
  *   1. SUBIR   -> POST /informes/extraer lee el PDF y propone los datos. No
  *                 guarda nada todavía.
- *   2. REVISAR -> el usuario confirma o corrige título, editor y año, y ve cada
- *                 skill con su página y su cita, para poder rastrearla hasta el
- *                 documento. Al guardar (POST /informes) queda en 'borrador'.
+ *   2. REVISAR -> el Administrador confirma o corrige título, editor y año, y
+ *                 ve cada skill con su página y su cita, para poder rastrearla
+ *                 hasta el documento. Al guardar (POST /informes) queda en
+ *                 'borrador'.
  *
- * Es el MISMO componente para el Admin y para el Usuario (ambos endpoints están
- * abiertos a propósito: cualquiera puede subir un PDF). Lo que cambia con
- * `modo` es el texto: al Usuario se le dice que el informe queda pendiente de
- * validación por el Administrador; al Admin, que lo valide él.
+ * SOLO ADMIN: el Usuario no puede subir nada (decisión del usuario, sesión
+ * 2026-09-27) — su vista es un catálogo de solo lectura de lo que el
+ * Administrador ya subió y validó. Antes este componente también lo montaba
+ * `vista-usuario.tsx`; los dos endpoints (`/informes/extraer`, `POST
+ * /informes`) ahora exigen `requiere_admin` en el backend, así que manda
+ * `authHeaders()` y trata 401/403 igual que el resto de acciones de Admin.
  *
  * REACTIVACIÓN: si el backend devuelve `reactiva`, el PDF corresponde a un
  * informe RETIRADO. Se muestra un aviso y al guardar ese registro se reactiva
@@ -22,29 +25,30 @@
 
 import { useRef, useState } from 'react';
 import { Upload, RefreshCw } from 'lucide-react';
+import { authHeaders, useAuth } from '@/lib/auth';
 import type { Borrador, ResultadoGuardado } from './comun';
 import {
   BACKEND_URL,
   CLASE_CAMPO,
   CLASE_ETIQUETA,
   ESTILO_CAMPO,
+  errorDeRespuesta,
   etiquetaInforme,
 } from './comun';
 
 export function SubirInforme({
-  modo,
   numerar = true,
   onGuardado,
   onDuplicado,
 }: {
-  modo: 'admin' | 'usuario';
-  /** "1. Subir informe" / "2. Revisar…" (Admin) o sin numeración (Usuario). */
+  /** "1. Subir informe" / "2. Revisar…"; false = sin numeración. */
   numerar?: boolean;
-  /** Se llama tras guardar con éxito (el padre recarga su lista / recuerda el id). */
+  /** Se llama tras guardar con éxito (el padre recarga su catálogo). */
   onGuardado: (r: ResultadoGuardado) => void | Promise<void>;
   /** El backend rechazó el PDF por estar ya ingerido: el padre puede refrescar su catálogo. */
   onDuplicado?: () => void | Promise<void>;
 }) {
+  const { logout } = useAuth();
   const [borrador, setBorrador] = useState<Borrador | null>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,9 +69,16 @@ export function SubirInforme({
     try {
       const fd = new FormData();
       fd.append('file', archivo);
-      const r = await fetch(`${BACKEND_URL}/informes/extraer`, { method: 'POST', body: fd });
+      const r = await fetch(`${BACKEND_URL}/informes/extraer`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: fd,
+      });
+      if (!r.ok) {
+        // 401/403 tienen forma {detail}, no {error}: errorDeRespuesta ya lee ambas.
+        throw new Error(await errorDeRespuesta(r, logout));
+      }
       const d = await r.json();
-      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
 
       setBorrador(d);
       const m = d.metadatos_sugeridos ?? {};
@@ -99,7 +110,7 @@ export function SubirInforme({
     try {
       const r = await fetch(`${BACKEND_URL}/informes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           catalogo: {
             titulo: titulo.trim(),
@@ -113,17 +124,13 @@ export function SubirInforme({
           items: borrador.items,
         }),
       });
-      const d: ResultadoGuardado & { error?: string } = await r.json();
-      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      if (!r.ok) throw new Error(await errorDeRespuesta(r, logout));
+      const d: ResultadoGuardado = await r.json();
 
       const base = d.reactivado
         ? `Informe reactivado con ${d.observaciones} skills (vuelve a borrador).`
         : `Guardado como borrador (${d.observaciones} skills).`;
-      setAviso(
-        modo === 'admin'
-          ? `${base} Valídalo para usarlo como fuente.`
-          : `${base} Queda pendiente de validación por el Administrador; lo verás abajo en "Mis informes".`,
-      );
+      setAviso(`${base} Valídalo para que aparezca en el catálogo del Usuario.`);
       setBorrador(null);
       await onGuardado(d);
     } catch (e) {
@@ -171,10 +178,8 @@ export function SubirInforme({
         </button>
         <p className="text-xs mt-2" style={{ color: 'var(--sabana-black-50)' }}>
           El PDF debe tener texto seleccionable. Para informes escaneados hay que configurar
-          Google Document AI en el backend.
-          {modo === 'usuario' && (
-            <> Solo se guardan las skills detectadas y los metadatos del informe, no el archivo.</>
-          )}
+          Google Document AI en el backend. Solo se guardan las skills detectadas y los metadatos
+          del informe, no el archivo.
         </p>
       </div>
 

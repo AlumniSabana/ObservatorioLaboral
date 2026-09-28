@@ -168,45 +168,6 @@ export interface SimilaresResp {
   n_candidatos: number;
 }
 
-// ── "Mis informes" del Usuario ─────────────────────────────────────────────
-//
-// El Usuario no tiene login (decisión del Tech Lead), así que "sus" informes
-// son los que se registraron desde ESTE navegador: al guardar uno se anota su
-// id en localStorage. Limitación asumida: otro navegador u otro equipo no los
-// verá, y borrar los datos del sitio los olvida (los informes siguen en el
-// catálogo del Observatorio; solo se pierde el vínculo local).
-
-export const MIS_INFORMES_KEY = 'observatorio_mis_informes';
-
-export function leerMisInformes(): string[] {
-  try {
-    if (typeof window === 'undefined') return [];
-    const crudo = window.localStorage.getItem(MIS_INFORMES_KEY);
-    const lista = crudo ? JSON.parse(crudo) : [];
-    return Array.isArray(lista) ? lista.filter((x) => typeof x === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-function escribirMisInformes(ids: string[]) {
-  try {
-    window.localStorage.setItem(MIS_INFORMES_KEY, JSON.stringify(ids));
-  } catch {
-    /* modo privado o storage bloqueado: el vínculo dura lo que dure la página */
-  }
-}
-
-export function recordarMiInforme(id: string) {
-  const actuales = leerMisInformes();
-  // El más reciente primero; sin duplicados (re-subir un retirado conserva el id).
-  escribirMisInformes([id, ...actuales.filter((x) => x !== id)]);
-}
-
-export function olvidarMiInforme(id: string) {
-  escribirMisInformes(leerMisInformes().filter((x) => x !== id));
-}
-
 // ── Errores de endpoints protegidos ────────────────────────────────────────
 
 export const MENSAJE_SESION_EXPIRADA = 'La sesión de Administrador expiró, vuelve a iniciar sesión.';

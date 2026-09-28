@@ -11,8 +11,9 @@
  *
  * Los botones de curación e insights van dentro de <SoloAdmin> y mandan
  * `authHeaders()`: ocultarlos es cortesía de interfaz, la seguridad la pone el
- * backend en cada endpoint protegido. Subir y revisar (SubirInforme) NO se
- * protege: cualquier visitante puede aportar un PDF (queda en borrador).
+ * backend en cada endpoint protegido. Subir y revisar (SubirInforme) también
+ * requiere sesión desde el 2026-09-27: el Usuario pasó a ser un catálogo de
+ * solo lectura (ver vista-usuario.tsx), así que solo el Admin aporta PDFs.
  */
 
 import { useEffect, useState } from 'react';
@@ -153,8 +154,8 @@ export function VistaAdmin() {
 
       {error && <div className="rounded-lg p-3 bg-red-50 text-red-700 text-sm">{error}</div>}
 
-      {/* ---------- Pasos 1 y 2: subir y revisar ---------- */}
-      <SubirInforme modo="admin" onGuardado={cargarInformes} onDuplicado={cargarInformes} />
+      {/* ---------- Pasos 1 y 2: subir y revisar (solo Admin; ver subir-informe.tsx) ---------- */}
+      <SubirInforme onGuardado={cargarInformes} onDuplicado={cargarInformes} />
 
       {/* ---------- Paso 3: catálogo y validación ---------- */}
       <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">

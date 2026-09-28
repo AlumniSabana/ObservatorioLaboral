@@ -235,12 +235,17 @@ class InformeGuardar(BaseModel):
     items: list
 
 
-@app.post("/informes/extraer")
+@app.post("/informes/extraer", dependencies=[Depends(requiere_admin)])
 async def informes_extraer(file: UploadFile = File(...)):
     """
     Extrae las skills de un informe PDF y las VERIFICA contra el texto del propio
     documento (cada cifra debe traer una cita literal localizable). No guarda nada:
-    devuelve un borrador para que el usuario lo revise.
+    devuelve un borrador para que el Administrador lo revise.
+
+    Solo Admin: antes cualquier visitante podía subir un PDF; el usuario pidió
+    que la vista de Usuario sea de solo lectura (catálogo de lo que el
+    Administrador ya subió y validó), así que subir/revisar pasa a requerir
+    sesión igual que validar/retirar/eliminar.
     """
     try:
         from Informes.informe_extractor import procesar_pdf
@@ -268,7 +273,7 @@ async def informes_extraer(file: UploadFile = File(...)):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.post("/informes")
+@app.post("/informes", dependencies=[Depends(requiere_admin)])
 async def informes_guardar(req: InformeGuardar):
     """
     Persiste el informe revisado (queda en estado 'borrador'). Si el PDF
