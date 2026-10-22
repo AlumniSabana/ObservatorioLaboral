@@ -19,10 +19,11 @@
 
 import { PageLayout } from '@/lib/sidebar';
 import { AssistantContent } from '@/lib/markdown';
-import { SoloAdmin, useAuth } from '@/lib/auth';
-import { DashboardPreguntas, type CostoSesion } from '@/lib/dashboard-preguntas';
-import { obtenerSesionId, separarUso, formatearUsd, formatearTokens, type UsoRespuesta } from '@/lib/chat-sesion';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useAuth } from '@/lib/auth';
+import { Spinner } from '@/lib/spinner';
+import { DashboardPreguntas } from '@/lib/dashboard-preguntas';
+import { obtenerSesionId, separarUso, type UsoRespuesta } from '@/lib/chat-sesion';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Send } from 'lucide-react';
 
@@ -32,8 +33,8 @@ interface Mensaje {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  // Tokens y costo estimado de la respuesta (tráiler de uso de /api/chat, ver
-  // src/lib/chat-sesion.ts). Solo se muestran al Administrador.
+  // Tokens y costo de la respuesta (tráiler de uso de /api/chat, ver
+  // src/lib/chat-sesion.ts); solo se usa para registrar la pregunta.
   uso?: UsoRespuesta | null;
 }
 
@@ -73,29 +74,11 @@ const SECTORES_SUGERIDOS = [
 const preguntaPorSector = (sector: string) =>
   `¿Qué empresas lideran la contratación en el sector de ${sector} y cómo es el clima laboral y las oportunidades de ascenso en ese sector?`;
 
-export default function AsistentePage() {
-  const { esAdmin } = useAuth();
+function ChatEmpresas() {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [entrada, setEntrada] = useState('');
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Panel de administración (costo de la sesión + preguntas más realizadas).
-  // Cerrado por defecto para no quitarle espacio a la conversación.
-  const [panelAbierto, setPanelAbierto] = useState(false);
-
-  // Costo acumulado de ESTA sesión, sumando el tráiler de uso de cada respuesta.
-  const costoSesion: CostoSesion = useMemo(() => {
-    const respuestas = mensajes.filter((m) => m.role === 'assistant');
-    const conUso = respuestas.filter((m) => m.uso);
-    return {
-      preguntas: respuestas.length,
-      conTokens: conUso.filter((m) => m.uso?.tokens_salida !== null).length,
-      tokensEntrada: conUso.reduce((acc, m) => acc + (m.uso?.tokens_entrada ?? 0), 0),
-      tokensSalida: conUso.reduce((acc, m) => acc + (m.uso?.tokens_salida ?? 0), 0),
-      costoUsd: conUso.reduce((acc, m) => acc + (m.uso?.costo_usd_estimado ?? 0), 0),
-    };
-  }, [mensajes]);
-
   const finRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   // Se guarda la PROMESA del contexto, no solo su valor: armarlo en el backend
@@ -209,27 +192,7 @@ export default function AsistentePage() {
   };
 
   return (
-    <PageLayout title="Empresas">
-      {/* ---------- Panel de administración (solo Admin) ----------
-          Costo estimado de la sesión y preguntas más realizadas por sección.
-          Es información operativa: el usuario final no lo ve. */}
-      <SoloAdmin>
-        <div className="flex justify-end mb-2">
-          <button
-            type="button"
-            onClick={() => setPanelAbierto((v) => !v)}
-            className="text-xs font-semibold underline cursor-pointer"
-            style={{ color: 'var(--sabana-navy)' }}
-            aria-expanded={panelAbierto}
-          >
-            {panelAbierto
-              ? 'Ocultar panel de administración'
-              : `Panel de administración: preguntas y costos (sesión: ${formatearUsd(costoSesion.costoUsd)})`}
-          </button>
-        </div>
-        {panelAbierto && <DashboardPreguntas sesion={costoSesion} />}
-      </SoloAdmin>
-
+    <>
       {/* `height` fijo (no `minHeight`): así el hijo "Conversación" puede tener
           `overflow-y-auto` y hacer scroll DENTRO de su propio recuadro en vez de
           estirar la página entera a medida que se generan mensajes. Con
@@ -344,18 +307,7 @@ export default function AsistentePage() {
                 }
               >
                 {m.role === 'assistant' ? (
-                  <>
-                    <AssistantContent content={m.content} />
-                    {/* Costo por pregunta: información operativa, solo Admin. */}
-                    {esAdmin && m.uso && (
-                      <p className="text-[11px] mt-2" style={{ color: 'var(--sabana-black-50)' }}
-                        title="Estimado con los precios configurados en el servidor; no es la factura.">
-                        ≈ {formatearUsd(m.uso.costo_usd_estimado)} · {formatearTokens(m.uso.tokens_entrada)} tokens de entrada ·{' '}
-                        {formatearTokens(m.uso.tokens_salida)} de salida · {m.uso.modelo} · estimado
-                        {m.uso.registrada === false ? ' · no registrada (¿migración 011?)' : ''}
-                      </p>
-                    )}
-                  </>
+                  <AssistantContent content={m.content} />
                 ) : (
                   <span className="whitespace-pre-wrap">{m.content}</span>
                 )}
@@ -420,6 +372,18 @@ export default function AsistentePage() {
           </p>
         </div>
       </div>
+    </>
+  );
+}
+
+// El Admin no conversa con el asistente: ve el resumen de uso de TODOS los
+// usuarios (decisión del usuario, 2026-10-22). Se espera a `cargando` para no
+// montar el chat (y pedir su contexto) un instante antes de saber el rol.
+export default function AsistentePage() {
+  const { esAdmin, cargando } = useAuth();
+  return (
+    <PageLayout title="Empresas">
+      {cargando ? <Spinner label="Cargando…" /> : esAdmin ? <DashboardPreguntas /> : <ChatEmpresas />}
     </PageLayout>
   );
 }

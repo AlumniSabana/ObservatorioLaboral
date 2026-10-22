@@ -28,6 +28,7 @@ import {
   MENSAJE_SESION_EXPIRADA,
   type ResumenActualizacion,
 } from '@/lib/panel-actualizacion';
+import { InformeGeneral } from '@/lib/informe-general';
 import { SeccionDepartamentos } from '@/lib/seccion-departamentos';
 import { Spinner } from '@/lib/spinner';
 import { useState, useEffect, useMemo } from 'react';
@@ -1034,6 +1035,7 @@ export default function TendenciasPage() {
   // <SoloAdmin> lo oculta al resto de usuarios.
   const panelAdmin = (
     <SoloAdmin>
+      <InformeGeneral />
       <PanelActualizacion
         onActualizar={recolectar}
         actualizando={recolectando}

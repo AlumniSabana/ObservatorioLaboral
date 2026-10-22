@@ -23,12 +23,12 @@ const LINK_TEST_PERFIL =
   '&gad_campaignid=23301191485&gbraid=0AAAABCDT4dz_AJ2DcVsdg4z10eimSvk6X';
 
 // Paleta Sabana en hex literal (el PDF no ve las CSS vars).
-const NAVY = '#002058';
-const NAVY2 = '#003870';
-const LIGHT = '#93aac9';
-const SKY = '#d9e1ef';
-const CREAM = '#f7e6d9';
-const GRAY = '#64748b';
+export const NAVY = '#002058';
+export const NAVY2 = '#003870';
+export const LIGHT = '#93aac9';
+export const SKY = '#d9e1ef';
+export const CREAM = '#f7e6d9';
+export const GRAY = '#64748b';
 
 // Estructura mínima que consume el PDF (subconjunto del Perfil del backend).
 interface PerfilPDF {
@@ -283,14 +283,14 @@ export function generarPerfilPDF(data: PerfilPDF): void {
 }
 
 // ── utilidades puras ───────────────────────────────────────────────────────
-function rgb(hex: string): [number, number, number] {
+export function rgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
-function cortar(s: string, n: number): string {
+export function cortar(s: string, n: number): string {
   return s.length > n ? s.slice(0, n - 1) + '…' : s;
 }
-function fechaHoy(): string {
+export function fechaHoy(): string {
   const d = new Date();
   return d.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
 }

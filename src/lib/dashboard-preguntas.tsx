@@ -3,14 +3,11 @@
 /**
  * <DashboardPreguntas /> — panel de Administrador de la página Empresas.
  *
- * Muestra dos cosas que son información OPERATIVA (decisión del Tech Lead:
- * solo el Admin las ve, el usuario final no necesita saber cuánto cuesta su
- * pregunta):
+ * Resume el uso del asistente de TODOS los usuarios (no el de la sesión del
+ * Admin, que ya no tiene chat en Empresas). Es información OPERATIVA: solo el
+ * Admin la ve, el usuario final no necesita saber cuánto cuesta su pregunta.
  *
- *   1. COSTO DE LA SESIÓN ACTUAL: preguntas, tokens y USD estimados de la
- *      conversación abierta en esta pestaña. Se calcula en el navegador con
- *      el tráiler de uso que devuelve /api/chat (ver src/lib/chat-sesion.ts).
- *   2. PREGUNTAS MÁS REALIZADAS por categoría (Perfil ocupacional, Análisis
+ *   - TOTALES y COSTO histórico, y PREGUNTAS MÁS REALIZADAS por categoría (Perfil ocupacional, Análisis
  *      salarial, Cursos, Competencias, Empresas) con totales, desde
  *      GET /asistente/preguntas/resumen. Si la tabla no existe todavía, el
  *      backend responde `disponible=false` y aquí se dice "pendiente de
@@ -29,14 +26,6 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:800
 
 export const MENSAJE_SESION_EXPIRADA =
   'La sesión de Administrador expiró, vuelve a iniciar sesión.';
-
-export interface CostoSesion {
-  preguntas: number;
-  conTokens: number;
-  tokensEntrada: number;
-  tokensSalida: number;
-  costoUsd: number;
-}
 
 interface Categoria {
   categoria: string;
@@ -68,7 +57,7 @@ interface Resumen {
   nota?: string;
 }
 
-export function DashboardPreguntas({ sesion }: { sesion: CostoSesion }) {
+export function DashboardPreguntas() {
   const { logout } = useAuth();
   const [datos, setDatos] = useState<Resumen | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -107,7 +96,7 @@ export function DashboardPreguntas({ sesion }: { sesion: CostoSesion }) {
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
         <h3 className="font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
-          Uso del asistente (Administrador)
+          Uso del asistente — todos los usuarios
         </h3>
         <button
           onClick={cargar}
@@ -117,27 +106,6 @@ export function DashboardPreguntas({ sesion }: { sesion: CostoSesion }) {
           Actualizar
         </button>
       </div>
-
-      {/* ---------------- Sesión actual ---------------- */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        {[
-          { t: 'Preguntas en esta sesión', v: String(sesion.preguntas) },
-          { t: 'Tokens de entrada', v: formatearTokens(sesion.tokensEntrada) },
-          { t: 'Tokens de salida', v: formatearTokens(sesion.tokensSalida) },
-          { t: 'Costo estimado de la sesión', v: formatearUsd(sesion.costoUsd) },
-        ].map((k) => (
-          <div key={k.t} className="rounded-lg p-3" style={{ backgroundColor: 'var(--sabana-sky-blue)' }}>
-            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>{k.t}</p>
-            <p className="text-xl font-bold mt-0.5" style={{ color: 'var(--sabana-dark-navy)' }}>{k.v}</p>
-          </div>
-        ))}
-      </div>
-      <p className="text-xs text-zinc-500 mb-4">
-        Estimado con los precios configurados en el servidor (GEMINI_USD_POR_1M_ENTRADA / _SALIDA); no es la
-        factura. {sesion.conTokens < sesion.preguntas && sesion.preguntas > 0
-          ? `${sesion.preguntas - sesion.conTokens} pregunta(s) sin conteo de tokens del modelo.`
-          : ''}
-      </p>
 
       {/* ---------------- Histórico por categoría ---------------- */}
       {aviso && <div className="rounded-lg p-3 mb-3 bg-amber-50 text-amber-900" role="status">{aviso}</div>}
@@ -152,11 +120,22 @@ export function DashboardPreguntas({ sesion }: { sesion: CostoSesion }) {
         </div>
       ) : datos && datos.totales ? (
         <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {[
+              { t: 'Preguntas', v: datos.totales.preguntas.toLocaleString('es-CO') },
+              { t: 'Sesiones', v: datos.totales.sesiones.toLocaleString('es-CO') },
+              { t: 'Tokens (entrada / salida)', v: `${formatearTokens(datos.totales.tokens_entrada)} / ${formatearTokens(datos.totales.tokens_salida)}` },
+              { t: 'Costo estimado total', v: formatearUsd(datos.totales.costo_usd_estimado) },
+            ].map((k) => (
+              <div key={k.t} className="rounded-lg p-3" style={{ backgroundColor: 'var(--sabana-sky-blue)' }}>
+                <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>{k.t}</p>
+                <p className="text-xl font-bold mt-0.5" style={{ color: 'var(--sabana-dark-navy)' }}>{k.v}</p>
+              </div>
+            ))}
+          </div>
           <p className="text-xs text-zinc-600 mb-3">
-            Histórico registrado: <b>{datos.totales.preguntas.toLocaleString('es-CO')}</b> preguntas en{' '}
-            <b>{datos.totales.sesiones.toLocaleString('es-CO')}</b> sesiones · costo estimado total{' '}
-            <b>{formatearUsd(datos.totales.costo_usd_estimado)}</b>
-            {datos.totales.costo_usd_por_sesion !== null && ` · ${formatearUsd(datos.totales.costo_usd_por_sesion)} por sesión`}
+            Costo medio:
+            {datos.totales.costo_usd_por_sesion !== null && ` ${formatearUsd(datos.totales.costo_usd_por_sesion)} por sesión`}
             {datos.totales.costo_usd_por_pregunta !== null && ` · ${formatearUsd(datos.totales.costo_usd_por_pregunta)} por pregunta`}
             {' '}· modelos: {Object.entries(datos.totales.modelos).map(([m, n]) => `${m} (${n})`).join(', ') || '—'}
           </p>
