@@ -356,7 +356,7 @@ export default function SalariesPage() {
               {ole?.sabana && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
                   <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
-                    Egresados de La Sabana — OLE, MinEducación {ole.anio_corte}
+                    Graduados de La Sabana — OLE, MinEducación {ole.anio_corte}
                   </h3>
                   <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
                     Ingreso de los <b>{ole.sabana.graduados.toLocaleString('es-CO')}</b> graduados de{' '}
@@ -668,7 +668,7 @@ export default function SalariesPage() {
               `P75 ${fmtCOP(analisis.kpis.p75)}, N=${analisis.kpis.n}. ` +
               `Rango SPE de la mediana: ${analisis.rango_spe?.rango ?? 'N/A'}.` +
               (ole?.sabana
-                ? ` OLE MinEducación ${ole.anio_corte}: ${ole.sabana.graduados} egresados de La Sabana ` +
+                ? ` OLE MinEducación ${ole.anio_corte}: ${ole.sabana.graduados} Graduados de La Sabana ` +
                   `cotizantes, mediana estimada ${medianaOle(ole.sabana)}` +
                   (ole.sabana.mediana_cop ? ` (${fmtCOP(ole.sabana.mediana_cop)})` : '') +
                   `, ${ole.sabana.pct_sobre_4smmlv}% sobre 4 SMMLV` +
