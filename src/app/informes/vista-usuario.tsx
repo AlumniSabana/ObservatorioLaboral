@@ -54,6 +54,7 @@ import type {
 } from './comun';
 import { BACKEND_URL, etiquetaInforme } from './comun';
 import { GraficasInforme } from './graficas-informe';
+import { cachedFetch } from '@/lib/cache-api';
 
 // ── Piezas compartidas ───────────────────────────────────────────────────────
 
@@ -154,11 +155,11 @@ function DetalleInforme({
     setConjuntosAbierto(false);
 
     const idUrl = encodeURIComponent(informe.id);
-    fetch(`${BACKEND_URL}/informes/${idUrl}/detalle`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    cachedFetch(`${BACKEND_URL}/informes/${idUrl}/detalle`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
       .then((d) => vivo && setDetalle(d));
-    fetch(`${BACKEND_URL}/informes/insights-generados?informe_id=${idUrl}&tipo=individual`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    cachedFetch(`${BACKEND_URL}/informes/insights-generados?informe_id=${idUrl}&tipo=individual`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
       .then((d) => vivo && setInsights(d));
-    fetch(`${BACKEND_URL}/informes/${idUrl}/similares`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    cachedFetch(`${BACKEND_URL}/informes/${idUrl}/similares`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
       .then((d) => vivo && setSimilares(d));
 
     return () => { vivo = false; };
@@ -168,7 +169,7 @@ function DetalleInforme({
     setConjuntosAbierto((v) => !v);
     if (conjuntos !== null) return; // ya se pidió para este informe
     const idUrl = encodeURIComponent(informe.id);
-    const d = await fetch(`${BACKEND_URL}/informes/insights-generados?informe_id=${idUrl}&tipo=conjunto`)
+    const d = await cachedFetch(`${BACKEND_URL}/informes/insights-generados?informe_id=${idUrl}&tipo=conjunto`)
       .then((r) => (r.ok ? r.json() : null)).catch(() => null);
     setConjuntos(d);
   };
@@ -284,7 +285,7 @@ export function VistaUsuario() {
       // Solo VALIDADOS: es el catálogo público del Observatorio, lo que el
       // Administrador ya revisó y aprobó como fuente. Un borrador (recién
       // subido, sin revisar) o un retirado no se muestran aquí.
-      const r = await fetch(`${BACKEND_URL}/informes?estado=validado`);
+      const r = await cachedFetch(`${BACKEND_URL}/informes?estado=validado`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
       setCatalogo(d.informes ?? []);

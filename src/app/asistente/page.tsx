@@ -26,6 +26,7 @@ import { obtenerSesionId, separarUso, type UsoRespuesta } from '@/lib/chat-sesio
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Send } from 'lucide-react';
+import { cachedFetch } from '@/lib/cache-api';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
@@ -94,7 +95,7 @@ function ChatEmpresas() {
   useEffect(() => {
     contextoRef.current = (async () => {
       try {
-        const r = await fetch(`${BACKEND_URL}/asistente/contexto`);
+        const r = await cachedFetch(`${BACKEND_URL}/asistente/contexto`);
         if (!r.ok) return '';
         const d = await r.json();
         return (d.contexto as string) ?? '';

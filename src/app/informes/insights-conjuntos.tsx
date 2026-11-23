@@ -31,6 +31,7 @@ import type {
   InsightsGeneradosResp,
 } from './comun';
 import { BACKEND_URL, errorDeRespuesta, etiquetaInforme, formatearFecha } from './comun';
+import { limpiarCache } from '@/lib/cache-api';
 
 const claveGrupo = (g: GrupoCandidato) => [...g.informe_ids].sort().join('|');
 
@@ -98,6 +99,7 @@ export function InsightsConjuntos({ abierto }: { abierto: boolean }) {
         body: JSON.stringify({ informe_ids: g.informe_ids, motivo_grupo: g.motivo }),
       });
       if (!r.ok) throw new Error(await errorDeRespuesta(r, logout));
+      limpiarCache();
       setResultado(await r.json());
       await cargarHistorico();
     } catch (e) {

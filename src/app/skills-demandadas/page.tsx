@@ -30,6 +30,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
+import { cachedFetch } from '@/lib/cache-api';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
@@ -256,7 +257,7 @@ export default function SkillsDemandadasPage() {
       url.searchParams.set('paises', pais.join(','));
       // Traemos un abanico amplio para poder elegir; se dibujan solo unas pocas.
       url.searchParams.set('top', String(EVOL_DISPONIBLES));
-      const r = await fetch(url);
+      const r = await cachedFetch(url);
       const d: Evolucion | null = r.ok ? await r.json() : null;
       if (mi !== seqEvolucion.current) return;
       setEvolucion(d);
@@ -292,7 +293,7 @@ export default function SkillsDemandadasPage() {
       url.searchParams.set('seniority', sen);
       url.searchParams.set('paises', pais.join(','));
       url.searchParams.set('top', '25');
-      const r = await fetch(url);
+      const r = await cachedFetch(url);
       if (!r.ok) throw new Error('No se pudo cargar el ranking de skills');
       const d = await r.json();
       if (mi === seqRanking.current) setData(d);
@@ -305,7 +306,7 @@ export default function SkillsDemandadasPage() {
 
   useEffect(() => {
     // Reutiliza el endpoint de opciones de tendencias (mismos programas/seniority/fuentes).
-    fetch(`${BACKEND_URL}/tendencias/opciones`)
+    cachedFetch(`${BACKEND_URL}/tendencias/opciones`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d) return;
@@ -341,7 +342,7 @@ export default function SkillsDemandadasPage() {
     url.searchParams.set('programa', programa);
     url.searchParams.set('tipo', tipo);
     url.searchParams.set('top', '20');
-    fetch(url)
+    cachedFetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setDataSpe(d && !d.sin_datos ? d : null))
       .catch(() => setDataSpe(null));
@@ -362,7 +363,7 @@ export default function SkillsDemandadasPage() {
     // El CNO separa "habilidades" de "conocimientos"; se alinean con el conmutador
     // Competencias / Tecnologías, que es la distinción equivalente en esta vista.
     url.searchParams.set('tipo', tipo === 'competencia' ? 'habilidad' : 'conocimiento');
-    fetch(url)
+    cachedFetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setDataSena(d && !d.sin_datos ? d : null))
       .catch(() => setDataSena(null));
@@ -384,7 +385,7 @@ export default function SkillsDemandadasPage() {
     const url = new URL(`${BACKEND_URL}/informes/contraste`);
     url.searchParams.set('informes', informesSel.join(','));
     url.searchParams.set('dimension', 'skill');
-    fetch(url)
+    cachedFetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setContraste(d))
       .catch(() => setContraste(null));

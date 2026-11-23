@@ -33,6 +33,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { cachedFetch } from '@/lib/cache-api';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
@@ -198,7 +199,7 @@ export default function SalariesPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/analytics/salarios`);
+        const res = await cachedFetch(`${BACKEND_URL}/analytics/salarios`);
         if (!res.ok) throw new Error('No se pudo cargar el análisis salarial');
         const data: Resumen = await res.json();
         setResumen(data);
@@ -224,7 +225,7 @@ export default function SalariesPage() {
       try {
         const url = new URL(`${BACKEND_URL}/analytics/salarios`);
         url.searchParams.append('programa', programa);
-        const res = await fetch(url, { signal: controlador.signal });
+        const res = await cachedFetch(url, { signal: controlador.signal });
         if (!res.ok) throw new Error('No se pudo cargar el programa');
         setAnalisis(await res.json());
       } catch (err) {
@@ -244,7 +245,7 @@ export default function SalariesPage() {
     const controlador = new AbortController();
     (async () => {
       try {
-        const r = await fetch(
+        const r = await cachedFetch(
           `${BACKEND_URL}/ole/ingreso?programa=${encodeURIComponent(programa)}`,
           { signal: controlador.signal },
         );

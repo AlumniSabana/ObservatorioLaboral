@@ -47,6 +47,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { cachedFetch, limpiarCache } from '@/lib/cache-api';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
@@ -372,7 +373,7 @@ export default function TendenciasPage() {
       if (d1) url.searchParams.set('desde', d1);
       if (d2) url.searchParams.set('hasta', d2);
 
-      const r = await fetch(url);
+      const r = await cachedFetch(url);
       if (!r.ok) throw new Error('No se pudieron cargar las tendencias');
       const d: TendenciasResponse = await r.json();
       if (mi !== seqTendencias.current) return;
@@ -421,6 +422,7 @@ export default function TendenciasPage() {
         setErrorActualizacion(MENSAJE_SESION_EXPIRADA);
         return;
       }
+      limpiarCache(); // la recolección cambió los datos: nada de lo guardado vale
       const cuerpo = await r.json().catch(() => null);
       if (r.status === 409) {
         setErrorActualizacion('Ya hay una actualización del histórico en curso; espera a que termine.');
@@ -441,7 +443,7 @@ export default function TendenciasPage() {
 
   const cargarOpciones = async () => {
     try {
-      const r = await fetch(`${BACKEND_URL}/tendencias/opciones`);
+      const r = await cachedFetch(`${BACKEND_URL}/tendencias/opciones`);
       if (!r.ok) return;
       const d: Opciones = await r.json();
       setOpciones(d);
@@ -492,7 +494,7 @@ export default function TendenciasPage() {
       url.searchParams.set('escolaridad', esc);
       url.searchParams.set('paises', pais.join(','));
       url.searchParams.set('top', String(top));
-      const r = await fetch(url);
+      const r = await cachedFetch(url);
       if (!r.ok) throw new Error('demanda');
       const d = await r.json();
       if (mi === seqDemanda.current) setDemanda(d);
@@ -525,7 +527,7 @@ export default function TendenciasPage() {
         const url = new URL(`${BACKEND_URL}/analytics/salarios`);
         url.searchParams.set('programa', programa);
         url.searchParams.set('paises', paisesSel.join(','));
-        const r = await fetch(url);
+        const r = await cachedFetch(url);
         const d = r.ok ? await r.json() : null;
         if (!cancelado) setSalario(d);
       } catch {
@@ -742,7 +744,7 @@ export default function TendenciasPage() {
       setSpeLoading(true);
       setTendSpe(null);
       try {
-        const r = await fetch(`${BACKEND_URL}/spe/tendencias?dimension=${dimSpe}&top=6`);
+        const r = await cachedFetch(`${BACKEND_URL}/spe/tendencias?dimension=${dimSpe}&top=6`);
         const d: TendenciaSpe | null = r.ok ? await r.json() : null;
         setTendSpe(d && !d.sin_datos ? d : null);
       } catch {

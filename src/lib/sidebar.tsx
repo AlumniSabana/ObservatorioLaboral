@@ -27,6 +27,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { BotonTema } from '@/lib/tema';
 
 // Lista única de enlaces de la barra lateral. Para agregar/quitar una sección,
 // edita este arreglo (href = ruta, label = texto visible, icon = ícono).
@@ -113,7 +114,9 @@ export function Sidebar() {
         {navigationItems.map((item) => <Enlace key={item.href} {...item} active={isActive(item.href)} />)}
       </nav>
 
-      <nav className="px-4 pt-2 pb-4 mt-auto border-t space-y-1" style={{ borderColor: 'var(--sabana-navy)' }}>
+      {/* Sesión a la izquierda y botón claro/oscuro a su lado, pegado al fondo. */}
+      <div className="px-4 pt-2 pb-4 mt-auto border-t flex items-end gap-1" style={{ borderColor: 'var(--sabana-navy)' }}>
+      <nav className="flex-1 min-w-0 space-y-1">
         {cargando ? (
           // Mismo alto que un enlace (py-2 + ícono de 20 px): reserva el sitio
           // para que el menú no "salte" cuando llegue el veredicto de la sesión.
@@ -137,6 +140,8 @@ export function Sidebar() {
           <Enlace {...iniciarSesion} active={isActive(iniciarSesion.href)} />
         )}
       </nav>
+      <BotonTema />
+      </div>
     </aside>
   );
 }

@@ -37,6 +37,10 @@ export const metadata: Metadata = {
   description: "Observatorio Laboral de Alumni Sabana",
 };
 
+// Se ejecuta antes de pintar (evita el parpadeo claro→oscuro): usa la elección
+// guardada con el botón de la barra lateral o, si no hay, la del sistema.
+const SCRIPT_TEMA = `(function(){var t;try{t=localStorage.getItem('tema')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -46,7 +50,11 @@ export default function RootLayout({
     <html
       lang="es"
       className={`${libreFranklin.variable} ${playfair.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+      </head>
       <body className="min-h-full">{children}</body>
     </html>
   );

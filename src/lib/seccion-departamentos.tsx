@@ -21,6 +21,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { MapPin, Info, AlertTriangle } from 'lucide-react';
 import { MapaColombia, type DatoDepartamento } from '@/lib/mapa-colombia';
 import { Spinner } from '@/lib/spinner';
+import { cachedFetch } from './cache-api';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
@@ -138,7 +139,7 @@ export function SeccionDepartamentos({
     setCargando(true);
     setError(null);
     const params = new URLSearchParams({ programa, paises: clavePaises });
-    fetch(`${BACKEND_URL}/tendencias/departamentos?${params}`)
+    cachedFetch(`${BACKEND_URL}/tendencias/departamentos?${params}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d) => {
         if (!vivo) return;

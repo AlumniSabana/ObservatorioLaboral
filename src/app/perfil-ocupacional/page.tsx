@@ -33,6 +33,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { cachedFetch } from '@/lib/cache-api';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
@@ -157,7 +158,7 @@ export default function PerfilOcupacionalPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/analytics/salarios`);
+        const res = await cachedFetch(`${BACKEND_URL}/analytics/salarios`);
         if (!res.ok) throw new Error('No se pudo cargar la lista de programas');
         const d = await res.json();
         const lista: string[] = d.programas ?? [];
@@ -186,7 +187,7 @@ export default function PerfilOcupacionalPage() {
       try {
         const url = new URL(`${BACKEND_URL}/perfil-ocupacional`);
         url.searchParams.append('programa', programa);
-        const res = await fetch(url, { signal: controlador.signal });
+        const res = await cachedFetch(url, { signal: controlador.signal });
         if (!res.ok) throw new Error('No se pudo cargar el perfil');
         setData(await res.json());
       } catch (err) {

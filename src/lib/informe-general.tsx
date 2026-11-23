@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import { Spinner } from '@/lib/spinner';
 import { NAVY, NAVY2, LIGHT, SKY, GRAY, rgb, cortar, fechaHoy } from '@/lib/perfil-pdf';
+import { cachedFetch } from './cache-api';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
@@ -24,7 +25,7 @@ interface Skill { nombre: string; indice: number }
 interface Termino { tendencia: string; score_tendencia: number }
 
 async function get<T>(ruta: string): Promise<T> {
-  const r = await fetch(`${BACKEND_URL}${ruta}`);
+  const r = await cachedFetch(`${BACKEND_URL}${ruta}`);
   if (!r.ok) throw new Error(`${ruta.split('?')[0]}: HTTP ${r.status}`);
   return r.json();
 }

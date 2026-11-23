@@ -35,6 +35,7 @@ import {
   errorDeRespuesta,
   etiquetaInforme,
 } from './comun';
+import { limpiarCache } from '@/lib/cache-api';
 
 export function SubirInforme({
   numerar = true,
@@ -125,6 +126,7 @@ export function SubirInforme({
         }),
       });
       if (!r.ok) throw new Error(await errorDeRespuesta(r, logout));
+      limpiarCache();
       const d: ResultadoGuardado = await r.json();
 
       const base = d.reactivado

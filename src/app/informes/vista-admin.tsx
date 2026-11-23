@@ -26,6 +26,7 @@ import { BACKEND_URL, errorDeRespuesta } from './comun';
 import { SubirInforme } from './subir-informe';
 import { GraficasInforme } from './graficas-informe';
 import { InsightsConjuntos } from './insights-conjuntos';
+import { limpiarCache } from '@/lib/cache-api';
 
 export function VistaAdmin() {
   // `logout` se usa cuando un endpoint protegido responde 401: el token dejó de
@@ -117,6 +118,7 @@ export function VistaAdmin() {
         body: JSON.stringify({ informe_ids: seleccionados }),
       });
       if (!r.ok) throw new Error(await errorDeRespuesta(r, logout));
+      limpiarCache();
       setInsights(await r.json());
     } catch (e) {
       setInsightsError(e instanceof Error ? e.message : 'No se pudo generar el informe de insights');
@@ -133,6 +135,7 @@ export function VistaAdmin() {
         headers: authHeaders(),
       });
       if (!r.ok) throw new Error(await errorDeRespuesta(r, logout));
+      limpiarCache();
       await cargarInformes();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'La acción falló');
