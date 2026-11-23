@@ -146,14 +146,14 @@ export function SubirInforme({
     <>
       {error && <div className="rounded-lg p-3 bg-red-50 text-red-700 text-sm">{error}</div>}
       {aviso && (
-        <div className="rounded-lg p-3 text-sm" style={{ background: 'var(--sabana-sky-blue)', color: 'var(--sabana-dark-navy)' }}>
+        <div className="rounded-lg p-3 text-sm" style={{ background: 'var(--tint)', color: 'var(--ink-strong)' }}>
           {aviso}
         </div>
       )}
 
       {/* ---------- Paso 1: subir ---------- */}
       <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-        <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--sabana-dark-navy)' }}>
+        <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--ink-strong)' }}>
           {n(1)}Subir informe
         </h3>
         <input
@@ -176,7 +176,7 @@ export function SubirInforme({
           <Upload size={18} />
           {cargando ? 'Procesando…' : 'Seleccionar PDF'}
         </button>
-        <p className="text-xs mt-2" style={{ color: 'var(--sabana-black-50)' }}>
+        <p className="text-xs mt-2" style={{ color: 'var(--ink-muted)' }}>
           El PDF debe tener texto seleccionable. Para informes escaneados hay que configurar
           Google Document AI en el backend. Solo se guardan las skills detectadas y los metadatos
           del informe, no el archivo.
@@ -186,10 +186,10 @@ export function SubirInforme({
       {/* ---------- Paso 2: revisar ---------- */}
       {borrador && (
         <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-          <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
             {n(2)}Revisar antes de guardar
           </h3>
-          <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
             {borrador.extraidos} skills · {borrador.paginas} páginas · leído con{' '}
             <b>{borrador.metodo_extraccion === 'document_ai' ? 'Google Document AI' : 'pypdf'}</b>.
             Corrige los datos del informe si hace falta.
@@ -197,7 +197,7 @@ export function SubirInforme({
 
           {borrador.reactiva && (
             <div className="flex items-start gap-2 rounded-lg p-3 mb-4 text-sm"
-              style={{ background: 'var(--sabana-cream)', color: 'var(--sabana-dark-navy)' }}>
+              style={{ background: 'var(--cream)', color: 'var(--ink-strong)' }}>
               <RefreshCw size={16} className="mt-0.5 shrink-0" />
               <p>
                 Este PDF corresponde al informe <b>retirado</b> «{etiquetaInforme(borrador.reactiva)}».
@@ -209,27 +209,27 @@ export function SubirInforme({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className={CLASE_ETIQUETA} style={{ color: 'var(--sabana-navy)' }}>Título *</label>
+              <label className={CLASE_ETIQUETA} style={{ color: 'var(--ink-navy)' }}>Título *</label>
               <input className={CLASE_CAMPO} style={ESTILO_CAMPO} value={titulo} onChange={(e) => setTitulo(e.target.value)} />
             </div>
             <div>
-              <label className={CLASE_ETIQUETA} style={{ color: 'var(--sabana-navy)' }}>Editor *</label>
+              <label className={CLASE_ETIQUETA} style={{ color: 'var(--ink-navy)' }}>Editor *</label>
               <input className={CLASE_CAMPO} style={ESTILO_CAMPO} value={editor} onChange={(e) => setEditor(e.target.value)}
                 placeholder="Coursera, WEF, McKinsey…" />
             </div>
             <div>
-              <label className={CLASE_ETIQUETA} style={{ color: 'var(--sabana-navy)' }}>Año de referencia *</label>
+              <label className={CLASE_ETIQUETA} style={{ color: 'var(--ink-navy)' }}>Año de referencia *</label>
               <input className={CLASE_CAMPO} style={ESTILO_CAMPO} value={anio} onChange={(e) => setAnio(e.target.value)} inputMode="numeric" />
             </div>
             <div>
-              <label className={CLASE_ETIQUETA} style={{ color: 'var(--sabana-navy)' }}>Cobertura</label>
+              <label className={CLASE_ETIQUETA} style={{ color: 'var(--ink-navy)' }}>Cobertura</label>
               <input className={CLASE_CAMPO} style={ESTILO_CAMPO} value={cobertura} onChange={(e) => setCobertura(e.target.value)}
                 placeholder="global, Colombia…" />
             </div>
           </div>
 
           {/* Cada skill, con su página y su cita: así cualquier cifra es rastreable al PDF. */}
-          <div className="overflow-x-auto max-h-80 overflow-y-auto border rounded-lg" style={{ borderColor: 'var(--sabana-sky-blue)' }}>
+          <div className="overflow-x-auto max-h-80 overflow-y-auto border rounded-lg" style={{ borderColor: 'var(--line-soft)' }}>
             <table className="w-full text-sm">
               <thead className="sticky top-0">
                 <tr style={{ backgroundColor: 'var(--sabana-dark-navy)', color: 'white' }}>
@@ -242,12 +242,12 @@ export function SubirInforme({
               </thead>
               <tbody>
                 {borrador.items.map((it, i) => (
-                  <tr key={it.termino_original} style={{ backgroundColor: i % 2 ? 'var(--sabana-sky-blue)' : 'transparent' }}>
-                    <td className="px-3 py-2" style={{ color: 'var(--sabana-dark-navy)' }}>{it.posicion}</td>
-                    <td className="px-3 py-2 font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>{it.termino_original}</td>
-                    <td className="px-3 py-2 text-right" style={{ color: 'var(--sabana-dark-navy)' }}>{it.valor ?? '—'}</td>
-                    <td className="px-3 py-2 text-right" style={{ color: 'var(--sabana-dark-navy)' }}>{it.pagina ?? '—'}</td>
-                    <td className="px-3 py-2 text-xs" style={{ color: 'var(--sabana-black-50)' }}>…{(it.cita || '').slice(0, 70)}…</td>
+                  <tr key={it.termino_original} style={{ backgroundColor: i % 2 ? 'var(--tint)' : 'transparent' }}>
+                    <td className="px-3 py-2" style={{ color: 'var(--ink-strong)' }}>{it.posicion}</td>
+                    <td className="px-3 py-2 font-semibold" style={{ color: 'var(--ink-strong)' }}>{it.termino_original}</td>
+                    <td className="px-3 py-2 text-right" style={{ color: 'var(--ink-strong)' }}>{it.valor ?? '—'}</td>
+                    <td className="px-3 py-2 text-right" style={{ color: 'var(--ink-strong)' }}>{it.pagina ?? '—'}</td>
+                    <td className="px-3 py-2 text-xs" style={{ color: 'var(--ink-muted)' }}>…{(it.cita || '').slice(0, 70)}…</td>
                   </tr>
                 ))}
               </tbody>
@@ -262,7 +262,7 @@ export function SubirInforme({
             </button>
             <button onClick={() => setBorrador(null)}
               className="px-5 py-2 rounded-lg font-semibold border"
-              style={{ borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)', cursor: 'pointer' }}>
+              style={{ borderColor: 'var(--line)', color: 'var(--ink-strong)', cursor: 'pointer' }}>
               Descartar
             </button>
           </div>

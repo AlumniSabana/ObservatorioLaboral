@@ -91,17 +91,17 @@ export function DashboardPreguntas() {
   return (
     <section
       className="rounded-lg border p-4 mb-4 text-sm"
-      style={{ borderColor: 'var(--sabana-light-blue)', backgroundColor: 'var(--white-background)' }}
+      style={{ borderColor: 'var(--line)', backgroundColor: 'var(--surface)' }}
       aria-label="Panel de administración del asistente"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-        <h3 className="font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+        <h3 className="font-bold" style={{ color: 'var(--ink-strong)' }}>
           Uso del asistente — todos los usuarios
         </h3>
         <button
           onClick={cargar}
           className="text-xs font-semibold underline cursor-pointer"
-          style={{ color: 'var(--sabana-navy)' }}
+          style={{ color: 'var(--ink-navy)' }}
         >
           Actualizar
         </button>
@@ -127,9 +127,9 @@ export function DashboardPreguntas() {
               { t: 'Tokens (entrada / salida)', v: `${formatearTokens(datos.totales.tokens_entrada)} / ${formatearTokens(datos.totales.tokens_salida)}` },
               { t: 'Costo estimado total', v: formatearUsd(datos.totales.costo_usd_estimado) },
             ].map((k) => (
-              <div key={k.t} className="rounded-lg p-3" style={{ backgroundColor: 'var(--sabana-sky-blue)' }}>
-                <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>{k.t}</p>
-                <p className="text-xl font-bold mt-0.5" style={{ color: 'var(--sabana-dark-navy)' }}>{k.v}</p>
+              <div key={k.t} className="rounded-lg p-3" style={{ backgroundColor: 'var(--tint)' }}>
+                <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--ink-navy)' }}>{k.t}</p>
+                <p className="text-xl font-bold mt-0.5" style={{ color: 'var(--ink-strong)' }}>{k.v}</p>
               </div>
             ))}
           </div>
@@ -143,8 +143,8 @@ export function DashboardPreguntas() {
             {datos.categorias
               .filter((c) => c.total > 0 || ['perfil_ocupacional', 'analisis_salarial', 'cursos', 'competencias'].includes(c.categoria))
               .map((c) => (
-                <div key={c.categoria} className="rounded-lg border p-3" style={{ borderColor: 'var(--sabana-sky-blue)' }}>
-                  <p className="font-semibold flex items-baseline justify-between" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <div key={c.categoria} className="rounded-lg border p-3" style={{ borderColor: 'var(--line-soft)' }}>
+                  <p className="font-semibold flex items-baseline justify-between" style={{ color: 'var(--ink-strong)' }}>
                     {c.etiqueta}
                     <span className="text-xs font-normal text-zinc-500">
                       {c.total} preguntas · {c.sesiones} sesiones · {formatearUsd(c.costo_usd_estimado)}
@@ -156,8 +156,8 @@ export function DashboardPreguntas() {
                     <ol className="mt-2 space-y-1 text-xs">
                       {c.top.map((p, i) => (
                         <li key={`${c.categoria}-${i}`} className="flex gap-2">
-                          <span className="font-semibold w-5 text-right" style={{ color: 'var(--sabana-navy)' }}>{i + 1}.</span>
-                          <span className="flex-1 min-w-0" style={{ color: 'var(--sabana-dark-navy)' }}>{p.pregunta}</span>
+                          <span className="font-semibold w-5 text-right" style={{ color: 'var(--ink-navy)' }}>{i + 1}.</span>
+                          <span className="flex-1 min-w-0" style={{ color: 'var(--ink-strong)' }}>{p.pregunta}</span>
                           <span className="text-zinc-500 whitespace-nowrap">×{p.veces}</span>
                         </li>
                       ))}

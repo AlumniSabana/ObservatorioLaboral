@@ -30,12 +30,12 @@ import {
 export function GraficasInforme({ detalle }: { detalle: Detalle | null }) {
   if (!detalle) {
     return (
-      <p className="text-sm text-center py-4" style={{ color: 'var(--sabana-black-50)' }}>Cargando…</p>
+      <p className="text-sm text-center py-4" style={{ color: 'var(--ink-muted)' }}>Cargando…</p>
     );
   }
   if (!detalle.informe || detalle.items.length === 0) {
     return (
-      <p className="text-sm text-center py-4" style={{ color: 'var(--sabana-black-50)' }}>
+      <p className="text-sm text-center py-4" style={{ color: 'var(--ink-muted)' }}>
         Este informe no tiene skills extraídas todavía.
       </p>
     );
@@ -43,7 +43,7 @@ export function GraficasInforme({ detalle }: { detalle: Detalle | null }) {
 
   return (
     <>
-      <p className="text-xs mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+      <p className="text-xs mb-4" style={{ color: 'var(--ink-muted)' }}>
         {detalle.informe.total_skills} skills · {detalle.informe.paginas} páginas ·
         cobertura {detalle.informe.cobertura} · idioma {detalle.informe.idioma}
       </p>
@@ -51,22 +51,22 @@ export function GraficasInforme({ detalle }: { detalle: Detalle | null }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top skills del informe */}
         <div className="lg:col-span-2">
-          <h4 className="text-sm font-bold mb-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <h4 className="text-sm font-bold mb-2" style={{ color: 'var(--ink-strong)' }}>
             Skills más citadas en el informe
           </h4>
           <ResponsiveContainer width="100%" height={Math.max(240, detalle.items.length * 24)}>
             <BarChart data={detalle.items} layout="vertical" margin={{ left: 8, right: 30 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--ink-strong)' }} />
               <YAxis dataKey="termino" type="category" width={165} interval={0}
-                tick={{ fontSize: 10, fill: 'var(--sabana-dark-navy)' }} />
+                tick={{ fontSize: 10, fill: 'var(--ink-strong)' }} />
               <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: 'var(--white-background)' }}
                 labelStyle={{ color: 'var(--sabana-light-blue)' }}
                 formatter={(v, _n, it) => [`${v} menciones · pág. ${it?.payload?.pagina ?? '—'}`, 'En el informe']} />
-              <Bar dataKey="valor" fill="var(--sabana-navy)" radius={[0, 4, 4, 0]} barSize={12} />
+              <Bar dataKey="valor" fill="var(--chart-1)" radius={[0, 4, 4, 0]} barSize={12} />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-xs mt-1" style={{ color: 'var(--sabana-black-50)' }}>
+          <p className="text-xs mt-1" style={{ color: 'var(--ink-muted)' }}>
             El nº de menciones ordena dentro de ESTE informe; no es comparable con otro
             documento, porque depende de su extensión.
           </p>
@@ -74,11 +74,11 @@ export function GraficasInforme({ detalle }: { detalle: Detalle | null }) {
 
         {/* Reparto por categoría */}
         <div>
-          <h4 className="text-sm font-bold mb-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <h4 className="text-sm font-bold mb-2" style={{ color: 'var(--ink-strong)' }}>
             Por categoría
           </h4>
           {detalle.por_categoria.length === 0 ? (
-            <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Sin categorías.</p>
+            <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Sin categorías.</p>
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>

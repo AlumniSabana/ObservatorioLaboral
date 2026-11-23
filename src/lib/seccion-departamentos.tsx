@@ -64,7 +64,7 @@ function Ranking({
   titulo,
   items,
   vacio,
-  color = 'var(--sabana-navy)',
+  color = 'var(--chart-1)',
 }: {
   titulo: string;
   items: Item[];
@@ -74,24 +74,24 @@ function Ranking({
   const max = items.length ? Math.max(...items.map((i) => i.vacantes)) : 0;
   return (
     <div>
-      <h4 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--sabana-navy)' }}>
+      <h4 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--ink-navy)' }}>
         {titulo}
       </h4>
       {items.length === 0 ? (
-        <p className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>{vacio}</p>
+        <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>{vacio}</p>
       ) : (
         <ul className="space-y-2">
           {items.map((i) => (
             <li key={i.nombre}>
               <div className="flex justify-between items-baseline gap-3 mb-1">
-                <span className="text-sm truncate" style={{ color: 'var(--sabana-black-90)' }} title={i.nombre}>
+                <span className="text-sm truncate" style={{ color: 'var(--ink-soft)' }} title={i.nombre}>
                   {i.nombre}
                 </span>
-                <span className="text-sm font-semibold tabular-nums shrink-0" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <span className="text-sm font-semibold tabular-nums shrink-0" style={{ color: 'var(--ink-strong)' }}>
                   {i.vacantes.toLocaleString('es-CO')}
                 </span>
               </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--sabana-sky-blue)' }}>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--tint)' }}>
                 <div
                   className="h-full rounded-full"
                   style={{ width: `${max ? (i.vacantes / max) * 100 : 0}%`, backgroundColor: color }}
@@ -107,11 +107,11 @@ function Ranking({
 
 function Kpi({ valor, etiqueta }: { valor: number; etiqueta: string }) {
   return (
-    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--sabana-sky-blue)' }}>
-      <p className="text-2xl font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--tint)' }}>
+      <p className="text-2xl font-bold" style={{ color: 'var(--ink-strong)' }}>
         {valor.toLocaleString('es-CO')}
       </p>
-      <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--sabana-navy)' }}>{etiqueta}</p>
+      <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--ink-navy)' }}>{etiqueta}</p>
     </div>
   );
 }
@@ -133,6 +133,7 @@ export function SeccionDepartamentos({
   const clavePaises = paises.slice().sort().join(',');
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     let vivo = true;
     setCargando(true);
     setError(null);
@@ -168,12 +169,12 @@ export function SeccionDepartamentos({
   return (
     <section className="mb-10">
       <div className="flex items-center gap-2 mb-1">
-        <MapPin className="w-5 h-5" style={{ color: 'var(--sabana-navy)' }} />
-        <h2 className="text-xl font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+        <MapPin className="w-5 h-5" style={{ color: 'var(--ink-navy)' }} />
+        <h2 className="text-xl font-bold" style={{ color: 'var(--ink-strong)' }}>
           Vacantes por departamento
         </h2>
       </div>
-      <p className="text-sm mb-5" style={{ color: 'var(--sabana-black-70)' }}>
+      <p className="text-sm mb-5" style={{ color: 'var(--ink-soft)' }}>
         Seleccione un departamento en el mapa para ver su detalle. Es una foto del estado actual de las
         vacantes recolectadas, no una serie de crecimiento.
       </p>
@@ -183,19 +184,19 @@ export function SeccionDepartamentos({
       ) : error ? (
         <div
           className="rounded-lg p-4 text-sm"
-          style={{ backgroundColor: 'var(--sabana-cream)', color: 'var(--sabana-dark-navy)' }}
+          style={{ backgroundColor: 'var(--cream)', color: 'var(--ink-strong)' }}
         >
           No se pudo cargar el análisis por departamento ({error}).
         </div>
       ) : !data || data.meta.total === 0 ? (
         <div
           className="rounded-lg p-4 text-sm"
-          style={{ backgroundColor: 'var(--sabana-sky-blue)', color: 'var(--sabana-navy)' }}
+          style={{ backgroundColor: 'var(--tint)', color: 'var(--ink-navy)' }}
         >
           No hay vacantes colombianas para los filtros seleccionados.
         </div>
       ) : (
-        <div className="rounded-lg border p-5" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+        <div className="rounded-lg border p-5" style={{ borderColor: 'var(--line)' }}>
           <div className="grid lg:grid-cols-[minmax(0,420px)_1fr] gap-8">
             {/* ---------------- Mapa ---------------- */}
             <div>
@@ -204,7 +205,7 @@ export function SeccionDepartamentos({
                 seleccionado={seleccionado}
                 onSelect={setSeleccionado}
               />
-              <p className="text-xs mt-3 text-center" style={{ color: 'var(--sabana-black-50)' }}>
+              <p className="text-xs mt-3 text-center" style={{ color: 'var(--ink-muted)' }}>
                 {data.meta.departamentos_con_datos} departamentos con vacantes ·{' '}
                 {data.meta.cobertura}% de las {data.meta.total.toLocaleString('es-CO')} vacantes
                 colombianas declaran ubicación
@@ -214,14 +215,14 @@ export function SeccionDepartamentos({
             {/* ---------------- Detalle ---------------- */}
             <div>
               <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-                <h3 className="text-lg font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <h3 className="text-lg font-bold" style={{ color: 'var(--ink-strong)' }}>
                   {titulo}
                 </h3>
                 {activo && (
                   <button
                     onClick={() => setSeleccionado(null)}
                     className="text-xs font-medium underline"
-                    style={{ color: 'var(--sabana-navy)' }}
+                    style={{ color: 'var(--ink-navy)' }}
                   >
                     Ver todo el país
                   </button>
@@ -233,7 +234,7 @@ export function SeccionDepartamentos({
               {activo && !activo.muestra_suficiente && (
                 <div
                   className="flex gap-2 rounded-lg p-3 mb-4 text-xs"
-                  style={{ backgroundColor: 'var(--sabana-cream)', color: 'var(--sabana-dark-navy)' }}
+                  style={{ backgroundColor: 'var(--cream)', color: 'var(--ink-strong)' }}
                 >
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>
@@ -284,7 +285,7 @@ export function SeccionDepartamentos({
                   </div>
 
                   {panel.por_fuente.length > 1 && (
-                    <p className="text-xs mt-6" style={{ color: 'var(--sabana-black-50)' }}>
+                    <p className="text-xs mt-6" style={{ color: 'var(--ink-muted)' }}>
                       Origen:{' '}
                       {panel.por_fuente
                         .map((f) => `${f.nombre} (${f.vacantes.toLocaleString('es-CO')})`)
@@ -302,7 +303,7 @@ export function SeccionDepartamentos({
           {data.meta.sin_departamento > 0 && (
             <div
               className="flex gap-2 rounded-lg p-3 mt-6 text-xs"
-              style={{ backgroundColor: 'var(--sabana-sky-blue)', color: 'var(--sabana-navy)' }}
+              style={{ backgroundColor: 'var(--tint)', color: 'var(--ink-navy)' }}
             >
               <Info className="w-4 h-4 shrink-0 mt-0.5" />
               <span>

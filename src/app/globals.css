@@ -32,6 +32,8 @@
 
   /* Light Background */
   --white-background: #ffffff;
+  /* Fondo de las páginas (lavanda claro, como AlumniCV); las tarjetas siguen en blanco. */
+  --page-bg: #eef2f8;
 
   /*
    * Colores de TENDENCIA (par divergente + neutro).
@@ -58,6 +60,30 @@
   --cat-4: #7c3aed;
   --cat-5: #b45309;
   --cat-6: #0891b2;
+
+  /*
+   * TOKENS SEMÁNTICOS (modo claro/oscuro). Los componentes usan estos nombres
+   * en lugar de --sabana-* para texto, superficies y bordes; la paleta
+   * --sabana-* queda como color de MARCA (barra lateral, botones, cabeceras).
+   */
+  --ink-strong: var(--sabana-dark-navy);   /* títulos y cifras */
+  --ink-navy: var(--sabana-navy);          /* acentos de texto */
+  --ink-soft: var(--sabana-black-70);      /* texto secundario */
+  --ink-muted: var(--sabana-black-50);     /* etiquetas y pies */
+  --surface: #ffffff;                      /* tarjetas */
+  --tint: var(--sabana-sky-blue);          /* chips, pistas de barras */
+  --cream: var(--sabana-cream);            /* avisos suaves */
+  --line: var(--sabana-light-blue);        /* bordes */
+  --line-soft: var(--sabana-sky-blue);
+  --chart-1: var(--sabana-navy);           /* serie principal de gráficas */
+  --chart-grid: #e5e7eb;
+  --warn-text: #b91c1c;
+  --warn-text-2: #b45309;
+  --ok-text: #15803d;
+  /* Mapa coroplético: de menor a mayor volumen. */
+  --mapa-0: #e8eef7; --mapa-1: #c5d5e9; --mapa-2: #93aac9;
+  --mapa-3: #5b7fae; --mapa-4: #2f5a8f; --mapa-5: #002058;
+  --mapa-sin: #f1f1f1;
 }
 
 @theme inline {
@@ -78,19 +104,61 @@
     black-30: var(--sabana-black-30);
   };
   
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-body);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --background: #0a0a0a;
     --foreground: #ededed;
+    --page-bg: #12151c;
+    --ink-strong: #e8eefb;
+    --ink-navy: #9db8e0;
+    --ink-soft: #b9c2d1;
+    --ink-muted: #8d97a9;
+    --surface: #1d2230;
+    --tint: rgba(147, 170, 201, 0.16);
+    --cream: rgba(247, 230, 217, 0.14);
+    --line: #3a4356;
+    --line-soft: #2c3444;
+    --chart-1: #7ea6dc;
+    --chart-grid: #333b4d;
+    --warn-text: #fca5a5;
+    --warn-text-2: #fbbf24;
+    --ok-text: #4ade80;
+    --cat-1: #6f9bd6;
+    --cat-4: #a78bfa;
+    --cat-5: #d98a3d;
+    --trend-flat: #94a3b8;
+    /* En oscuro, más volumen = más luminoso. */
+    --mapa-0: #263148; --mapa-1: #2f4a73; --mapa-2: #3d6aa3;
+    --mapa-3: #5388cc; --mapa-4: #7eaef0; --mapa-5: #c4dcff;
+    --mapa-sin: #232a3a;
   }
+  /* Utilidades de Tailwind sin variante dark: (se remapean aquí una sola vez). */
+  .bg-white { background-color: var(--surface); }
+  .text-zinc-400, .text-zinc-500, .text-zinc-600, .text-gray-300 { color: var(--ink-muted); }
+  .bg-red-50, .bg-red-100 { background-color: #3b1d1f; }
+  .text-red-700 { color: var(--warn-text); }
+  .bg-amber-50 { background-color: #3a2c12; }
+  .text-amber-900 { color: #fcd34d; }
+  .border-zinc-200, .border-zinc-300, .border-zinc-400 { border-color: var(--line); }
+  .bg-zinc-200, .bg-zinc-300 { background-color: var(--line); }
+  .text-blue-600 { color: #8ab4f8; }
+  /* La barra lateral conserva su paleta de marca. */
+  aside .bg-white { background-color: #ffffff; }
+  aside .text-gray-300 { color: #d1d5db; }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), "Segoe UI", system-ui, sans-serif;
+}
+
+h1,
+h2 {
+  font-family: var(--font-heading), Georgia, serif;
 }

@@ -19,6 +19,8 @@ Todos los helpers hacen *fallback* al valor original si no está en el diccionar
 
 from __future__ import annotations
 
+import re
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Sectores de Adzuna (category.label). Conjunto FINITO (~29 etiquetas fijas).
 # Verificado sobre las 7.032 vacantes reales en BD.
@@ -214,6 +216,48 @@ def agrupar_sector(sector_es: str | None) -> str | None:
     if not sector_es or sector_es == SIN_ESPECIFICAR:
         return sector_es
     return GRUPOS_SECTOR.get(_tema_sector(sector_es), OTROS_SECTOR)
+
+
+# ── Refinamiento por TÍTULO para los dos grupos que ninguna etiqueta cubre ──
+# Adzuna no tiene categoría de agricultura ni de servicios públicos, así que
+# AGROPECUARIO y ENERGIA quedaban siempre en cero. Cuando la vacante YA trae
+# categoría (Google Jobs y LinkedIn no la traen: no se inventa un sector) y esa
+# categoría cae en un grupo "técnico" donde esos oficios suelen esconderse, el
+# título decide. Es una heurística: se limita a esas bases para no arrastrar
+# "Farm Bureau" (seguros), "Fishers, IN" (ciudad) o "nuclear medicine" (salud).
+_BASES_REFINABLES = frozenset({INDUSTRIA, CONSTRUCCION, MINERIA, CONSULTORIA, OTROS_SECTOR})
+
+_RE_AGRO = re.compile(
+    r"\b(farm|farms|farmer|farmhand|farming|agricultur\w*|agronom\w*|crop|crops|"
+    r"livestock|dairy|poultry|greenhouse|horticultur\w*|vineyard|forestry|forester|"
+    r"fisheries|aquaculture|irrigation|grower|rancher|ranching|cattle|grain|"
+    r"agricola|granja|cultivo|ganader\w*|finca|pecuari\w*|agroindustri\w*|zootecn\w*)\b"
+)
+_RE_ENERGIA = re.compile(
+    r"\b(utilities|lineman|linemen|power plant|substation|solar|wind turbine|wind energy|"
+    r"photovoltaic|water treatment|wastewater|waste water|water plant|hydroelectric|"
+    r"hydro|nuclear|power generation|energy|renewable|renewables|smart grid|power grid|"
+    r"grid modernization|transmission line|energia|acueducto|alcantarillado)\b"
+)
+# Si el título habla de crudo/gas/minería, la vacante es MINERIA aunque diga "energy".
+_RE_HIDROCARBUROS = re.compile(
+    r"\b(oil|gas|petroleum|petroleo|drilling|refinery|offshore|wellsite|mining|mine|minero)\b"
+)
+_RE_NO_ENERGIA = re.compile(r"\bnuclear (medicine|med|imaging|pharmacy)\b")
+
+
+def sector_de_vacante(categoria: str | None, titulo: str | None) -> str | None:
+    """Grupo de sector de UNA vacante: la categoría agrupada y, solo para las
+    bases refinables, el título decide si es Agroindustria o Energía/agua."""
+    grupo = agrupar_sector(traducir_sector(categoria))
+    if grupo not in _BASES_REFINABLES or not titulo:
+        return grupo
+    t = _sin_tildes(titulo.lower())
+    if _RE_AGRO.search(t):
+        return AGROPECUARIO
+    if _RE_ENERGIA.search(t) and not _RE_NO_ENERGIA.search(t) and not _RE_HIDROCARBUROS.search(t):
+        return ENERGIA
+    return grupo
 
 
 # ─────────────────────────────────────────────────────────────────────────────

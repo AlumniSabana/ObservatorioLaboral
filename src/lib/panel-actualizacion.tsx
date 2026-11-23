@@ -102,18 +102,18 @@ interface EstadoSerpapi {
 // El color va SIEMPRE acompañado del nombre y del símbolo: la identidad no
 // depende solo del color.
 const SEMAFORO: Record<EstadoSerpapi['semaforo'], { color: string; texto: string; simbolo: string }> = {
-  verde: { color: '#15803d', texto: 'Verde', simbolo: '●' },
-  amarillo: { color: '#b45309', texto: 'Amarillo', simbolo: '●' },
-  rojo: { color: '#b91c1c', texto: 'Rojo', simbolo: '●' },
+  verde: { color: 'var(--ok-text)', texto: 'Verde', simbolo: '●' },
+  amarillo: { color: 'var(--warn-text-2)', texto: 'Amarillo', simbolo: '●' },
+  rojo: { color: 'var(--warn-text)', texto: 'Rojo', simbolo: '●' },
 };
 
 const ESTADO_FILA: Record<FilaFuenteActualizada['estado'], { texto: string; color: string }> = {
-  ok: { texto: 'OK', color: '#15803d' },
-  sin_cambios: { texto: 'Sin cambios', color: 'var(--sabana-black-70)' },
-  parcial: { texto: 'Parcial', color: '#b45309' },
-  omitida: { texto: 'Omitida', color: '#b45309' },
-  desactivada: { texto: 'Desactivada', color: 'var(--sabana-black-50)' },
-  error: { texto: 'Error', color: '#b91c1c' },
+  ok: { texto: 'OK', color: 'var(--ok-text)' },
+  sin_cambios: { texto: 'Sin cambios', color: 'var(--ink-soft)' },
+  parcial: { texto: 'Parcial', color: 'var(--warn-text-2)' },
+  omitida: { texto: 'Omitida', color: 'var(--warn-text-2)' },
+  desactivada: { texto: 'Desactivada', color: 'var(--ink-muted)' },
+  error: { texto: 'Error', color: 'var(--warn-text)' },
 };
 
 function fmtFecha(iso: string | null | undefined): string {
@@ -181,11 +181,11 @@ export function PanelActualizacion({ onActualizar, actualizando, resultado, erro
   return (
     <section
       className="rounded-lg border p-5 mb-10"
-      style={{ borderColor: 'var(--sabana-light-blue)', backgroundColor: 'var(--white-background)' }}
+      style={{ borderColor: 'var(--line)', backgroundColor: 'var(--surface)' }}
       aria-label="Panel de administración: actualización del histórico"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
-        <h3 className="text-lg font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+        <h3 className="text-lg font-bold" style={{ color: 'var(--ink-strong)' }}>
           Fuentes consultadas
         </h3>
         <span className="text-xs text-zinc-500">Solo Administrador</span>
@@ -216,12 +216,12 @@ export function PanelActualizacion({ onActualizar, actualizando, resultado, erro
             </thead>
             <tbody>
               {fuentes.fuentes.map((f, i) => (
-                <tr key={f.id} style={{ backgroundColor: i % 2 ? 'var(--sabana-sky-blue)' : 'transparent' }}>
-                  <td className="px-3 py-1.5" style={{ color: 'var(--sabana-dark-navy)' }}>{f.label}</td>
-                  <td className="px-3 py-1.5" style={{ color: f.consultada ? 'var(--sabana-dark-navy)' : '#b91c1c' }}>
+                <tr key={f.id} style={{ backgroundColor: i % 2 ? 'var(--tint)' : 'transparent' }}>
+                  <td className="px-3 py-1.5" style={{ color: 'var(--ink-strong)' }}>{f.label}</td>
+                  <td className="px-3 py-1.5" style={{ color: f.consultada ? 'var(--ink-strong)' : 'var(--warn-text)' }}>
                     {fmtFecha(f.ultima_busqueda)}
                   </td>
-                  <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: 'var(--ink-strong)' }}>
                     {f.filas_historico === null ? '—' : f.filas_historico.toLocaleString('es-CO')}
                   </td>
                   <td className="px-3 py-1.5 text-xs text-zinc-500">
@@ -236,7 +236,7 @@ export function PanelActualizacion({ onActualizar, actualizando, resultado, erro
             </tbody>
           </table>
           {fuentes.nunca_consultadas.length > 0 && (
-            <p className="text-xs mt-2" style={{ color: '#b91c1c' }}>
+            <p className="text-xs mt-2" style={{ color: 'var(--warn-text)' }}>
               Nunca consultadas: {fuentes.nunca_consultadas.join(', ')}.
             </p>
           )}
@@ -246,21 +246,21 @@ export function PanelActualizacion({ onActualizar, actualizando, resultado, erro
       {/* ---------------- Semáforo SerpApi ---------------- */}
       <div
         className="rounded-lg p-4 mb-5 border-l-4"
-        style={{ borderColor: sem?.color ?? 'var(--sabana-light-blue)', backgroundColor: 'var(--sabana-sky-blue)' }}
+        style={{ borderColor: sem?.color ?? 'var(--line)', backgroundColor: 'var(--tint)' }}
         role="status"
         aria-label={sem ? `Semáforo SerpApi: ${sem.texto}` : 'Semáforo SerpApi'}
       >
-        <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--sabana-navy)' }}>
+        <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--ink-navy)' }}>
           Cuota de SerpApi (Google Jobs)
         </p>
         {serpapi && sem ? (
           <>
-            <p className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <p className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--ink-strong)' }}>
               <span style={{ color: sem.color, fontSize: '1.2rem' }} aria-hidden="true">{sem.simbolo}</span>
               {sem.texto}
               {serpapi.estimado && <span className="text-xs font-normal text-zinc-500">(estimado con el uso local)</span>}
             </p>
-            <p className="text-sm mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <p className="text-sm mt-1" style={{ color: 'var(--ink-strong)' }}>
               Restantes: <b>{serpapi.restantes ?? '—'}</b> / {serpapi.total ?? '—'} búsquedas ·
               Uso del mes: <b>{serpapi.uso_mes ?? '—'}</b> ·
               Presupuesto por corrida: <b>{serpapi.presupuesto}</b> ·
@@ -283,7 +283,7 @@ export function PanelActualizacion({ onActualizar, actualizando, resultado, erro
           onClick={onActualizar}
           disabled={enCurso}
           className="px-6 py-2 rounded-lg font-semibold disabled:opacity-60"
-          style={{ backgroundColor: 'var(--sabana-navy)', color: 'white', cursor: enCurso ? 'wait' : 'pointer' }}
+          style={{ backgroundColor: 'var(--ink-navy)', color: 'white', cursor: enCurso ? 'wait' : 'pointer' }}
         >
           {enCurso ? 'Actualizando histórico (todas las fuentes)...' : 'Actualizar histórico (todas las fuentes)'}
         </button>
@@ -302,9 +302,9 @@ export function PanelActualizacion({ onActualizar, actualizando, resultado, erro
       {/* ---------------- Resultado de la última corrida ---------------- */}
       {resultado && (
         <div className="mt-5">
-          <p className="text-sm font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <p className="text-sm font-semibold" style={{ color: 'var(--ink-strong)' }}>
             Resultado de la actualización:{' '}
-            <span style={{ color: resultado.status === 'completed' ? '#15803d' : resultado.status === 'parcial' ? '#b45309' : '#b91c1c' }}>
+            <span style={{ color: resultado.status === 'completed' ? 'var(--ok-text)' : resultado.status === 'parcial' ? 'var(--warn-text-2)' : 'var(--warn-text)' }}>
               {resultado.status === 'completed' ? 'completa' : resultado.status === 'parcial' ? 'parcial' : 'con error'}
             </span>
             {resultado.duracion_seg !== undefined && ` · ${fmtDuracion(resultado.duracion_seg)}`}
@@ -327,15 +327,15 @@ export function PanelActualizacion({ onActualizar, actualizando, resultado, erro
               </thead>
               <tbody>
                 {resultado.fuentes.map((f, i) => (
-                  <tr key={`${f.fuente}:${f.pais}`} style={{ backgroundColor: i % 2 ? 'var(--sabana-sky-blue)' : 'transparent' }}>
-                    <td className="px-3 py-1.5" style={{ color: 'var(--sabana-dark-navy)' }}>{f.label}</td>
+                  <tr key={`${f.fuente}:${f.pais}`} style={{ backgroundColor: i % 2 ? 'var(--tint)' : 'transparent' }}>
+                    <td className="px-3 py-1.5" style={{ color: 'var(--ink-strong)' }}>{f.label}</td>
                     <td className="px-3 py-1.5 font-semibold" style={{ color: ESTADO_FILA[f.estado]?.color }}>
                       {ESTADO_FILA[f.estado]?.texto ?? f.estado}
                     </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: 'var(--sabana-dark-navy)' }}>
+                    <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: 'var(--ink-strong)' }}>
                       {f.filas === null ? '—' : f.filas.toLocaleString('es-CO')}
                     </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: 'var(--sabana-dark-navy)' }}>
+                    <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: 'var(--ink-strong)' }}>
                       {f.llamadas === null ? '—' : f.llamadas}
                     </td>
                     <td className="px-3 py-1.5 text-right tabular-nums text-zinc-500">{fmtDuracion(f.duracion_seg)}</td>

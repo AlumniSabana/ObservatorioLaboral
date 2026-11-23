@@ -150,8 +150,8 @@ export function SelectorFuentes({
     (activo ? 'shadow-sm' : 'opacity-60 hover:opacity-100');
   const estiloAtajo = (activo: boolean) => ({
     backgroundColor: activo ? 'var(--sabana-dark-navy)' : 'transparent',
-    color: activo ? 'white' : 'var(--sabana-navy)',
-    borderColor: 'var(--sabana-light-blue)',
+    color: activo ? 'white' : 'var(--ink-navy)',
+    borderColor: 'var(--line)',
   });
 
   return (
@@ -159,7 +159,7 @@ export function SelectorFuentes({
       <div className="flex items-end justify-between gap-2 mb-1">
         <label
           className="flex items-end min-h-[2.1rem] text-xs font-bold uppercase tracking-wide leading-tight"
-          style={{ color: 'var(--sabana-navy)' }}
+          style={{ color: 'var(--ink-navy)' }}
         >
           {etiqueta}
         </label>
@@ -205,9 +205,9 @@ export function SelectorFuentes({
         aria-expanded={abierto}
         className="w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-semibold border cursor-pointer"
         style={{
-          backgroundColor: 'var(--sabana-sky-blue)',
-          color: 'var(--sabana-dark-navy)',
-          borderColor: 'var(--sabana-light-blue)',
+          backgroundColor: 'var(--tint)',
+          color: 'var(--ink-strong)',
+          borderColor: 'var(--line)',
         }}
       >
         <span className="truncate text-left">
@@ -220,13 +220,13 @@ export function SelectorFuentes({
       {abierto && (
         <div
           className="absolute z-50 mt-1 w-full min-w-[19rem] max-h-[24rem] overflow-y-auto rounded-lg border shadow-lg p-2"
-          style={{ backgroundColor: 'var(--white-background)', borderColor: 'var(--sabana-light-blue)' }}
+          style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--line)' }}
         >
           <button
             type="button"
             onClick={() => onChange(todasMarcadas ? [disponibles[0].id] : disponibles.map((f) => f.id))}
             className="w-full text-left text-xs font-semibold px-2 py-1.5 rounded cursor-pointer"
-            style={{ color: 'var(--sabana-navy)' }}
+            style={{ color: 'var(--ink-navy)' }}
           >
             {todasMarcadas ? 'Dejar solo la primera' : 'Seleccionar todas'}
           </button>
@@ -236,10 +236,10 @@ export function SelectorFuentes({
             if (delGrupo.length === 0) return null;
             return (
               <div key={g.clave} className="mt-2">
-                <p className="px-2 text-[0.68rem] font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
+                <p className="px-2 text-[0.68rem] font-bold uppercase tracking-wide" style={{ color: 'var(--ink-navy)' }}>
                   {g.titulo}
                 </p>
-                <p className="px-2 mb-1 text-[0.68rem]" style={{ color: 'var(--sabana-black-50)' }}>
+                <p className="px-2 mb-1 text-[0.68rem]" style={{ color: 'var(--ink-muted)' }}>
                   {g.ayuda}
                 </p>
 
@@ -254,12 +254,12 @@ export function SelectorFuentes({
                       disabled={!!motivo}
                       title={f.nota || motivo || undefined}
                       className="w-full flex items-start gap-2 px-2 py-1.5 rounded text-left text-sm disabled:opacity-45 disabled:cursor-not-allowed hover:bg-black/5 cursor-pointer"
-                      style={{ color: 'var(--sabana-dark-navy)' }}
+                      style={{ color: 'var(--ink-strong)' }}
                     >
                       <span
                         className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border"
                         style={{
-                          borderColor: 'var(--sabana-light-blue)',
+                          borderColor: 'var(--line)',
                           backgroundColor: activa ? 'var(--sabana-dark-navy)' : 'transparent',
                         }}
                       >
@@ -268,13 +268,13 @@ export function SelectorFuentes({
                       <span className="flex-1 min-w-0">
                         <span className="block truncate">{f.label}</span>
                         {(f.sublabel || motivo) && (
-                          <span className="block text-[0.7rem] truncate" style={{ color: 'var(--sabana-black-50)' }}>
+                          <span className="block text-[0.7rem] truncate" style={{ color: 'var(--ink-muted)' }}>
                             {motivo ? `No aplica aquí: ${motivo}` : f.sublabel}
                           </span>
                         )}
                       </span>
                       {f.naturaleza === 'declarado' && !motivo && (
-                        <Info size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--sabana-black-50)' }} />
+                        <Info size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--ink-muted)' }} />
                       )}
                     </button>
                   );
@@ -287,7 +287,7 @@ export function SelectorFuentes({
 
       {/* Qué se está usando, siempre visible (sin abrir el desplegable). */}
       {activas.length > 0 && (
-        <p className="mt-1.5 text-[0.7rem] leading-snug" style={{ color: 'var(--sabana-black-50)' }}>
+        <p className="mt-1.5 text-[0.7rem] leading-snug" style={{ color: 'var(--ink-muted)' }}>
           Usando: {activas.map((f) => f.label).join(' · ')}
         </p>
       )}

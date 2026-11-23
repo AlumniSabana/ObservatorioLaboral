@@ -115,18 +115,18 @@ export function InsightsConjuntos({ abierto }: { abierto: boolean }) {
   };
 
   return (
-    <div className="mt-4 rounded-lg border p-4 space-y-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+    <div className="mt-4 rounded-lg border p-4 space-y-4" style={{ borderColor: 'var(--line)' }}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+        <h4 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--ink-strong)' }}>
           <Layers size={16} /> Grupos de informes afines propuestos por la IA
         </h4>
         <button onClick={pedirCandidatos} disabled={cargandoCand}
           className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded border disabled:opacity-50"
-          style={{ borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)', cursor: 'pointer' }}>
+          style={{ borderColor: 'var(--line)', color: 'var(--ink-strong)', cursor: 'pointer' }}>
           <RefreshCw size={12} /> Volver a proponer
         </button>
       </div>
-      <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+      <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
         Primero se calcula qué skills comparten los informes validados (sin IA); con ese resumen,
         Gemini agrupa y explica el motivo. Generar un insight conjunto cuesta una llamada al modelo.
       </p>
@@ -137,12 +137,12 @@ export function InsightsConjuntos({ abierto }: { abierto: boolean }) {
       {candidatos && !cargandoCand && (
         <>
           {candidatos.aviso && (
-            <div className="rounded-lg p-3 text-xs" style={{ background: 'var(--sabana-cream)', color: 'var(--sabana-dark-navy)' }}>
+            <div className="rounded-lg p-3 text-xs" style={{ background: 'var(--cream)', color: 'var(--ink-strong)' }}>
               {candidatos.aviso}
             </div>
           )}
           {candidatos.grupos.length === 0 ? (
-            <p className="text-sm text-center py-3" style={{ color: 'var(--sabana-black-50)' }}>
+            <p className="text-sm text-center py-3" style={{ color: 'var(--ink-muted)' }}>
               No se encontraron grupos con afinidad suficiente entre los informes validados.
             </p>
           ) : (
@@ -150,18 +150,18 @@ export function InsightsConjuntos({ abierto }: { abierto: boolean }) {
               {candidatos.grupos.map((g) => {
                 const clave = claveGrupo(g);
                 return (
-                  <div key={clave} className="rounded-lg border p-3" style={{ borderColor: 'var(--sabana-sky-blue)' }}>
+                  <div key={clave} className="rounded-lg border p-3" style={{ borderColor: 'var(--line-soft)' }}>
                     <div className="flex flex-wrap items-start gap-3">
                       <div className="flex-1 min-w-[16rem]">
-                        <p className="text-sm font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--ink-strong)' }}>
                           {g.titulo_grupo}
                           <span className="ml-2 text-xs font-normal px-2 py-0.5 rounded"
-                            style={{ background: 'var(--sabana-sky-blue)', color: 'var(--sabana-dark-navy)' }}>
+                            style={{ background: 'var(--tint)', color: 'var(--ink-strong)' }}>
                             afinidad {Math.round(g.afinidad * 100)} %
                           </span>
                         </p>
-                        <p className="text-xs mt-1" style={{ color: 'var(--sabana-black-70)' }}>{g.motivo}</p>
-                        <ul className="text-xs mt-1 list-disc pl-5" style={{ color: 'var(--sabana-black-50)' }}>
+                        <p className="text-xs mt-1" style={{ color: 'var(--ink-soft)' }}>{g.motivo}</p>
+                        <ul className="text-xs mt-1 list-disc pl-5" style={{ color: 'var(--ink-muted)' }}>
                           {g.informe_ids.map((id) => <li key={id}>{nombre(id)}</li>)}
                         </ul>
                       </div>
@@ -184,14 +184,14 @@ export function InsightsConjuntos({ abierto }: { abierto: boolean }) {
       {errorGen && <div className="rounded-lg p-3 bg-red-50 text-red-700 text-sm">{errorGen}</div>}
 
       {resultado && !generando && (
-        <div className="rounded-lg border p-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-          <p className="text-sm font-bold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>{resultado.titulo}</p>
-          <p className="text-xs mb-3" style={{ color: 'var(--sabana-black-50)' }}>
+        <div className="rounded-lg border p-4" style={{ borderColor: 'var(--line)' }}>
+          <p className="text-sm font-bold mb-1" style={{ color: 'var(--ink-strong)' }}>{resultado.titulo}</p>
+          <p className="text-xs mb-3" style={{ color: 'var(--ink-muted)' }}>
             Basado en: {resultado.informes.map((i) => `${etiquetaInforme(i)}${i.antiguo ? ' ⚠ hace más de 2 años' : ''}`).join(' · ')}
             {resultado.omitidos.length > 0 && ` — se omitieron ${resultado.omitidos.length} id(s) por no estar validados.`}
           </p>
           {!resultado.persistido && (
-            <div className="rounded-lg p-2 mb-3 text-xs" style={{ background: 'var(--sabana-cream)', color: 'var(--sabana-dark-navy)' }}>
+            <div className="rounded-lg p-2 mb-3 text-xs" style={{ background: 'var(--cream)', color: 'var(--ink-strong)' }}>
               {resultado.aviso ?? 'El insight no quedó guardado (pendiente de aplicar migración 012).'}
             </div>
           )}
@@ -201,26 +201,26 @@ export function InsightsConjuntos({ abierto }: { abierto: boolean }) {
 
       {/* Conjuntos ya generados: se listan para no volver a pagar por lo mismo. */}
       <div>
-        <h4 className="text-sm font-bold flex items-center gap-2 mb-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+        <h4 className="text-sm font-bold flex items-center gap-2 mb-2" style={{ color: 'var(--ink-strong)' }}>
           <Clock size={14} /> Insights conjuntos guardados
         </h4>
         {historico === null ? (
-          <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Cargando…</p>
+          <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Cargando…</p>
         ) : !historico.disponible ? (
-          <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+          <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
             {historico.aviso ?? 'Pendiente de aplicar la migración 012.'}
           </p>
         ) : historico.insights.length === 0 ? (
-          <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Todavía no hay insights conjuntos guardados.</p>
+          <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Todavía no hay insights conjuntos guardados.</p>
         ) : (
           <div className="space-y-2">
             {historico.insights.map((ins: InsightGenerado) => (
-              <div key={ins.id} className="rounded-lg border" style={{ borderColor: 'var(--sabana-sky-blue)' }}>
+              <div key={ins.id} className="rounded-lg border" style={{ borderColor: 'var(--line-soft)' }}>
                 <button onClick={() => setHistoricoAbierto(historicoAbierto === ins.id ? null : ins.id)}
                   className="w-full flex items-center justify-between gap-2 p-3 text-left" style={{ cursor: 'pointer' }}>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>{ins.titulo}</p>
-                    <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--ink-strong)' }}>{ins.titulo}</p>
+                    <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                       {formatearFecha(ins.creado_en)}{ins.motivo_grupo ? ` · ${ins.motivo_grupo}` : ''}
                     </p>
                   </div>

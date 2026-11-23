@@ -23,7 +23,7 @@ import { useAuth } from '@/lib/auth';
 // Mismo estilo de campo que los formularios de Informes, para que la app se
 // sienta una sola. `pl-10` deja sitio al ícono que va dentro del campo.
 const campo = 'w-full rounded-lg border px-3 py-2 pl-10 text-sm outline-none focus:ring-2';
-const estiloCampo = { borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)' };
+const estiloCampo = { borderColor: 'var(--line)', color: 'var(--ink-strong)' };
 const tarjeta = 'bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4 space-y-4';
 
 export default function LoginPage() {
@@ -65,22 +65,22 @@ export default function LoginPage() {
   return (
     <PageLayout title="Iniciar sesión">
       <div className="max-w-md space-y-6">
-        <p className="text-base leading-relaxed" style={{ color: 'var(--sabana-black-70)' }}>
+        <p className="text-base leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
           Este acceso es para el equipo de la Dirección de Alumni. Como visitante no
           necesitas iniciar sesión: todos los análisis del Observatorio son de libre consulta.
         </p>
 
         {cargando ? (
-          <p className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>Comprobando sesión…</p>
+          <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>Comprobando sesión…</p>
         ) : esAdmin ? (
-          <div className={tarjeta} style={{ borderColor: 'var(--sabana-light-blue)' }}>
+          <div className={tarjeta} style={{ borderColor: 'var(--line)' }}>
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5" style={{ color: 'var(--sabana-navy)' }} />
-              <h2 className="text-lg font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+              <ShieldCheck className="w-5 h-5" style={{ color: 'var(--ink-navy)' }} />
+              <h2 className="text-lg font-bold" style={{ color: 'var(--ink-strong)' }}>
                 Sesión de Administrador activa
               </h2>
             </div>
-            <p className="text-sm" style={{ color: 'var(--sabana-black-70)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
               Ya iniciaste sesión. Puedes volver a los análisis o cerrar la sesión en este equipo.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -95,7 +95,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={logout}
                 className="flex items-center gap-2 px-5 py-2 rounded-lg font-semibold border cursor-pointer"
-                style={{ borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)' }}
+                style={{ borderColor: 'var(--line)', color: 'var(--ink-strong)' }}
               >
                 <LogOut size={18} />
                 Cerrar sesión
@@ -106,13 +106,13 @@ export default function LoginPage() {
           // noValidate: la validación la hacemos nosotros para mostrar los
           // errores con el mismo estilo que el resto de la app, no el globo
           // nativo del navegador.
-          <form onSubmit={enviar} noValidate className={tarjeta} style={{ borderColor: 'var(--sabana-light-blue)' }}>
+          <form onSubmit={enviar} noValidate className={tarjeta} style={{ borderColor: 'var(--line)' }}>
             <div>
-              <label htmlFor="login-email" className="block text-sm font-bold mb-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+              <label htmlFor="login-email" className="block text-sm font-bold mb-2" style={{ color: 'var(--ink-strong)' }}>
                 Correo
               </label>
               <div className="relative">
-                <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--sabana-navy)' }} />
+                <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--ink-navy)' }} />
                 <input
                   id="login-email"
                   type="email"
@@ -128,11 +128,11 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="login-password" className="block text-sm font-bold mb-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+              <label htmlFor="login-password" className="block text-sm font-bold mb-2" style={{ color: 'var(--ink-strong)' }}>
                 Contraseña
               </label>
               <div className="relative">
-                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--sabana-navy)' }} />
+                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--ink-navy)' }} />
                 <input
                   id="login-password"
                   type={verPassword ? 'text' : 'password'}
@@ -148,7 +148,7 @@ export default function LoginPage() {
                   onClick={() => setVerPassword((v) => !v)}
                   aria-label={verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                  style={{ color: 'var(--sabana-black-50)' }}
+                  style={{ color: 'var(--ink-muted)' }}
                 >
                   {verPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>

@@ -102,7 +102,10 @@ export function Sidebar() {
     // simplemente después del resto cuando sí (gracias a overflow-y-auto).
     <aside className="w-80 text-white h-screen overflow-y-auto border-r fixed left-0 top-0 z-50 flex flex-col" style={{backgroundColor: 'var(--sabana-dark-navy)', borderColor: 'var(--sabana-navy)'}}>
       <div className="px-6 pt-6 pb-2">
-        <Image src="/logo-alumni.png" alt="Logo Alumni Sabana" className="w-32 mb-2 mx-auto" width={128} height={128} />
+        {/* El logo es un JPEG con fondo blanco: va en una ficha blanca para no verse como un recuadro sobre el azul. */}
+        <div className="bg-white rounded-xl overflow-hidden mb-2 mx-auto w-56">
+          <Image src="/logo-talenthub.jpeg" alt="Logo TalentHub UniSabana" className="w-full h-auto" width={470} height={250} priority />
+        </div>
         <p className="text-sm text-center" style={{color: 'var(--sabana-sky-blue)'}}>Observatorio laboral</p>
       </div>
 
@@ -146,15 +149,15 @@ export function PageLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-black" style={{backgroundColor: 'var(--white-background)'}}>
+    <div className="flex min-h-screen" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <main className="ml-80 flex-1 p-8">
         {/* Contenido a todo el ancho disponible (uniforme en todas las páginas). */}
         <div className="w-full">
-          <h1 className="text-4xl font-bold mb-2" style={{color: 'var(--sabana-dark-navy)'}}>
+          <h1 className="text-4xl font-normal mb-2" style={{color: 'var(--ink-strong)'}}>
             {title}
           </h1>
-          <div className="h-1 w-20 rounded mb-8" style={{backgroundColor: 'var(--sabana-navy)'}}></div>
+          <div className="h-1 w-20 rounded mb-8" style={{backgroundColor: 'var(--chart-1)'}}></div>
           {children}
         </div>
       </main>

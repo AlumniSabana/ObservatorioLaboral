@@ -8,13 +8,22 @@
  */
 
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Libre_Franklin, Playfair_Display, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 // Fuentes de Google cargadas vía next/font; se exponen como variables CSS
 // (--font-geist-sans / --font-geist-mono) que usa globals.css.
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Cuerpo y títulos siguen la tipografía de AlumniCV: Libre Franklin para el
+// texto y una serif ligera para los títulos (allá es Publico Banner, de pago;
+// Playfair Display es su respaldo gratuito).
+const libreFranklin = Libre_Franklin({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-heading",
   subsets: ["latin"],
 });
 
@@ -36,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${libreFranklin.variable} ${playfair.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">{children}</body>
     </html>

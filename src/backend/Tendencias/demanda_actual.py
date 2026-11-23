@@ -27,7 +27,7 @@ from Salarios.trm_service import tasas_a_cop, fecha_tasas, PAIS_MONEDA
 from Tendencias.escolaridad import detectar_escolaridad
 from Tendencias.seniority import detectar_seniority
 from Tendencias.tendencias_service import PAIS_DEFECTO, TODOS
-from traducciones import agrupar_sector, traducir_cargo, traducir_sector
+from traducciones import sector_de_vacante, traducir_cargo
 
 _TABLA = "vacantes_historicas"
 
@@ -205,7 +205,7 @@ def demanda_actual(programa: str = TODOS, seniority: str = TODOS,
         cargo = traducir_cargo(normalize_title(f.get("title") or ""))
         if cargo:
             cargos[cargo] += 1
-        sector = agrupar_sector(traducir_sector(f.get("category")))
+        sector = sector_de_vacante(f.get("category"), f.get("title"))
         if sector:
             sectores[sector] += 1
         empresa = f.get("company")

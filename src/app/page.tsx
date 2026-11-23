@@ -31,7 +31,7 @@ import {
 import { InformeGeneral } from '@/lib/informe-general';
 import { SeccionDepartamentos } from '@/lib/seccion-departamentos';
 import { Spinner } from '@/lib/spinner';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   BarChart,
   Bar,
@@ -245,7 +245,7 @@ const TABLA_LIMITE = 20;
 const TOOLTIP_STYLE = {
   backgroundColor: 'var(--sabana-dark-navy)',
   color: 'var(--white-background)',
-  borderColor: 'var(--sabana-dark-navy)',
+  borderColor: 'var(--chart-1)',
   borderRadius: '8px',
 };
 
@@ -278,7 +278,7 @@ function GraficaDemanda({
 }) {
   return (
     <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-      <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+      <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
         {titulo}
       </h3>
       <p className="text-sm text-zinc-500 mb-4">{descripcion}</p>
@@ -287,9 +287,9 @@ function GraficaDemanda({
       ) : (
         <ResponsiveContainer width="100%" height={Math.max(260, datos.length * 32)}>
           <BarChart data={datos} layout="vertical" margin={{ top: 5, right: 60, left: 10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-            <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }} />
-            <YAxis dataKey="label" type="category" width={210} interval={0} tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }} />
+            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--chart-grid)" />
+            <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--ink-soft)' }} />
+            <YAxis dataKey="label" type="category" width={210} interval={0} tick={{ fontSize: 11, fill: 'var(--ink-soft)' }} />
             <Tooltip
               contentStyle={TOOLTIP_STYLE}
               itemStyle={{ color: 'var(--white-background)' }}
@@ -347,6 +347,8 @@ export default function TendenciasPage() {
   const [salario, setSalario] = useState<SalarioPrograma | null>(null);
   const [salarioLoading, setSalarioLoading] = useState(false);
 
+  const seqTendencias = useRef(0);
+  const seqDemanda = useRef(0);
   const cargar = async (
     dim: Dimension,
     prog: string,
@@ -356,6 +358,9 @@ export default function TendenciasPage() {
     pais: string[],
   ) => {
     if (pais.length === 0) return; // sin países no hay nada que pedir
+    // Solo vale la ÚLTIMA petición: si una respuesta lenta de un filtro anterior
+    // llega tarde, se descarta en vez de pisar a la nueva.
+    const mi = ++seqTendencias.current;
     setLoading(true);
     setError(null);
     try {
@@ -370,6 +375,7 @@ export default function TendenciasPage() {
       const r = await fetch(url);
       if (!r.ok) throw new Error('No se pudieron cargar las tendencias');
       const d: TendenciasResponse = await r.json();
+      if (mi !== seqTendencias.current) return;
       setData(d);
       // Preselección: primero los que más crecen (es lo que se viene a ver) y,
       // si no llegan a 4, se completa con los de mayor volumen. Si solo hubiera
@@ -385,9 +391,9 @@ export default function TendenciasPage() {
       const inicial = [...new Set([...crecientes, ...porVolumen])].slice(0, 4);
       setSeleccionados(inicial);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido');
+      if (mi === seqTendencias.current) setError(e instanceof Error ? e.message : 'Error desconocido');
     } finally {
-      setLoading(false);
+      if (mi === seqTendencias.current) setLoading(false);
     }
   };
 
@@ -472,6 +478,7 @@ export default function TendenciasPage() {
   // No depende de la dimensión ni del rango de fechas (es una foto, no una serie).
   const cargarDemanda = async (prog: string, sen: string, esc: string, pais: string[], top: number) => {
     if (pais.length === 0) return;
+    const mi = ++seqDemanda.current;
     setDemandaLoading(true);
     // Limpia el dato viejo ANTES de pedir el nuevo: si no, mientras el fetch
     // está en curso (puede tardar) la gráfica sigue mostrando el resultado del
@@ -487,11 +494,12 @@ export default function TendenciasPage() {
       url.searchParams.set('top', String(top));
       const r = await fetch(url);
       if (!r.ok) throw new Error('demanda');
-      setDemanda(await r.json());
+      const d = await r.json();
+      if (mi === seqDemanda.current) setDemanda(d);
     } catch {
-      setDemanda(null);
+      if (mi === seqDemanda.current) setDemanda(null);
     } finally {
-      setDemandaLoading(false);
+      if (mi === seqDemanda.current) setDemandaLoading(false);
     }
   };
 
@@ -623,7 +631,9 @@ export default function TendenciasPage() {
   // departamento seguiría oculta con nada visible para volver a la general.
   const [vistaTendencias, setVistaTendencias] = useState<'general' | 'departamento'>('general');
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (!soloColombia) setVistaTendencias('general');
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [soloColombia]);
 
   const terminos = useMemo(() => data?.terminos ?? {}, [data]);
@@ -766,9 +776,9 @@ export default function TendenciasPage() {
     CAT_COLORS[(tendSpe?.series.findIndex((s) => s.nombre === nombre) ?? 0) % CAT_COLORS.length];
 
   const estiloSelect = {
-    backgroundColor: 'var(--sabana-sky-blue)',
-    color: 'var(--sabana-dark-navy)',
-    borderColor: 'var(--sabana-light-blue)',
+    backgroundColor: 'var(--tint)',
+    color: 'var(--ink-strong)',
+    borderColor: 'var(--line)',
   };
   const claseSelect = 'rounded-lg px-3 py-2 text-sm font-semibold border cursor-pointer w-full';
   // Altura fija + alineado abajo: aunque una etiqueta ocupe 2 líneas (p. ej.
@@ -791,10 +801,10 @@ export default function TendenciasPage() {
   const selector = (
     <div
       className="mb-6 rounded-lg p-4 border"
-      style={{ borderColor: 'var(--sabana-light-blue)', backgroundColor: 'var(--white-background)' }}
+      style={{ borderColor: 'var(--line)', backgroundColor: 'var(--surface)' }}
     >
       {/* Fuentes de datos: desplegable con checkboxes. Contexto global del análisis. */}
-      <div className="mb-3 pb-3 border-b" style={{ borderColor: 'var(--sabana-sky-blue)' }}>
+      <div className="mb-3 pb-3 border-b" style={{ borderColor: 'var(--line-soft)' }}>
         <div className="max-w-md">
           <SelectorFuentes
             fuentes={fuentesParaSelector}
@@ -816,7 +826,7 @@ export default function TendenciasPage() {
           en pantallas estrechas se envuelven gracias a flex-wrap + min-width. */}
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-[130px]">
-          <label htmlFor="f-dim" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="f-dim" className={claseEtiqueta} style={{ color: 'var(--ink-navy)' }}>
             Analizar por
           </label>
           <select
@@ -835,7 +845,7 @@ export default function TendenciasPage() {
         </div>
 
         <div className="flex-[2.5] min-w-[220px]">
-          <label htmlFor="f-prog" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="f-prog" className={claseEtiqueta} style={{ color: 'var(--ink-navy)' }}>
             Programa académico
           </label>
           <select
@@ -854,7 +864,7 @@ export default function TendenciasPage() {
         </div>
 
         <div className="flex-[1.3] min-w-[150px]">
-          <label htmlFor="f-sen" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="f-sen" className={claseEtiqueta} style={{ color: 'var(--ink-navy)' }}>
             Nivel de experiencia
           </label>
           <select
@@ -873,7 +883,7 @@ export default function TendenciasPage() {
         </div>
 
         <div className="flex-[1.6] min-w-[190px]">
-          <label htmlFor="f-esc" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="f-esc" className={claseEtiqueta} style={{ color: 'var(--ink-navy)' }}>
             Grupos de la CUOC
           </label>
           <select
@@ -892,7 +902,7 @@ export default function TendenciasPage() {
         </div>
 
         <div className="flex-1 min-w-[120px]">
-          <label htmlFor="f-desde" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="f-desde" className={claseEtiqueta} style={{ color: 'var(--ink-navy)' }}>
             Desde
           </label>
           <select
@@ -914,7 +924,7 @@ export default function TendenciasPage() {
         </div>
 
         <div className="flex-1 min-w-[120px]">
-          <label htmlFor="f-hasta" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="f-hasta" className={claseEtiqueta} style={{ color: 'var(--ink-navy)' }}>
             Hasta
           </label>
           <select
@@ -938,7 +948,7 @@ export default function TendenciasPage() {
 
       <div className="flex flex-wrap items-center gap-4 mt-4">
         <div className="flex items-center gap-2">
-          <label htmlFor="f-top" className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="f-top" className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--ink-navy)' }}>
             Top N
           </label>
           <input
@@ -950,7 +960,7 @@ export default function TendenciasPage() {
             onChange={(e) => setTopN(Number(e.target.value))}
             className="cursor-pointer"
           />
-          <span className="text-sm font-bold w-8" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <span className="text-sm font-bold w-8" style={{ color: 'var(--ink-strong)' }}>
             {topN}
           </span>
         </div>
@@ -959,7 +969,7 @@ export default function TendenciasPage() {
           <button
             onClick={limpiarFiltros}
             className="text-xs font-semibold underline cursor-pointer"
-            style={{ color: 'var(--sabana-navy)' }}
+            style={{ color: 'var(--ink-navy)' }}
           >
             Limpiar filtros
           </button>
@@ -1064,16 +1074,16 @@ export default function TendenciasPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <div
               className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4"
-              style={{ borderColor: 'var(--sabana-navy)' }}
+              style={{ borderColor: 'var(--chart-1)' }}
             >
-              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--ink-navy)' }}>
                 Salario promedio (GEIH) — {programa}
               </p>
               {salarioLoading ? (
                 <Spinner size="sm" compact label="Cargando..." />
               ) : salario?.tiene_geih && salario.kpis ? (
                 <>
-                  <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <p className="text-3xl font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>
                     {salario.kpis.media.toLocaleString('es-CO', {
                       style: 'currency',
                       currency: 'COP',
@@ -1098,16 +1108,16 @@ export default function TendenciasPage() {
                 aquí aunque estén marcados en el selector de fuentes. */}
             <div
               className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4"
-              style={{ borderColor: 'var(--sabana-light-blue)' }}
+              style={{ borderColor: 'var(--line)' }}
             >
-              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--ink-navy)' }}>
                 Salario de las vacantes seleccionadas — {programa}
               </p>
               {salarioLoading ? (
                 <Spinner size="sm" compact label="Cargando..." />
               ) : salario?.salario_vacantes?.disponible ? (
                 <>
-                  <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <p className="text-3xl font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>
                     {salario.salario_vacantes.media_cop!.toLocaleString('es-CO', {
                       style: 'currency',
                       currency: 'COP',
@@ -1142,8 +1152,8 @@ export default function TendenciasPage() {
               className="px-4 py-2 text-sm font-semibold rounded-lg border transition-colors cursor-pointer"
               style={{
                 backgroundColor: vistaTendencias === 'general' ? 'var(--sabana-dark-navy)' : 'transparent',
-                color: vistaTendencias === 'general' ? 'white' : 'var(--sabana-navy)',
-                borderColor: 'var(--sabana-light-blue)',
+                color: vistaTendencias === 'general' ? 'white' : 'var(--ink-navy)',
+                borderColor: 'var(--line)',
               }}
             >
               General
@@ -1154,8 +1164,8 @@ export default function TendenciasPage() {
               className="px-4 py-2 text-sm font-semibold rounded-lg border transition-colors cursor-pointer"
               style={{
                 backgroundColor: vistaTendencias === 'departamento' ? 'var(--sabana-dark-navy)' : 'transparent',
-                color: vistaTendencias === 'departamento' ? 'white' : 'var(--sabana-navy)',
-                borderColor: 'var(--sabana-light-blue)',
+                color: vistaTendencias === 'departamento' ? 'white' : 'var(--ink-navy)',
+                borderColor: 'var(--line)',
               }}
             >
               Por departamento
@@ -1192,8 +1202,8 @@ export default function TendenciasPage() {
                 los que tuvieron suficiente historia mensual para calcularla —
                 todas las vacantes recolectadas se normalizan/agrupan igual,
                 sean o no suficientes para una tendencia. */}
-            <div className="rounded-lg p-5" style={{ backgroundColor: 'var(--sabana-sky-blue)' }}>
-              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
+            <div className="rounded-lg p-5" style={{ backgroundColor: 'var(--tint)' }}>
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--ink-navy)' }}>
                 Vacantes analizadas
               </p>
               {demandaLoading && !demanda ? (
@@ -1201,23 +1211,23 @@ export default function TendenciasPage() {
                   <Spinner size="sm" compact label="Contando..." />
                 </div>
               ) : (
-                <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <p className="text-3xl font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>
                   {demanda ? demanda.meta.total.toLocaleString('es-CO') : '0'}
                 </p>
               )}
-              <p className="text-xs mt-1" style={{ color: 'var(--sabana-navy)' }}>
+              <p className="text-xs mt-1" style={{ color: 'var(--ink-navy)' }}>
                 ofertas recolectadas
               </p>
             </div>
 
-            <div className="rounded-lg p-5" style={{ backgroundColor: 'var(--sabana-sky-blue)' }}>
-              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--sabana-navy)' }}>
+            <div className="rounded-lg p-5" style={{ backgroundColor: 'var(--tint)' }}>
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--ink-navy)' }}>
                 {DIMENSIONES[dimension].singular}s con tendencia
               </p>
-              <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+              <p className="text-3xl font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>
                 {data.meta.total_terminos}
               </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--sabana-navy)' }}>
+              <p className="text-xs mt-1" style={{ color: 'var(--ink-navy)' }}>
                 {hayTendencia
                   ? `con suficiente historia en ${periodos.length} meses`
                   : 'sin historia mensual suficiente todavía'}
@@ -1234,10 +1244,10 @@ export default function TendenciasPage() {
                   className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4"
                   style={{ borderColor: COLOR_TENDENCIA[t] }}
                 >
-                  <p className="text-xs font-bold uppercase tracking-wide flex items-center gap-1" style={{ color: 'var(--sabana-navy)' }}>
+                  <p className="text-xs font-bold uppercase tracking-wide flex items-center gap-1" style={{ color: 'var(--ink-navy)' }}>
                     <span style={{ color: COLOR_TENDENCIA[t] }}>{SIMBOLO[t]}</span> {ETIQUETA[t]}s
                   </p>
-                  <p className="text-3xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <p className="text-3xl font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>
                     {valor}
                   </p>
                   <p className="text-xs mt-1 text-zinc-500">{porc.toFixed(0)}% del total</p>
@@ -1255,7 +1265,7 @@ export default function TendenciasPage() {
             Cargos o Sectores, la que coincida con "Analizar por" de arriba—
             para no repetir prácticamente la misma pregunta cuatro veces. */}
         <div className="mb-4">
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <h2 className="text-2xl font-bold" style={{ color: 'var(--ink-strong)' }}>
             Demanda actual
           </h2>
           <p className="text-sm text-zinc-500">
@@ -1275,7 +1285,7 @@ export default function TendenciasPage() {
               <GraficaDemanda
                 titulo="Cargos más demandados"
                 descripcion="Títulos de cargo con mayor número de vacantes."
-                datos={demanda?.cargos ?? []} color="var(--sabana-dark-navy)"
+                datos={demanda?.cargos ?? []} color="var(--chart-1)"
                 vacio="No hay cargos con ese filtro."
               />
             )}
@@ -1283,7 +1293,7 @@ export default function TendenciasPage() {
               <GraficaDemanda
                 titulo="Sectores con mayor actividad de contratación"
                 descripcion="Sectores económicos que más contratan (Adzuna; Google Jobs no aporta sector)."
-                datos={demanda?.sectores ?? []} color="var(--sabana-navy)"
+                datos={demanda?.sectores ?? []} color="var(--chart-1)"
                 vacio="No hay datos de sector para la selección (Google Jobs no trae sector)."
               />
             )}
@@ -1298,7 +1308,7 @@ export default function TendenciasPage() {
                 <GraficaDemanda
                   titulo="Programas académicos relacionados con mayor demanda"
                   descripcion="Programas de La Sabana asociados a más vacantes."
-                  datos={demanda?.programas ?? []} color="var(--sabana-navy)"
+                  datos={demanda?.programas ?? []} color="var(--chart-1)"
                   vacio="No hay programas con ese filtro."
                 />
               </>
@@ -1316,7 +1326,7 @@ export default function TendenciasPage() {
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-8 shadow text-center space-y-3 mb-10">
             {soloFuentesEnDesarrollo ? (
               <>
-                <p className="text-lg font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <p className="text-lg font-bold" style={{ color: 'var(--ink-strong)' }}>
                   Esta fuente está en desarrollo
                 </p>
                 <p className="text-sm text-zinc-500 max-w-2xl mx-auto">
@@ -1333,17 +1343,17 @@ export default function TendenciasPage() {
                     independientemente de este bloque. */}
                 {demanda && demanda.cargos.length > 0 && (
                   <div className="max-w-md mx-auto text-left pt-2">
-                    <p className="text-xs font-bold uppercase tracking-wide mb-2 text-center" style={{ color: 'var(--sabana-navy)' }}>
+                    <p className="text-xs font-bold uppercase tracking-wide mb-2 text-center" style={{ color: 'var(--ink-navy)' }}>
                       Top 10 cargos más encontrados
                     </p>
                     <table className="w-full text-sm">
                       <tbody>
                         {demanda.cargos.slice(0, 10).map((c, i) => (
-                          <tr key={c.label} style={{ backgroundColor: i % 2 ? 'var(--sabana-sky-blue)' : 'transparent' }}>
-                            <td className="px-3 py-1.5 text-right font-semibold w-8" style={{ color: 'var(--sabana-navy)' }}>
+                          <tr key={c.label} style={{ backgroundColor: i % 2 ? 'var(--tint)' : 'transparent' }}>
+                            <td className="px-3 py-1.5 text-right font-semibold w-8" style={{ color: 'var(--ink-navy)' }}>
                               {i + 1}.
                             </td>
-                            <td className="px-3 py-1.5" style={{ color: 'var(--sabana-dark-navy)' }}>
+                            <td className="px-3 py-1.5" style={{ color: 'var(--ink-strong)' }}>
                               {c.label}
                             </td>
                             <td className="px-3 py-1.5 text-right tabular-nums text-zinc-500">
@@ -1358,7 +1368,7 @@ export default function TendenciasPage() {
               </>
             ) : (
               <>
-                <p className="text-lg font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <p className="text-lg font-bold" style={{ color: 'var(--ink-strong)' }}>
                   Todavía no hay historia suficiente para calcular tendencias.
                 </p>
                 <p className="text-sm text-zinc-500 max-w-2xl mx-auto">
@@ -1406,7 +1416,7 @@ export default function TendenciasPage() {
               className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4"
               style={{ borderColor: c.color }}
             >
-              <p className="text-sm font-bold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+              <p className="text-sm font-bold mb-1" style={{ color: 'var(--ink-strong)' }}>
                 {c.titulo}
               </p>
               {c.datos.total === 0 ? (
@@ -1424,7 +1434,7 @@ export default function TendenciasPage() {
                         <span className="font-semibold" style={{ color: c.color }}>
                           {i + 1}.
                         </span>
-                        <span className="flex-1 min-w-0 truncate" style={{ color: 'var(--sabana-dark-navy)' }}>
+                        <span className="flex-1 min-w-0 truncate" style={{ color: 'var(--ink-strong)' }}>
                           {nombre}
                         </span>
                       </li>
@@ -1449,8 +1459,8 @@ export default function TendenciasPage() {
                 className="px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors cursor-pointer"
                 style={{
                   backgroundColor: activo ? 'var(--sabana-dark-navy)' : 'transparent',
-                  color: activo ? 'white' : 'var(--sabana-dark-navy)',
-                  borderColor: f === 'todas' ? 'var(--sabana-light-blue)' : COLOR_TENDENCIA[f],
+                  color: activo ? 'white' : 'var(--ink-strong)',
+                  borderColor: f === 'todas' ? 'var(--line)' : COLOR_TENDENCIA[f],
                 }}
               >
                 {f === 'todas' ? 'Todas' : `${SIMBOLO[f]} ${ETIQUETA[f]}s`}
@@ -1461,7 +1471,7 @@ export default function TendenciasPage() {
 
         {/* ---------------- Barras: fuerza de la señal ---------------- */}
         <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mb-8">
-          <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
             Crecimiento de vacantes
           </h3>
           <p className="text-sm text-zinc-500 mb-4">
@@ -1472,14 +1482,14 @@ export default function TendenciasPage() {
           ) : (
             <ResponsiveContainer width="100%" height={Math.max(280, datosBarras.length * 34)}>
               <BarChart data={datosBarras} layout="vertical" margin={{ top: 5, right: 60, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                <XAxis type="number" domain={[0, 1]} tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }} />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--chart-grid)" />
+                <XAxis type="number" domain={[0, 1]} tick={{ fontSize: 11, fill: 'var(--ink-soft)' }} />
                 <YAxis
                   dataKey="nombre"
                   type="category"
                   width={210}
                   interval={0}
-                  tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }}
+                  tick={{ fontSize: 11, fill: 'var(--ink-soft)' }}
                 />
                 <Tooltip
                   contentStyle={TOOLTIP_STYLE}
@@ -1501,7 +1511,7 @@ export default function TendenciasPage() {
           {/* Leyenda explícita: la identidad no puede depender solo del color. */}
           <div className="flex flex-wrap gap-4 mt-4 justify-center">
             {(['creciente', 'estable', 'decreciente'] as Tendencia[]).map((t) => (
-              <span key={t} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--sabana-black-70)' }}>
+              <span key={t} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--ink-soft)' }}>
                 <span style={{ color: COLOR_TENDENCIA[t] }}>{SIMBOLO[t]}</span>
                 {ETIQUETA[t]}
               </span>
@@ -1512,7 +1522,7 @@ export default function TendenciasPage() {
 
         {/* ---------------- Evolución temporal ---------------- */}
         <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mb-8">
-          <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
             Evolución temporal
           </h3>
           <p className="text-sm text-zinc-500 mb-4">
@@ -1531,8 +1541,8 @@ export default function TendenciasPage() {
                   className="px-3 py-1 rounded-full text-xs font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   style={{
                     backgroundColor: activo ? colorDeSerie(nombre) : 'transparent',
-                    color: activo ? 'white' : 'var(--sabana-dark-navy)',
-                    borderColor: activo ? colorDeSerie(nombre) : 'var(--sabana-light-blue)',
+                    color: activo ? 'white' : 'var(--ink-strong)',
+                    borderColor: activo ? colorDeSerie(nombre) : 'var(--line)',
                   }}
                 >
                   {nombre}
@@ -1546,22 +1556,22 @@ export default function TendenciasPage() {
           ) : (
             <ResponsiveContainer width="100%" height={380}>
               <LineChart data={datosEvolucion} margin={{ top: 5, right: 20, left: 0, bottom: 40 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
                 <XAxis
                   dataKey="periodo"
-                  tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }}
+                  tick={{ fontSize: 11, fill: 'var(--ink-soft)' }}
                   angle={-40}
                   textAnchor="end"
                   height={60}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }}
+                  tick={{ fontSize: 11, fill: 'var(--ink-soft)' }}
                   tickFormatter={(v) => `${v}%`}
                   label={{
                     value: '% de vacantes del mes',
                     angle: -90,
                     position: 'insideLeft',
-                    style: { fontSize: 11, fill: 'var(--sabana-black-70)' },
+                    style: { fontSize: 11, fill: 'var(--ink-soft)' },
                   }}
                 />
                 <Tooltip
@@ -1601,7 +1611,7 @@ export default function TendenciasPage() {
         )}
         {tendSpe && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mb-8">
-            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
               Serie mensual del SPE — Colombia
             </h3>
             <p className="text-sm text-zinc-500 mb-4">
@@ -1614,7 +1624,7 @@ export default function TendenciasPage() {
             <div className="flex flex-wrap gap-4 items-end mb-5">
               <div>
                 <label htmlFor="spe-dim" className="block text-xs font-bold uppercase tracking-wide mb-1"
-                  style={{ color: 'var(--sabana-navy)' }}>
+                  style={{ color: 'var(--ink-navy)' }}>
                   Qué medir
                 </label>
                 <select
@@ -1632,10 +1642,10 @@ export default function TendenciasPage() {
 
               <div>
                 <span className="block text-xs font-bold uppercase tracking-wide mb-1"
-                  style={{ color: 'var(--sabana-navy)' }}>
+                  style={{ color: 'var(--ink-navy)' }}>
                   Cómo verlo
                 </span>
-                <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+                <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: 'var(--line)' }}>
                   {([['share', 'Participación'], ['volumen', 'Volumen']] as const).map(([k, txt]) => (
                     <button
                       key={k}
@@ -1643,8 +1653,8 @@ export default function TendenciasPage() {
                       onClick={() => setModoSpe(k)}
                       className="px-3 py-2 text-sm font-semibold cursor-pointer"
                       style={{
-                        backgroundColor: modoSpe === k ? 'var(--sabana-dark-navy)' : 'var(--sabana-sky-blue)',
-                        color: modoSpe === k ? 'var(--white-background)' : 'var(--sabana-dark-navy)',
+                        backgroundColor: modoSpe === k ? 'var(--sabana-dark-navy)' : 'var(--tint)',
+                        color: modoSpe === k ? 'var(--white-background)' : 'var(--ink-strong)',
                       }}
                     >
                       {txt}
@@ -1673,16 +1683,16 @@ export default function TendenciasPage() {
 
             <ResponsiveContainer width="100%" height={380}>
               <LineChart data={datosSpe} margin={{ top: 5, right: 20, left: 0, bottom: 40 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
                 <XAxis
                   dataKey="periodo"
-                  tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }}
+                  tick={{ fontSize: 11, fill: 'var(--ink-soft)' }}
                   angle={-40}
                   textAnchor="end"
                   height={60}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }}
+                  tick={{ fontSize: 11, fill: 'var(--ink-soft)' }}
                   tickFormatter={(v) =>
                     modoSpe === 'share' ? `${v}%` : `${Math.round((v as number) / 1000)}k`
                   }
@@ -1690,7 +1700,7 @@ export default function TendenciasPage() {
                     value: modoSpe === 'share' ? '% del total del mes' : 'menciones en vacantes',
                     angle: -90,
                     position: 'insideLeft',
-                    style: { fontSize: 11, fill: 'var(--sabana-black-70)' },
+                    style: { fontSize: 11, fill: 'var(--ink-soft)' },
                   }}
                 />
                 <Tooltip
@@ -1729,7 +1739,7 @@ export default function TendenciasPage() {
 
         {/* ---------------- Tabla ---------------- */}
         <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-          <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
             Detalle
           </h3>
           <p className="text-sm text-zinc-500 mb-4">
@@ -1751,8 +1761,8 @@ export default function TendenciasPage() {
               </thead>
               <tbody>
                 {filasTabla.map(([nombre, v], i) => (
-                  <tr key={nombre} style={{ backgroundColor: i % 2 ? 'var(--sabana-sky-blue)' : 'transparent' }}>
-                    <td className="px-3 py-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <tr key={nombre} style={{ backgroundColor: i % 2 ? 'var(--tint)' : 'transparent' }}>
+                    <td className="px-3 py-2" style={{ color: 'var(--ink-strong)' }}>
                       {nombre}
                     </td>
                     <td className="px-3 py-2">
@@ -1763,10 +1773,10 @@ export default function TendenciasPage() {
                         {SIMBOLO[v.tendencia]} {ETIQUETA[v.tendencia]}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-right" style={{ color: 'var(--sabana-dark-navy)' }}>
+                    <td className="px-3 py-2 text-right" style={{ color: 'var(--ink-strong)' }}>
                       {v.total_menciones}
                     </td>
-                    <td className="px-3 py-2 text-right" style={{ color: 'var(--sabana-dark-navy)' }}>
+                    <td className="px-3 py-2 text-right" style={{ color: 'var(--ink-strong)' }}>
                       {v.periodos_cubiertos}
                     </td>
                   </tr>
@@ -1781,8 +1791,8 @@ export default function TendenciasPage() {
                 onClick={() => setTablaExpandida((v) => !v)}
                 className="px-4 py-2 rounded-lg text-sm font-semibold border cursor-pointer transition-colors"
                 style={{
-                  borderColor: 'var(--sabana-light-blue)',
-                  color: 'var(--sabana-dark-navy)',
+                  borderColor: 'var(--line)',
+                  color: 'var(--ink-strong)',
                   backgroundColor: 'transparent',
                 }}
               >

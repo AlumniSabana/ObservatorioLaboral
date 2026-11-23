@@ -140,9 +140,9 @@ export function InformeGeneral() {
   };
 
   return (
-    <section className="rounded-lg border p-4 mb-4 text-sm" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-      <h3 className="font-bold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Informe general (PDF)</h3>
-      <p className="text-xs mb-3" style={{ color: 'var(--sabana-black-50)' }}>
+    <section className="rounded-lg border p-4 mb-4 text-sm" style={{ borderColor: 'var(--line)' }}>
+      <h3 className="font-bold mb-1" style={{ color: 'var(--ink-strong)' }}>Informe general (PDF)</h3>
+      <p className="text-xs mb-3" style={{ color: 'var(--ink-muted)' }}>
         Descarga el panorama completo —tendencias, demanda actual, competencias y tecnologías— de todas las
         fuentes y todos los programas, sin discriminar por carrera. Puede tardar un minuto.
       </p>

@@ -39,7 +39,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:800
 const TOOLTIP_STYLE = {
   backgroundColor: 'var(--sabana-dark-navy)',
   color: 'var(--white-background)',
-  borderColor: 'var(--sabana-dark-navy)',
+  borderColor: 'var(--chart-1)',
   borderRadius: '8px',
 };
 
@@ -143,7 +143,7 @@ const TENDENCIA_UI: Record<string, { label: string; icono: string; color: string
   creciente: { label: 'Creciente', icono: '▲', color: 'var(--trend-up)' },
   estable: { label: 'Estable', icono: '▬', color: 'var(--trend-flat)' },
   decreciente: { label: 'Decreciente', icono: '▼', color: 'var(--trend-down)' },
-  sin_datos: { label: 'Sin datos', icono: '–', color: 'var(--sabana-black-50)' },
+  sin_datos: { label: 'Sin datos', icono: '–', color: 'var(--ink-muted)' },
 };
 
 export default function PerfilOcupacionalPage() {
@@ -172,6 +172,10 @@ export default function PerfilOcupacionalPage() {
 
   useEffect(() => {
     if (!programa) return;
+    // Cancela la petición anterior al cambiar de programa: sin esto, una
+    // respuesta lenta del programa viejo podía llegar DESPUÉS de la del nuevo
+    // y pisarla (perfil mezclado). El spinner solo tapa la espera, no evita eso.
+    const controlador = new AbortController();
     (async () => {
       setLoading(true);
       setError(null);
@@ -182,15 +186,17 @@ export default function PerfilOcupacionalPage() {
       try {
         const url = new URL(`${BACKEND_URL}/perfil-ocupacional`);
         url.searchParams.append('programa', programa);
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: controlador.signal });
         if (!res.ok) throw new Error('No se pudo cargar el perfil');
         setData(await res.json());
       } catch (err) {
+        if (controlador.signal.aborted) return;
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
-        setLoading(false);
+        if (!controlador.signal.aborted) setLoading(false);
       }
     })();
+    return () => controlador.abort();
   }, [programa]);
 
   const kpis = data?.salario.kpis;
@@ -201,11 +207,11 @@ export default function PerfilOcupacionalPage() {
       <PageLayout title="Perfil ocupacional">
         <div className="space-y-6">
           <div>
-            <p className="text-lg" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <p className="text-lg" style={{ color: 'var(--ink-strong)' }}>
               Todo lo esencial de un programa en una vista: cuánto se gana, qué competencias
               pesan, qué nivel de experiencia conviene y hacia dónde va la demanda.
             </p>
-            <p className="text-sm mt-1" style={{ color: 'var(--sabana-black-50)' }}>
+            <p className="text-sm mt-1" style={{ color: 'var(--ink-muted)' }}>
               Fuentes: <b>O*NET</b> · <b>GEIH — DANE</b> · <b>SPE</b> · <b>Adzuna</b> · <b>Google Jobs</b>.
             </p>
           </div>
@@ -213,14 +219,14 @@ export default function PerfilOcupacionalPage() {
           {/* Selector de programa + botón PDF */}
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 shadow flex flex-col md:flex-row md:items-end gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--ink-strong)' }}>
                 Programa académico
               </label>
               <select
                 value={programa}
                 onChange={(e) => setPrograma(e.target.value)}
                 className="w-full md:w-96 rounded-lg border px-3 py-2 text-sm"
-                style={{ borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)' }}
+                style={{ borderColor: 'var(--line)', color: 'var(--ink-strong)' }}
               >
                 {programas.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
@@ -242,8 +248,8 @@ export default function PerfilOcupacionalPage() {
             <>
               {/* Ocupación de referencia */}
               {data.onet.ocupacion_ref && (
-                <p className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>
-                  Ocupación de referencia O*NET: <b style={{ color: 'var(--sabana-dark-navy)' }}>{data.onet.ocupacion_ref}</b>
+                <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
+                  Ocupación de referencia O*NET: <b style={{ color: 'var(--ink-strong)' }}>{data.onet.ocupacion_ref}</b>
                   {data.salario.cno ? ` · Grupo ocupacional CNO ${data.salario.cno.codigo} (${data.salario.cno.nombre})` : ''}
                   {data.onet.bright_outlook ? ' · Perspectiva de crecimiento' : ''}
                 </p>
@@ -251,69 +257,69 @@ export default function PerfilOcupacionalPage() {
 
               {/* ── SECCIÓN 0 · VEREDICTO ─────────────────────────────────── */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="rounded-lg p-4 border-l-4 bg-white dark:bg-zinc-800 shadow" style={{ borderColor: 'var(--sabana-dark-navy)' }}>
-                  <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Salario mediano</p>
-                  <p className="text-xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>{fmtCOP(kpis.mediana)}</p>
+                <div className="rounded-lg p-4 border-l-4 bg-white dark:bg-zinc-800 shadow" style={{ borderColor: 'var(--chart-1)' }}>
+                  <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Salario mediano</p>
+                  <p className="text-xl font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>{fmtCOP(kpis.mediana)}</p>
                   {data.salario.vs_nacional_pct !== null && (
                     <p className="text-xs mt-1" style={{ color: data.salario.vs_nacional_pct >= 0 ? 'var(--trend-up)' : 'var(--trend-down)' }}>
                       {data.salario.vs_nacional_pct >= 0 ? '+' : ''}{data.salario.vs_nacional_pct}% vs. promedio nacional
                     </p>
                   )}
                 </div>
-                <div className="rounded-lg p-4 border-l-4 bg-white dark:bg-zinc-800 shadow" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-                  <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Demanda</p>
+                <div className="rounded-lg p-4 border-l-4 bg-white dark:bg-zinc-800 shadow" style={{ borderColor: 'var(--line)' }}>
+                  <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Demanda</p>
                   <p className="text-xl font-bold mt-1" style={{ color: tend.color }}>{tend.icono} {tend.label}</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--sabana-black-50)' }}>
+                  <p className="text-xs mt-1" style={{ color: 'var(--ink-muted)' }}>
                     {data.tendencia.variacion_pct !== null ? `${data.tendencia.variacion_pct > 0 ? '+' : ''}${data.tendencia.variacion_pct}% en el periodo` : 'tendencia observada'}
                   </p>
                 </div>
-                <div className="rounded-lg p-4 border-l-4 bg-white dark:bg-zinc-800 shadow" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-                  <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Seniority que conviene</p>
-                  <p className="text-lg font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <div className="rounded-lg p-4 border-l-4 bg-white dark:bg-zinc-800 shadow" style={{ borderColor: 'var(--line)' }}>
+                  <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Seniority que conviene</p>
+                  <p className="text-lg font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>
                     {data.seniority.recomendado ? data.seniority.recomendado.etiqueta : 'Señal limitada'}
                   </p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--sabana-black-50)' }}>
+                  <p className="text-xs mt-1" style={{ color: 'var(--ink-muted)' }}>
                     {data.seniority.confianza === 'alta' ? 'confianza alta' : `muestra limitada (n=${data.seniority.n_total_etiquetadas})`}
                   </p>
                 </div>
-                <div className="rounded-lg p-4 border-l-4 bg-white dark:bg-zinc-800 shadow" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-                  <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Competencia clave</p>
-                  <p className="text-lg font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <div className="rounded-lg p-4 border-l-4 bg-white dark:bg-zinc-800 shadow" style={{ borderColor: 'var(--line)' }}>
+                  <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Competencia clave</p>
+                  <p className="text-lg font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>
                     {data.skills.competencias[0]?.nombre ?? '—'}
                   </p>
                   {data.skills.competencias[0] && (
-                    <p className="text-xs mt-1" style={{ color: 'var(--sabana-black-50)' }}>importancia {Math.round(data.skills.competencias[0].peso)}/100</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--ink-muted)' }}>importancia {Math.round(data.skills.competencias[0].peso)}/100</p>
                   )}
                 </div>
               </div>
 
               {/* ── SECCIÓN 1 · SALARIO + NIVEL EDUCATIVO ─────────────────── */}
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--sabana-dark-navy)' }}>Salario en Colombia (COP)</h3>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--ink-strong)' }}>Salario en Colombia (COP)</h3>
                 <div className="mb-6">
-                  <div className="rounded-lg p-4 border-l-4 max-w-xs" style={{ borderColor: 'var(--sabana-dark-navy)' }}>
-                    <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Mediana mensual</p>
-                    <p className="text-lg font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>{fmtCOP(kpis.mediana)}</p>
+                  <div className="rounded-lg p-4 border-l-4 max-w-xs" style={{ borderColor: 'var(--chart-1)' }}>
+                    <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Mediana mensual</p>
+                    <p className="text-lg font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>{fmtCOP(kpis.mediana)}</p>
                   </div>
                 </div>
 
                 {data.salario.nivel_educativo.length > 0 && (
                   <>
-                    <p className="text-sm mb-2" style={{ color: 'var(--sabana-black-50)' }}>
+                    <p className="text-sm mb-2" style={{ color: 'var(--ink-muted)' }}>
                       Salario por nivel educativo{data.salario.nivel_top_paga?.incremento_vs_pregrado_pct != null && (
-                        <> — <b style={{ color: 'var(--sabana-dark-navy)' }}>{data.salario.nivel_top_paga.nombre}</b> paga
+                        <> — <b style={{ color: 'var(--ink-strong)' }}>{data.salario.nivel_top_paga.nombre}</b> paga
                         {' '}<b style={{ color: 'var(--trend-up)' }}>+{data.salario.nivel_top_paga.incremento_vs_pregrado_pct}%</b> sobre el pregrado</>
                       )}.
                     </p>
                     <ResponsiveContainer width="100%" height={Math.max(200, data.salario.nivel_educativo.length * 44)}>
                       <BarChart data={data.salario.nivel_educativo} layout="vertical" margin={{ left: 8, right: 40 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" tickFormatter={(v) => fmtM(v as number)} tick={{ fontSize: 12, fill: 'var(--sabana-dark-navy)' }} />
-                        <YAxis dataKey="nombre" type="category" width={170} tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }} />
+                        <XAxis type="number" tickFormatter={(v) => fmtM(v as number)} tick={{ fontSize: 12, fill: 'var(--ink-strong)' }} />
+                        <YAxis dataKey="nombre" type="category" width={170} tick={{ fontSize: 11, fill: 'var(--ink-strong)' }} />
                         <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: 'var(--white-background)' }} labelStyle={{ color: 'var(--white-background)' }} formatter={(v) => [fmtCOP(v as number), 'Mediana']} />
                         <Bar dataKey="mediana" radius={[0, 4, 4, 0]}>
                           {data.salario.nivel_educativo.map((nv) => (
-                            <Cell key={nv.codigo} fill={nv.orden >= 10 ? 'var(--sabana-dark-navy)' : 'var(--sabana-light-blue)'} />
+                            <Cell key={nv.codigo} fill={nv.orden >= 10 ? 'var(--chart-1)' : 'var(--sabana-light-blue)'} />
                           ))}
                         </Bar>
                       </BarChart>
@@ -324,26 +330,26 @@ export default function PerfilOcupacionalPage() {
 
               {/* ── SECCIÓN 2 · SKILLS ─────────────────────────────────────── */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SkillsCard titulo="Competencias clave" skills={data.skills.competencias} color="var(--sabana-navy)" />
+                <SkillsCard titulo="Competencias clave" skills={data.skills.competencias} color="var(--chart-1)" />
                 <SkillsCard titulo="Tecnologías y herramientas" skills={data.skills.tecnologias} color="var(--sabana-light-blue)" />
               </div>
 
               {/* ── SECCIÓN 2b · CNO 2025 (SENA) ───────────────────────────── */}
               {!data.cno_sena.sin_datos && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
                     Perfil oficial colombiano — CNO 2025 (SENA)
                   </h3>
-                  <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
-                    Lo que la <b style={{ color: 'var(--sabana-dark-navy)' }}>Clasificación Nacional de Ocupaciones</b> exige
+                  <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
+                    Lo que la <b style={{ color: 'var(--ink-strong)' }}>Clasificación Nacional de Ocupaciones</b> exige
                     para {data.cno_sena.ocupacion?.nombre
-                      ? <b style={{ color: 'var(--sabana-dark-navy)' }}>{data.cno_sena.ocupacion.nombre}</b>
+                      ? <b style={{ color: 'var(--ink-strong)' }}>{data.cno_sena.ocupacion.nombre}</b>
                       : 'esta ocupación'}
                     {data.cno_sena.ocupacion?.codigo && <> (código {data.cno_sena.ocupacion.codigo})</>}.
                     {' '}Es la referencia <b>normativa del país</b>, no una medición del mercado.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <CnoLista titulo="Habilidades" items={data.cno_sena.habilidades ?? []} color="var(--sabana-navy)" />
+                    <CnoLista titulo="Habilidades" items={data.cno_sena.habilidades ?? []} color="var(--chart-1)" />
                     <CnoLista titulo="Conocimientos" items={data.cno_sena.conocimientos ?? []} color="var(--sabana-light-blue)" />
                   </div>
                 </div>
@@ -352,18 +358,18 @@ export default function PerfilOcupacionalPage() {
               {/* ── SECCIÓN 3 · TENDENCIA ──────────────────────────────────── */}
               {data.tendencia.serie.length > 1 && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Tendencia de demanda</h3>
-                  <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>Tendencia de demanda</h3>
+                  <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
                     Evolución del índice de demanda del programa. <b>Tendencia observada, no es una proyección.</b>
                     {' '}Señal: <span style={{ color: tend.color, fontWeight: 600 }}>{tend.icono} {tend.label}</span>.
                   </p>
                   <ResponsiveContainer width="100%" height={260}>
                     <LineChart data={data.tendencia.serie} margin={{ left: 8, right: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="periodo" tick={{ fontSize: 10, fill: 'var(--sabana-dark-navy)' }} tickFormatter={(v) => String(v).slice(0, 7)} />
-                      <YAxis tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }} />
+                      <XAxis dataKey="periodo" tick={{ fontSize: 10, fill: 'var(--ink-strong)' }} tickFormatter={(v) => String(v).slice(0, 7)} />
+                      <YAxis tick={{ fontSize: 11, fill: 'var(--ink-strong)' }} />
                       <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: 'var(--white-background)' }} labelStyle={{ color: 'var(--white-background)' }} formatter={(v) => [(v as number).toFixed(2), 'Índice']} />
-                      <Line type="monotone" dataKey="indice" stroke="var(--sabana-navy)" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="indice" stroke="var(--chart-1)" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -371,13 +377,13 @@ export default function PerfilOcupacionalPage() {
 
               {/* ── SECCIÓN 4 · SENIORITY ÓPTIMO ───────────────────────────── */}
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>¿Qué seniority conviene más?</h3>
-                <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+                <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>¿Qué seniority conviene más?</h3>
+                <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
                   Balance entre <b>acceso</b> (cuántas vacantes hay) y <b>pago</b> por nivel de experiencia.
                   Índice de pago relativo entre niveles (promedio = 100). Fuente: {data.seniority.fuente}.
                 </p>
                 {data.seniority.confianza === 'limitada' && (
-                  <div className="rounded-lg px-3 py-2 mb-4 text-xs" style={{ background: 'var(--sabana-cream)', color: 'var(--sabana-dark-navy)' }}>
+                  <div className="rounded-lg px-3 py-2 mb-4 text-xs" style={{ background: 'var(--cream)', color: 'var(--ink-strong)' }}>
                     Señal limitada: solo {data.seniority.n_total_etiquetadas} vacantes declaran nivel en el título. Tómese como orientación, no como conclusión.
                   </div>
                 )}
@@ -385,16 +391,16 @@ export default function PerfilOcupacionalPage() {
                   {data.seniority.niveles.map((nv) => {
                     const rec = data.seniority.recomendado?.codigo === nv.codigo;
                     return (
-                      <div key={nv.codigo} className="rounded-lg p-3 border" style={{ borderColor: rec ? 'var(--sabana-dark-navy)' : 'var(--sabana-sky-blue)', borderWidth: rec ? 2 : 1, background: rec ? 'var(--sabana-sky-blue)' : 'transparent' }}>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>{nv.etiqueta}</p>
-                        <p className="text-xs mt-1" style={{ color: 'var(--sabana-black-50)' }}>Demanda: <b style={{ color: 'var(--sabana-dark-navy)' }}>{nv.demanda_pct}%</b></p>
-                        <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Pago: <b style={{ color: 'var(--sabana-dark-navy)' }}>{nv.salario_indice != null ? `${nv.salario_indice} / 100` : '—'}</b></p>
+                      <div key={nv.codigo} className="rounded-lg p-3 border" style={{ borderColor: rec ? 'var(--chart-1)' : 'var(--line-soft)', borderWidth: rec ? 2 : 1, background: rec ? 'var(--line-soft)' : 'transparent' }}>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--ink-strong)' }}>{nv.etiqueta}</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--ink-muted)' }}>Demanda: <b style={{ color: 'var(--ink-strong)' }}>{nv.demanda_pct}%</b></p>
+                        <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Pago: <b style={{ color: 'var(--ink-strong)' }}>{nv.salario_indice != null ? `${nv.salario_indice} / 100` : '—'}</b></p>
                       </div>
                     );
                   })}
                 </div>
                 {data.seniority.recomendado && (
-                  <p className="text-sm mt-4" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <p className="text-sm mt-4" style={{ color: 'var(--ink-strong)' }}>
                     <b>Recomendado: {data.seniority.recomendado.etiqueta}.</b> {data.seniority.recomendado.motivo}
                   </p>
                 )}
@@ -404,13 +410,13 @@ export default function PerfilOcupacionalPage() {
               {(data.onet.riasec.length > 0 || data.onet.job_zone || data.onet.descripcion) && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Perfil de intereses (RIASEC)</h3>
-                    <p className="text-sm mb-2" style={{ color: 'var(--sabana-black-50)' }}>Afinidad vocacional de la ocupación (modelo de Holland, Holland, J. L. (1997). Making vocational choices: A theory of vocational personalities and work environments (3rd ed.). Psychological Assessment Resources.).</p>
+                    <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>Perfil de intereses (RIASEC)</h3>
+                    <p className="text-sm mb-2" style={{ color: 'var(--ink-muted)' }}>Afinidad vocacional de la ocupación (modelo de Holland, Holland, J. L. (1997). Making vocational choices: A theory of vocational personalities and work environments (3rd ed.). Psychological Assessment Resources.).</p>
                     {data.onet.riasec.length > 0 ? (
                       <>
                         <ResponsiveContainer width="100%" height={280}>
                           <RadarChart data={data.onet.riasec} outerRadius="72%">
-                            <PolarGrid stroke="var(--sabana-sky-blue)" />
+                            <PolarGrid stroke="var(--line)" />
                             {/* Eje con la LETRA (no el nombre largo): así cabe sin
                                 encimarse y cada vértice va del color de su zona,
                                 que es la clave que usa la leyenda de abajo. */}
@@ -427,18 +433,18 @@ export default function PerfilOcupacionalPage() {
                                     dominantBaseline="central"
                                     fontSize={15}
                                     fontWeight="bold"
-                                    fill={zona?.color ?? 'var(--sabana-dark-navy)'}
+                                    fill={zona?.color ?? 'var(--chart-1)'}
                                   >
                                     {payload.value}
                                   </text>
                                 );
                               }}
                             />
-                            <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--sabana-black-50)' }} />
+                            <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--ink-muted)' }} />
                             <Radar
                               dataKey="valor"
-                              stroke="var(--sabana-navy)"
-                              fill="var(--sabana-navy)"
+                              stroke="var(--chart-1)"
+                              fill="var(--chart-1)"
                               fillOpacity={0.2}
                               dot={(props) => {
                                 const { cx, cy, payload, index } = props;
@@ -455,7 +461,7 @@ export default function PerfilOcupacionalPage() {
                                     cx={cx}
                                     cy={cy}
                                     r={5}
-                                    fill={zona?.color ?? 'var(--sabana-navy)'}
+                                    fill={zona?.color ?? 'var(--chart-1)'}
                                     stroke="var(--white-background)"
                                     strokeWidth={1.5}
                                   />
@@ -479,7 +485,7 @@ export default function PerfilOcupacionalPage() {
                           {ORDEN_RIASEC.map((cod) => {
                             const z = RIASEC_ZONAS[cod];
                             return (
-                              <p key={cod} className="text-xs leading-snug flex gap-2" style={{ color: 'var(--sabana-black-70)' }}>
+                              <p key={cod} className="text-xs leading-snug flex gap-2" style={{ color: 'var(--ink-soft)' }}>
                                 <span
                                   className="shrink-0 font-bold rounded px-1.5 text-white"
                                   style={{ backgroundColor: z.color, minWidth: '1.25rem', textAlign: 'center' }}
@@ -487,20 +493,20 @@ export default function PerfilOcupacionalPage() {
                                   {z.letra}
                                 </span>
                                 <span>
-                                  <b style={{ color: 'var(--sabana-dark-navy)' }}>{z.titulo}:</b> {z.desc}
+                                  <b style={{ color: 'var(--ink-strong)' }}>{z.titulo}:</b> {z.desc}
                                 </span>
                               </p>
                             );
                           })}
                         </div>
                       </>
-                    ) : <p className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>Sin datos de intereses.</p>}
+                    ) : <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>Sin datos de intereses.</p>}
                     <a
                       href="https://personality.co/es/test/start?t=career&gclid=CjwKCAjw4dDTBhAqEiwAkHYmSvzxU3dHMp7MLg2PrXsAo2m86jpxoprK-5MmCXELR3t3t1IR8UC_nhoC6doQAvD_BwE&gclid=CjwKCAjw4dDTBhAqEiwAkHYmSvzxU3dHMp7MLg2PrXsAo2m86jpxoprK-5MmCXELR3t3t1IR8UC_nhoC6doQAvD_BwE&utm_source=google&utm_medium=cpc&utm_campaign=23301191485&utm_content=187856935574&utm_term=test+de+inter%C3%A9s+profesional+holland&matchtype=b&device=c&gad_source=1&gad_campaignid=23301191485&gbraid=0AAAABCDT4dz_AJ2DcVsdg4z10eimSvk6X"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-3 inline-block text-sm font-semibold underline"
-                      style={{ color: 'var(--sabana-navy)' }}
+                      style={{ color: 'var(--ink-navy)' }}
                     >
                       Conoce tu perfil
                     </a>
@@ -508,15 +514,15 @@ export default function PerfilOcupacionalPage() {
                   <div className="space-y-4">
                     {data.onet.job_zone && (
                       <div>
-                        <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Nivel de preparación (Job Zone {data.onet.job_zone.nivel}/5)</h4>
+                        <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>Nivel de preparación (Job Zone {data.onet.job_zone.nivel}/5)</h4>
                         <span className="inline-block rounded px-2 py-1 text-xs font-semibold text-white" style={{ background: 'var(--sabana-dark-navy)' }}>{data.onet.job_zone.etiqueta}</span>
-                        <p className="text-sm mt-2" style={{ color: 'var(--sabana-black-50)' }}>{data.onet.job_zone.descripcion}</p>
+                        <p className="text-sm mt-2" style={{ color: 'var(--ink-muted)' }}>{data.onet.job_zone.descripcion}</p>
                       </div>
                     )}
                     {data.onet.descripcion && (
-                      <div className="rounded-lg p-4" style={{ background: 'var(--sabana-sky-blue)' }}>
-                        <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Sobre la ocupación</h4>
-                        <p className="text-sm" style={{ color: 'var(--sabana-dark-navy)' }}>{data.onet.descripcion}</p>
+                      <div className="rounded-lg p-4" style={{ background: 'var(--tint)' }}>
+                        <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>Sobre la ocupación</h4>
+                        <p className="text-sm" style={{ color: 'var(--ink-strong)' }}>{data.onet.descripcion}</p>
                       </div>
                     )}
                   </div>
@@ -528,13 +534,13 @@ export default function PerfilOcupacionalPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {data.sectores.length > 0 && (
                     <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Sectores que contratan</h3>
-                      <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>Vacantes por sector (referencia internacional, Adzuna).</p>
+                      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>Sectores que contratan</h3>
+                      <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>Vacantes por sector (referencia internacional, Adzuna).</p>
                       <ResponsiveContainer width="100%" height={Math.max(200, data.sectores.length * 42)}>
                         <BarChart data={data.sectores} layout="vertical" margin={{ left: 8, right: 30 }}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis type="number" tick={{ fontSize: 12, fill: 'var(--sabana-dark-navy)' }} />
-                          <YAxis dataKey="category" type="category" width={180} tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }} />
+                          <XAxis type="number" tick={{ fontSize: 12, fill: 'var(--ink-strong)' }} />
+                          <YAxis dataKey="category" type="category" width={180} tick={{ fontSize: 11, fill: 'var(--ink-strong)' }} />
                           <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: 'var(--white-background)' }} formatter={(v) => [`${v}`, 'Vacantes']} />
                           <Bar dataKey="count" fill="var(--sabana-light-blue)" radius={[0, 4, 4, 0]} />
                         </BarChart>
@@ -543,15 +549,15 @@ export default function PerfilOcupacionalPage() {
                   )}
                   {data.ciudades_colombia.length > 0 && (
                     <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>Dónde se contrata en Colombia</h3>
-                      <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>Vacantes por ciudad (Google Jobs + LinkedIn, Colombia).</p>
+                      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>Dónde se contrata en Colombia</h3>
+                      <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>Vacantes por ciudad (Google Jobs + LinkedIn, Colombia).</p>
                       <ResponsiveContainer width="100%" height={Math.max(200, data.ciudades_colombia.length * 42)}>
                         <BarChart data={data.ciudades_colombia} layout="vertical" margin={{ left: 8, right: 30 }}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis type="number" tick={{ fontSize: 12, fill: 'var(--sabana-dark-navy)' }} />
-                          <YAxis dataKey="city" type="category" width={180} tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }} />
+                          <XAxis type="number" tick={{ fontSize: 12, fill: 'var(--ink-strong)' }} />
+                          <YAxis dataKey="city" type="category" width={180} tick={{ fontSize: 11, fill: 'var(--ink-strong)' }} />
                           <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: 'var(--white-background)' }} formatter={(v) => [`${v}`, 'Vacantes']} />
-                          <Bar dataKey="count" fill="var(--sabana-navy)" radius={[0, 4, 4, 0]} />
+                          <Bar dataKey="count" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -559,7 +565,7 @@ export default function PerfilOcupacionalPage() {
                 </div>
               )}
 
-              <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+              <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                 Fuentes: {data.meta.fuentes.join(' · ')}. Salario y educación: Colombia (GEIH/SPE). Skills y perfil vocacional:
                 O*NET (normativo). Seniority y sectores: Adzuna (mercado internacional). Ciudades: Google Jobs (Colombia).
               </p>
@@ -567,7 +573,7 @@ export default function PerfilOcupacionalPage() {
           )}
 
           {data && !data.encontrado && !loading && (
-            <div className="rounded-lg p-4 text-sm" style={{ background: 'var(--sabana-sky-blue)', color: 'var(--sabana-dark-navy)' }}>
+            <div className="rounded-lg p-4 text-sm" style={{ background: 'var(--tint)', color: 'var(--ink-strong)' }}>
               No hay datos suficientes para <b>{programa}</b> todavía.
             </div>
           )}
@@ -597,22 +603,22 @@ function CnoLista({ titulo, items, color }: { titulo: string; items: AtributoCno
   if (items.length === 0) return null;
   return (
     <div>
-      <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--sabana-dark-navy)' }}>{titulo}</h4>
+      <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--ink-strong)' }}>{titulo}</h4>
       <ul className="space-y-2">
         {items.map((it) => (
           <li key={it.nombre} className="flex items-start gap-2">
             <span className="mt-1.5 shrink-0 rounded-full" style={{ width: 6, height: 6, background: color }} />
             <div>
-              <span className="text-sm" style={{ color: 'var(--sabana-dark-navy)' }}>{it.nombre}</span>
+              <span className="text-sm" style={{ color: 'var(--ink-strong)' }}>{it.nombre}</span>
               {!it.especifica && (
                 <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded"
-                  style={{ color: 'var(--sabana-black-50)', border: '1px solid var(--sabana-black-20, #ddd)' }}
+                  style={{ color: 'var(--ink-muted)', border: '1px solid var(--sabana-black-20, #ddd)' }}
                   title="Requisito del grupo ocupacional, no exclusivo de esta ocupación">
                   del grupo
                 </span>
               )}
               {it.descripcion && (
-                <p className="text-xs mt-0.5" style={{ color: 'var(--sabana-black-50)' }}>{it.descripcion}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--ink-muted)' }}>{it.descripcion}</p>
               )}
             </div>
           </li>
@@ -627,13 +633,13 @@ function SkillsCard({ titulo, skills, color }: { titulo: string; skills: Skill[]
   if (skills.length === 0) return null;
   return (
     <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>{titulo}</h3>
-      <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>Importancia según O*NET (0–100).</p>
+      <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>{titulo}</h3>
+      <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>Importancia según O*NET (0–100).</p>
       <ResponsiveContainer width="100%" height={Math.max(260, skills.length * 34)}>
         <BarChart data={skills} layout="vertical" margin={{ left: 8, right: 30 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12, fill: 'var(--sabana-dark-navy)' }} />
-          <YAxis dataKey="nombre" type="category" width={175} tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }} />
+          <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12, fill: 'var(--ink-strong)' }} />
+          <YAxis dataKey="nombre" type="category" width={175} tick={{ fontSize: 11, fill: 'var(--ink-strong)' }} />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
             itemStyle={{ color: 'var(--white-background)' }}

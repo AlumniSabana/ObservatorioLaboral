@@ -40,7 +40,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:800
 const TOOLTIP_STYLE = {
   backgroundColor: 'var(--sabana-dark-navy)',
   color: 'var(--white-background)',
-  borderColor: 'var(--sabana-dark-navy)',
+  borderColor: 'var(--chart-1)',
   borderRadius: '8px',
 };
 
@@ -217,38 +217,44 @@ export default function SalariesPage() {
   // Cada cambio de programa recarga su análisis.
   useEffect(() => {
     if (!programa) return;
+    const controlador = new AbortController(); // evita que una respuesta vieja pise a la nueva
     (async () => {
       setLoading(true);
       setError(null);
       try {
         const url = new URL(`${BACKEND_URL}/analytics/salarios`);
         url.searchParams.append('programa', programa);
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: controlador.signal });
         if (!res.ok) throw new Error('No se pudo cargar el programa');
         setAnalisis(await res.json());
       } catch (err) {
+        if (controlador.signal.aborted) return;
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
-        setLoading(false);
+        if (!controlador.signal.aborted) setLoading(false);
       }
     })();
+    return () => controlador.abort();
   }, [programa]);
 
   // OLE en petición aparte: es otra fuente y no debe retrasar ni tumbar el
   // análisis GEIH, que es la espina de la página.
   useEffect(() => {
     if (!programa) return;
+    const controlador = new AbortController();
     (async () => {
       try {
         const r = await fetch(
           `${BACKEND_URL}/ole/ingreso?programa=${encodeURIComponent(programa)}`,
+          { signal: controlador.signal },
         );
         const d: Ole | null = r.ok ? await r.json() : null;
         setOle(d && !d.sin_datos ? d : null);
       } catch {
-        setOle(null);
+        if (!controlador.signal.aborted) setOle(null);
       }
     })();
+    return () => controlador.abort();
   }, [programa]);
 
   // Distribución comparada: una fila por banda, con el % de La Sabana y el del
@@ -274,11 +280,11 @@ export default function SalariesPage() {
         <div className="space-y-6">
           {/* Intro + fuentes */}
           <div>
-            <p className="text-lg" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <p className="text-lg" style={{ color: 'var(--ink-strong)' }}>
               Salarios de referencia en pesos colombianos (COP) por programa académico,
               a partir de datos oficiales del mercado laboral.
             </p>
-            <p className="text-sm mt-1" style={{ color: 'var(--sabana-black-50)' }}>
+            <p className="text-sm mt-1" style={{ color: 'var(--ink-muted)' }}>
               Fuentes: <b>GEIH — DANE</b> (ingreso laboral real por ocupación) ·{' '}
               <b>SPE Colombia</b> (rangos de vacantes)
               {ole?.sabana && <> · <b>OLE — MinEducación</b> (egresados por programa)</>}
@@ -290,7 +296,7 @@ export default function SalariesPage() {
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 shadow">
             <label
               className="block text-sm font-semibold mb-2"
-              style={{ color: 'var(--sabana-dark-navy)' }}
+              style={{ color: 'var(--ink-strong)' }}
             >
               Programa académico
             </label>
@@ -298,7 +304,7 @@ export default function SalariesPage() {
               value={programa}
               onChange={(e) => setPrograma(e.target.value)}
               className="w-full md:w-96 rounded-lg border px-3 py-2 text-sm"
-              style={{ borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)' }}
+              style={{ borderColor: 'var(--line)', color: 'var(--ink-strong)' }}
             >
               {resumen?.programas.map((p) => (
                 <option key={p} value={p}>
@@ -318,10 +324,10 @@ export default function SalariesPage() {
             <>
               {/* Ocupación de referencia */}
               <div>
-                <h3 className="text-lg font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--ink-strong)' }}>
                   {analisis.cno.nombre}
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>
+                <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
                   Gran grupo ocupacional (CNO {analisis.cno.codigo}) al que se asocian
                   los egresados de <b>{analisis.programa}</b> · {kpis.n.toLocaleString('es-CO')} trabajadores en la GEIH.
                 </p>
@@ -338,10 +344,10 @@ export default function SalariesPage() {
                   <div
                     key={k.label}
                     className="rounded-lg p-4 border-l-4 bg-white dark:bg-zinc-800 shadow"
-                    style={{ borderColor: k.destacado ? 'var(--sabana-dark-navy)' : 'var(--sabana-light-blue)' }}
+                    style={{ borderColor: k.destacado ? 'var(--chart-1)' : 'var(--line)' }}
                   >
-                    <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>{k.label}</p>
-                    <p className="text-xl font-bold mt-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                    <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>{k.label}</p>
+                    <p className="text-xl font-bold mt-1" style={{ color: 'var(--ink-strong)' }}>
                       {k.value}
                     </p>
                   </div>
@@ -355,10 +361,10 @@ export default function SalariesPage() {
                   programa, y promediarlos sería juntar dos universos. */}
               {ole?.sabana && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
                     Graduados de La Sabana — OLE, MinEducación {ole.anio_corte}
                   </h3>
-                  <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+                  <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
                     Ingreso de los <b>{ole.sabana.graduados.toLocaleString('es-CO')}</b> graduados de{' '}
                     <b>{analisis.programa}</b>
                     {ole.sabana.anios_grado && ` (promociones ${ole.sabana.anios_grado[0]}–${ole.sabana.anios_grado[1]})`}
@@ -371,32 +377,32 @@ export default function SalariesPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                     <div
                       className="rounded-lg p-4 border-l-4"
-                      style={{ borderColor: 'var(--sabana-dark-navy)', backgroundColor: 'var(--sabana-sky-blue)' }}
+                      style={{ borderColor: 'var(--chart-1)', backgroundColor: 'var(--tint)' }}
                     >
-                      <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Mediana — La Sabana</p>
-                      <p className="text-2xl font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+                      <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Mediana — La Sabana</p>
+                      <p className="text-2xl font-bold" style={{ color: 'var(--ink-strong)' }}>
                         {ole.sabana.mediana_cop ? fmtCOP(ole.sabana.mediana_cop) : medianaOle(ole.sabana)}
                       </p>
-                      <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+                      <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                         {medianaOle(ole.sabana)} · estimada
                       </p>
                     </div>
 
-                    <div className="rounded-lg p-4 border" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-                      <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+                    <div className="rounded-lg p-4 border" style={{ borderColor: 'var(--line)' }}>
+                      <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                         Mismo programa en el país
                       </p>
                       {ole.unico_oferente ? (
-                        <p className="text-sm mt-2" style={{ color: 'var(--sabana-black-50)' }}>
+                        <p className="text-sm mt-2" style={{ color: 'var(--ink-muted)' }}>
                           La Sabana es la <b>única</b> institución que lo ofrece: no hay referencia
                           externa con la que compararse.
                         </p>
                       ) : (
                         <>
-                          <p className="text-2xl font-bold" style={{ color: 'var(--sabana-navy)' }}>
+                          <p className="text-2xl font-bold" style={{ color: 'var(--ink-navy)' }}>
                             {ole.nacional?.mediana_cop ? fmtCOP(ole.nacional.mediana_cop) : medianaOle(ole.nacional)}
                           </p>
-                          <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+                          <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                             {medianaOle(ole.nacional)}
                             {ole.nacional?.n_ies ? ` · ${ole.nacional.n_ies} sedes lo ofrecen` : ''}
                           </p>
@@ -404,8 +410,8 @@ export default function SalariesPage() {
                       )}
                     </div>
 
-                    <div className="rounded-lg p-4 border" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-                      <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>Diferencia</p>
+                    <div className="rounded-lg p-4 border" style={{ borderColor: 'var(--line)' }}>
+                      <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>Diferencia</p>
                       {ole.brecha_vs_nacional_pct != null ? (
                         <>
                           <p
@@ -414,17 +420,17 @@ export default function SalariesPage() {
                           >
                             {ole.brecha_vs_nacional_pct >= 0 ? '+' : ''}{ole.brecha_vs_nacional_pct}%
                           </p>
-                          <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+                          <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                             frente a la mediana nacional del programa
                           </p>
                         </>
                       ) : (
-                        <p className="text-sm mt-2" style={{ color: 'var(--sabana-black-50)' }}>
+                        <p className="text-sm mt-2" style={{ color: 'var(--ink-muted)' }}>
                           Sin comparación disponible.
                         </p>
                       )}
-                      <p className="text-xs mt-2" style={{ color: 'var(--sabana-black-50)' }}>
-                        <b style={{ color: 'var(--sabana-dark-navy)' }}>{ole.sabana.pct_sobre_4smmlv}%</b>{' '}
+                      <p className="text-xs mt-2" style={{ color: 'var(--ink-muted)' }}>
+                        <b style={{ color: 'var(--ink-strong)' }}>{ole.sabana.pct_sobre_4smmlv}%</b>{' '}
                         gana más de 4 SMMLV
                       </p>
                     </div>
@@ -433,7 +439,7 @@ export default function SalariesPage() {
                   {ole.sabana.muestra_corta && (
                     <p
                       className="text-xs rounded px-3 py-2 mb-4"
-                      style={{ backgroundColor: 'var(--sabana-sky-blue)', color: 'var(--sabana-dark-navy)' }}
+                      style={{ backgroundColor: 'var(--tint)', color: 'var(--ink-strong)' }}
                     >
                       Solo {ole.sabana.graduados} graduados cotizantes. Con una muestra tan
                       pequeña la mediana se mueve con unas pocas personas: tómese como indicio.
@@ -441,7 +447,7 @@ export default function SalariesPage() {
                   )}
 
                   {/* Distribución por banda */}
-                  <p className="text-sm mb-2" style={{ color: 'var(--sabana-black-50)' }}>
+                  <p className="text-sm mb-2" style={{ color: 'var(--ink-muted)' }}>
                     Cómo se reparten por rango de ingreso (en SMMLV). El OLE no publica el salario
                     exacto, solo <b>en qué banda cae cada graduado</b>, así que esta distribución es
                     el dato real y la mediana de arriba se estima a partir de ella.
@@ -449,10 +455,10 @@ export default function SalariesPage() {
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart data={distribucionOle} margin={{ left: 8, right: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="banda" tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }} />
+                      <XAxis dataKey="banda" tick={{ fontSize: 11, fill: 'var(--ink-strong)' }} />
                       <YAxis
                         tickFormatter={(v) => `${v}%`}
-                        tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }}
+                        tick={{ fontSize: 11, fill: 'var(--ink-strong)' }}
                       />
                       <Tooltip
                         contentStyle={TOOLTIP_STYLE}
@@ -461,14 +467,14 @@ export default function SalariesPage() {
                         formatter={(v, name) => [`${(v as number).toFixed(1)}%`, name as string]}
                       />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="sabana" name="La Sabana" fill="var(--sabana-dark-navy)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="sabana" name="La Sabana" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
                       {!ole.unico_oferente && (
                         <Bar dataKey="pais" name="El país" fill="var(--sabana-light-blue)" radius={[4, 4, 0, 0]} />
                       )}
                     </BarChart>
                   </ResponsiveContainer>
 
-                  <p className="text-xs mt-4 leading-relaxed" style={{ color: 'var(--sabana-black-50)' }}>
+                  <p className="text-xs mt-4 leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
                     <b>Cómo leerlo:</b> el OLE mide el <b>Ingreso Base de Cotización</b> a seguridad
                     social, no el salario declarado. Los independientes cotizan sobre el 40% de sus
                     honorarios, así que en programas con mucho ejercicio independiente la cifra
@@ -481,12 +487,12 @@ export default function SalariesPage() {
 
               {/* Comparativa por subgrupo CNO */}
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
                   Comparativa salarial entre grupos ocupacionales
                 </h3>
-                <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+                <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
                   Mediana mensual (COP) por gran grupo profesional. En{' '}
-                  <span style={{ color: 'var(--sabana-dark-navy)', fontWeight: 600 }}>azul oscuro</span>,
+                  <span style={{ color: 'var(--ink-strong)', fontWeight: 600 }}>azul oscuro</span>,
                   el del programa seleccionado.
                 </p>
                 <ResponsiveContainer width="100%" height={Math.max(260, comparativa.length * 46)}>
@@ -495,13 +501,13 @@ export default function SalariesPage() {
                     <XAxis
                       type="number"
                       tickFormatter={(v) => fmtM(v as number)}
-                      tick={{ fontSize: 12, fill: 'var(--sabana-dark-navy)' }}
+                      tick={{ fontSize: 12, fill: 'var(--ink-strong)' }}
                     />
                     <YAxis
                       dataKey="nombre"
                       type="category"
                       width={260}
-                      tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }}
+                      tick={{ fontSize: 11, fill: 'var(--ink-strong)' }}
                     />
                     <Tooltip
                       contentStyle={TOOLTIP_STYLE}
@@ -513,7 +519,7 @@ export default function SalariesPage() {
                       {comparativa.map((it) => (
                         <Cell
                           key={it.codigo}
-                          fill={it.es_actual ? 'var(--sabana-dark-navy)' : 'var(--sabana-light-blue)'}
+                          fill={it.es_actual ? 'var(--chart-1)' : 'var(--sabana-light-blue)'}
                         />
                       ))}
                     </Bar>
@@ -523,10 +529,10 @@ export default function SalariesPage() {
 
               {/* Rangos SPE */}
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
                   Rangos salariales en vacantes activas — SPE Colombia
                 </h3>
-                <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+                <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
                   Participación de vacantes por rango y su variación anual. Resaltado con borde, el
                   rango donde cae la mediana de <b>{analisis.programa}</b>.
                 </p>
@@ -542,13 +548,13 @@ export default function SalariesPage() {
                           key={r.rango}
                           className="rounded-lg px-3 py-2 border"
                           style={{
-                            borderColor: enRango ? 'var(--sabana-dark-navy)' : 'var(--sabana-sky-blue)',
+                            borderColor: enRango ? 'var(--chart-1)' : 'var(--line-soft)',
                             borderWidth: enRango ? 2 : 1,
-                            background: enRango ? 'var(--sabana-sky-blue)' : 'transparent',
+                            background: enRango ? 'var(--tint)' : 'transparent',
                           }}
                         >
                           <div className="flex justify-between items-baseline">
-                            <span className="text-sm font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>
+                            <span className="text-sm font-semibold" style={{ color: 'var(--ink-strong)' }}>
                               {r.rango}
                             </span>
                             <span
@@ -558,7 +564,7 @@ export default function SalariesPage() {
                               {sube ? '↑' : '↓'} {Math.abs(r.variacion).toFixed(1)}% a/a
                             </span>
                           </div>
-                          <span className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+                          <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                             {r.participacion.toFixed(1)}% de las vacantes
                           </span>
                         </div>
@@ -570,10 +576,10 @@ export default function SalariesPage() {
               {/* Salario por nivel educativo — dentro del grupo ocupacional del programa */}
               {analisis.nivel_educativo.length > 0 && (
                 <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
                     Salario según nivel educativo
                   </h3>
-                  <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+                  <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
                     {analisis.nivel_educativo_nacional ? (
                       <>
                         Mediana mensual (COP) por máximo nivel alcanzado. Para{' '}
@@ -587,7 +593,7 @@ export default function SalariesPage() {
                         controlando por la ocupación de {analisis.programa}.
                       </>
                     )}{' '}
-                    En <span style={{ color: 'var(--sabana-dark-navy)', fontWeight: 600 }}>azul oscuro</span>,
+                    En <span style={{ color: 'var(--ink-strong)', fontWeight: 600 }}>azul oscuro</span>,
                     los niveles universitario y de posgrado.
                   </p>
                   <ResponsiveContainer width="100%" height={Math.max(220, analisis.nivel_educativo.length * 44)}>
@@ -596,13 +602,13 @@ export default function SalariesPage() {
                       <XAxis
                         type="number"
                         tickFormatter={(v) => fmtM(v as number)}
-                        tick={{ fontSize: 12, fill: 'var(--sabana-dark-navy)' }}
+                        tick={{ fontSize: 12, fill: 'var(--ink-strong)' }}
                       />
                       <YAxis
                         dataKey="nombre"
                         type="category"
                         width={170}
-                        tick={{ fontSize: 11, fill: 'var(--sabana-dark-navy)' }}
+                        tick={{ fontSize: 11, fill: 'var(--ink-strong)' }}
                       />
                       <Tooltip
                         contentStyle={TOOLTIP_STYLE}
@@ -617,7 +623,7 @@ export default function SalariesPage() {
                         {analisis.nivel_educativo.map((nv) => (
                           <Cell
                             key={nv.codigo}
-                            fill={nv.orden >= 10 ? 'var(--sabana-dark-navy)' : 'var(--sabana-light-blue)'}
+                            fill={nv.orden >= 10 ? 'var(--chart-1)' : 'var(--sabana-light-blue)'}
                           />
                         ))}
                       </Bar>
@@ -631,7 +637,7 @@ export default function SalariesPage() {
                   backend (GET /ole/posgrados) sigue intacto por si se retoma. */}
 
               {/* Nota metodológica */}
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--sabana-black-50)' }}>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--ink-muted)' }}>
                 <b>Metodología:</b> la GEIH del DANE registra el ingreso laboral por
                 ocupación (código CNO-2020), no por programa. Cada programa se asocia al
                 gran grupo ocupacional de 2 dígitos que agrupa a sus egresados

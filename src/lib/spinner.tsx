@@ -27,8 +27,8 @@ export function Spinner({
         style={{
           width: px,
           height: px,
-          border: `${Math.max(2, px / 8)}px solid var(--sabana-sky-blue)`,
-          borderTopColor: 'var(--sabana-dark-navy)',
+          border: `${Math.max(2, px / 8)}px solid var(--line-soft)`,
+          borderTopColor: 'var(--chart-1)',
         }}
         role="status"
         aria-label={label ?? 'Cargando'}
@@ -36,7 +36,7 @@ export function Spinner({
       {label && (
         <p
           className={compact ? 'text-sm text-zinc-500' : 'text-lg font-bold'}
-          style={compact ? undefined : { color: 'var(--sabana-dark-navy)' }}
+          style={compact ? undefined : { color: 'var(--ink-strong)' }}
         >
           {label}
         </p>

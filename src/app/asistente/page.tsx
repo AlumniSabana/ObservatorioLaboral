@@ -218,27 +218,27 @@ function ChatEmpresas() {
               style={{ backgroundImage: 'url(/empresas-logos-bg.jpg)' }}
               aria-hidden="true"
             />
-            <div className="absolute inset-0 bg-white/85 dark:bg-zinc-900/85" aria-hidden="true" />
+            <div className="absolute inset-0 bg-white/85 dark:bg-zinc-900/95" aria-hidden="true" />
 
             <div className="relative z-10 flex flex-col items-center">
               <div
-                className="rounded-2xl px-10 py-8 mb-6"
-                style={{ backgroundColor: 'var(--sabana-dark-navy)' }}
+                className="rounded-2xl px-6 py-2 mb-6 bg-white shadow"
+                style={{ border: '1px solid var(--line-soft)' }}
               >
                 <Image
-                  src="/logo-alumni.png"
-                  alt="Logo Alumni Sabana"
-                  width={260}
-                  height={100}
-                  className="w-56 h-auto"
+                  src="/logo-talenthub.jpeg"
+                  alt="Logo TalentHub UniSabana"
+                  width={470}
+                  height={250}
+                  className="w-64 h-auto"
                   priority
                 />
               </div>
 
-              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--ink-strong)' }}>
                 ¿Qué quieres saber sobre las empresas?
               </h2>
-              <p className="text-sm max-w-2xl mb-8" style={{ color: 'var(--sabana-black-50)' }}>
+              <p className="text-sm max-w-2xl mb-8" style={{ color: 'var(--ink-muted)' }}>
                 Explora la estructura y cultura organizacional, el clima laboral, las
                 tendencias de ascensos y los rankings de empleadores como Great Place to Work.
               </p>
@@ -251,9 +251,9 @@ function ChatEmpresas() {
                     disabled={cargando}
                     className="px-5 py-3 rounded-xl text-sm font-semibold border transition-colors cursor-pointer disabled:opacity-50"
                     style={{
-                      borderColor: 'var(--sabana-light-blue)',
-                      color: 'var(--sabana-dark-navy)',
-                      backgroundColor: 'var(--sabana-sky-blue)',
+                      borderColor: 'var(--line)',
+                      color: 'var(--ink-strong)',
+                      backgroundColor: 'var(--tint)',
                     }}
                   >
                     {s.etiqueta}
@@ -263,7 +263,7 @@ function ChatEmpresas() {
                 {/* `w-full` fuerza el salto de línea dentro del flex-wrap: separa
                     visualmente el grupo "por sector" de los chips generales de
                     arriba, sin montar una fila aparte. */}
-                <span className="w-full text-xs font-semibold mt-1" style={{ color: 'var(--sabana-black-50)' }}>
+                <span className="w-full text-xs font-semibold mt-1" style={{ color: 'var(--ink-muted)' }}>
                   Empresas por sector
                 </span>
                 {SECTORES_SUGERIDOS.map((sector) => (
@@ -273,9 +273,9 @@ function ChatEmpresas() {
                     disabled={cargando}
                     className="px-4 py-2 rounded-xl text-sm font-semibold border transition-colors cursor-pointer disabled:opacity-50"
                     style={{
-                      borderColor: 'var(--sabana-light-blue)',
-                      color: 'var(--sabana-dark-navy)',
-                      backgroundColor: 'var(--white-background)',
+                      borderColor: 'var(--line)',
+                      color: 'var(--ink-strong)',
+                      backgroundColor: 'var(--surface)',
                     }}
                   >
                     {sector}
@@ -300,9 +300,9 @@ function ChatEmpresas() {
                   m.role === 'user'
                     ? { backgroundColor: 'var(--sabana-dark-navy)', color: 'white' }
                     : {
-                        backgroundColor: 'var(--white-background)',
-                        color: 'var(--sabana-dark-navy)',
-                        border: '1px solid var(--sabana-sky-blue)',
+                        backgroundColor: 'var(--surface)',
+                        color: 'var(--ink-strong)',
+                        border: '1px solid var(--line-soft)',
                       }
                 }
               >
@@ -320,9 +320,9 @@ function ChatEmpresas() {
               <div
                 className="rounded-2xl px-4 py-3 text-base"
                 style={{
-                  backgroundColor: 'var(--white-background)',
-                  border: '1px solid var(--sabana-sky-blue)',
-                  color: 'var(--sabana-black-50)',
+                  backgroundColor: 'var(--surface)',
+                  border: '1px solid var(--line-soft)',
+                  color: 'var(--ink-muted)',
                 }}
               >
                 Pensando…
@@ -340,11 +340,11 @@ function ChatEmpresas() {
         {/* ---------- Entrada ---------- */}
         <div
           className="sticky bottom-0 pt-2 pb-4"
-          style={{ backgroundColor: 'var(--white-background)' }}
+          style={{ backgroundColor: 'var(--page-bg)' }}
         >
           <div
             className="flex items-end gap-2 rounded-2xl border p-2"
-            style={{ borderColor: 'var(--sabana-light-blue)' }}
+            style={{ borderColor: 'var(--line)' }}
           >
             <textarea
               ref={inputRef}
@@ -354,7 +354,7 @@ function ChatEmpresas() {
               rows={1}
               placeholder="Pregunta por una empresa, un sector o su cultura…"
               className="flex-1 resize-none bg-transparent px-2 py-2 text-base outline-none"
-              style={{ color: 'var(--sabana-dark-navy)', maxHeight: '8rem' }}
+              style={{ color: 'var(--ink-strong)', maxHeight: '8rem' }}
             />
             <button
               onClick={() => enviar(entrada)}
@@ -366,7 +366,7 @@ function ChatEmpresas() {
               <Send size={16} />
             </button>
           </div>
-          <p className="text-xs mt-2" style={{ color: 'var(--sabana-black-50)' }}>
+          <p className="text-xs mt-2" style={{ color: 'var(--ink-muted)' }}>
             Usa los datos del Observatorio cuando existen; si responde con información
             general lo indica. Verifica los rankings en su fuente oficial.
           </p>

@@ -16,7 +16,7 @@ import { PageLayout } from '@/lib/sidebar';
 import { FloatingChat } from '@/lib/floating-chat';
 import { SelectorFuentes, type FuenteOpcion as OpcionSelector } from '@/lib/selector-fuentes';
 import { Spinner } from '@/lib/spinner';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   BarChart,
   Bar,
@@ -174,7 +174,7 @@ function TickHomologada({
       dy={4}
       textAnchor="end"
       fontSize={11}
-      fill="var(--sabana-black-70)"
+      fill="var(--ink-soft)"
       fontWeight={homologada ? 900 : 400}
     >
       {nombre}
@@ -197,12 +197,12 @@ const TIPO_LABEL: Record<Tipo, string> = {
 
 // Sequential: una hue institucional, más oscura = más demanda. El color codifica
 // la misma variable que la longitud de la barra (magnitud), así que es un refuerzo.
-const BAR_COLOR = 'var(--sabana-navy)';
+const BAR_COLOR = 'var(--chart-1)';
 
 const TOOLTIP_STYLE = {
   backgroundColor: 'var(--sabana-dark-navy)',
   color: 'var(--white-background)',
-  borderColor: 'var(--sabana-dark-navy)',
+  borderColor: 'var(--chart-1)',
   borderRadius: '8px',
 };
 
@@ -243,8 +243,11 @@ export default function SkillsDemandadasPage() {
   // Evolución de la demanda a lo largo del tiempo. Cada skill se mueve según su
   // demanda de mercado; al filtrar por programa solo se restringe qué skills se
   // listan (con su misma demanda de mercado).
+  const seqEvolucion = useRef(0);
+  const seqRanking = useRef(0);
   const cargarEvolucion = async (t: Tipo, prog: string, sen: string, pais: string[]) => {
     if (pais.length === 0) return;
+    const mi = ++seqEvolucion.current; // solo vale la última petición
     try {
       const url = new URL(`${BACKEND_URL}/skills-demandadas/evolucion`);
       url.searchParams.set('tipo', t);
@@ -255,10 +258,12 @@ export default function SkillsDemandadasPage() {
       url.searchParams.set('top', String(EVOL_DISPONIBLES));
       const r = await fetch(url);
       const d: Evolucion | null = r.ok ? await r.json() : null;
+      if (mi !== seqEvolucion.current) return;
       setEvolucion(d);
       // Por defecto se muestran las primeras (las más demandadas).
       setSkillsVisibles((d?.series ?? []).slice(0, EVOL_VISIBLES).map((s) => s.nombre));
     } catch {
+      if (mi !== seqEvolucion.current) return;
       setEvolucion(null);
       setSkillsVisibles([]);
     }
@@ -276,6 +281,7 @@ export default function SkillsDemandadasPage() {
 
   const cargar = async (t: Tipo, prog: string, sen: string, pais: string[]) => {
     if (pais.length === 0) return;
+    const mi = ++seqRanking.current;
     setLoading(true);
     setError(null);
     setSeleccion(null);
@@ -288,11 +294,12 @@ export default function SkillsDemandadasPage() {
       url.searchParams.set('top', '25');
       const r = await fetch(url);
       if (!r.ok) throw new Error('No se pudo cargar el ranking de skills');
-      setData(await r.json());
+      const d = await r.json();
+      if (mi === seqRanking.current) setData(d);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido');
+      if (mi === seqRanking.current) setError(e instanceof Error ? e.message : 'Error desconocido');
     } finally {
-      setLoading(false);
+      if (mi === seqRanking.current) setLoading(false);
     }
   };
 
@@ -449,9 +456,9 @@ export default function SkillsDemandadasPage() {
   const mostrarEvolucion = (evolucion?.series.length ?? 0) > 0 && !evolucion?.sin_datos;
 
   const estiloSelect = {
-    backgroundColor: 'var(--sabana-sky-blue)',
-    color: 'var(--sabana-dark-navy)',
-    borderColor: 'var(--sabana-light-blue)',
+    backgroundColor: 'var(--tint)',
+    color: 'var(--ink-strong)',
+    borderColor: 'var(--line)',
   };
   const claseSelect = 'rounded-lg px-3 py-2 text-sm font-semibold border cursor-pointer w-full';
   const claseEtiqueta = 'block text-xs font-bold uppercase tracking-wide mb-1';
@@ -459,11 +466,11 @@ export default function SkillsDemandadasPage() {
   const filtros = (
     <div
       className="mb-6 rounded-lg p-4 border"
-      style={{ borderColor: 'var(--sabana-light-blue)', backgroundColor: 'var(--white-background)' }}
+      style={{ borderColor: 'var(--line)', backgroundColor: 'var(--surface)' }}
     >
       {/* Fuentes de datos: desplegable con checkboxes (mismo componente que Tendencias).
           Aquí sí aplican los informes PDF: aportan dimensión 'skill'. */}
-      <div className="mb-3 pb-3 border-b" style={{ borderColor: 'var(--sabana-sky-blue)' }}>
+      <div className="mb-3 pb-3 border-b" style={{ borderColor: 'var(--line-soft)' }}>
         <div className="max-w-md">
           <SelectorFuentes
             fuentes={fuentesParaSelector}
@@ -483,7 +490,7 @@ export default function SkillsDemandadasPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
-          <label htmlFor="s-tipo" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="s-tipo" className={claseEtiqueta} style={{ color: 'var(--ink-navy)' }}>
             Mostrar
           </label>
           <select
@@ -498,7 +505,7 @@ export default function SkillsDemandadasPage() {
           </select>
         </div>
         <div>
-          <label htmlFor="s-prog" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="s-prog" className={claseEtiqueta} style={{ color: 'var(--ink-navy)' }}>
             Programa académico
           </label>
           <select
@@ -516,7 +523,7 @@ export default function SkillsDemandadasPage() {
           </select>
         </div>
         <div>
-          <label htmlFor="s-sen" className={claseEtiqueta} style={{ color: 'var(--sabana-navy)' }}>
+          <label htmlFor="s-sen" className={claseEtiqueta} style={{ color: 'var(--ink-navy)' }}>
             Nivel de experiencia
           </label>
           <select
@@ -573,7 +580,7 @@ export default function SkillsDemandadasPage() {
 
         <div
           className="mb-6 rounded-lg p-4 text-sm border-l-4"
-          style={{ borderColor: 'var(--sabana-light-blue)', backgroundColor: 'var(--sabana-sky-blue)', color: 'var(--sabana-dark-navy)' }}
+          style={{ borderColor: 'var(--line)', backgroundColor: 'var(--tint)', color: 'var(--ink-strong)' }}
         >
           {speActivo && dataSpe ? (
             <>
@@ -607,7 +614,7 @@ export default function SkillsDemandadasPage() {
                 className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4"
                 style={{ borderColor: 'var(--trend-up)' }}
               >
-                <p className="text-sm font-bold mb-1 flex items-center gap-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <p className="text-sm font-bold mb-1 flex items-center gap-1" style={{ color: 'var(--ink-strong)' }}>
                   <span style={{ color: 'var(--trend-up)' }}>▲</span>{' '}
                   {tipo === 'tecnologia' ? 'Tecnologías' : 'Competencias'} emergentes
                 </p>
@@ -618,7 +625,7 @@ export default function SkillsDemandadasPage() {
                   de {evolucion.kpis.analizadas} analizadas destacan al alza
                 </p>
                 {!!evolucion.kpis.emergentes?.top.length && (
-                  <p className="text-xs mt-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <p className="text-xs mt-2" style={{ color: 'var(--ink-strong)' }}>
                     {evolucion.kpis.emergentes.top.map((m) => m.nombre).join(' · ')}
                   </p>
                 )}
@@ -628,7 +635,7 @@ export default function SkillsDemandadasPage() {
                 className="rounded-lg p-5 bg-white dark:bg-zinc-800 shadow border-l-4"
                 style={{ borderColor: 'var(--trend-down)' }}
               >
-                <p className="text-sm font-bold mb-1 flex items-center gap-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                <p className="text-sm font-bold mb-1 flex items-center gap-1" style={{ color: 'var(--ink-strong)' }}>
                   <span style={{ color: 'var(--trend-down)' }}>▼</span>{' '}
                   {tipo === 'tecnologia' ? 'Tecnologías' : 'Competencias'} en decrecimiento
                 </p>
@@ -639,7 +646,7 @@ export default function SkillsDemandadasPage() {
                   de {evolucion.kpis.analizadas} analizadas destacan a la baja
                 </p>
                 {!!evolucion.kpis.en_declive?.top.length && (
-                  <p className="text-xs mt-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <p className="text-xs mt-2" style={{ color: 'var(--ink-strong)' }}>
                     {evolucion.kpis.en_declive.top.map((m) => m.nombre).join(' · ')}
                   </p>
                 )}
@@ -674,7 +681,7 @@ export default function SkillsDemandadasPage() {
 
         {!loading && !error && datosRanking && (datosRanking.sin_datos || datosRanking.items.length === 0) && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-8 shadow text-center">
-            <p className="text-lg font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <p className="text-lg font-bold" style={{ color: 'var(--ink-strong)' }}>
               Sin datos para esta combinación.
             </p>
             <p className="text-sm text-zinc-500 mt-2">
@@ -685,7 +692,7 @@ export default function SkillsDemandadasPage() {
 
         {!loading && !error && datosRanking && !datosRanking.sin_datos && datosRanking.items.length > 0 && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
               {TIPO_LABEL[tipo]} más demandadas
             </h3>
             <p className="text-sm text-zinc-500 mb-4">
@@ -703,8 +710,8 @@ export default function SkillsDemandadasPage() {
                 layout="vertical"
                 margin={{ top: 5, right: 40, left: 10, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }} />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--chart-grid)" />
+                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--ink-soft)' }} />
                 <YAxis
                   dataKey="nombre"
                   type="category"
@@ -741,13 +748,13 @@ export default function SkillsDemandadasPage() {
             {seleccion && (
               <div
                 className="mt-4 rounded-lg p-4 border-l-4 flex items-start gap-3"
-                style={{ borderColor: 'var(--sabana-navy)', backgroundColor: 'var(--sabana-sky-blue)' }}
+                style={{ borderColor: 'var(--chart-1)', backgroundColor: 'var(--tint)' }}
               >
                 <div className="flex-1">
-                  <p className="font-bold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <p className="font-bold mb-1" style={{ color: 'var(--ink-strong)' }}>
                     {seleccion.nombre}
                   </p>
-                  <p className="text-sm" style={{ color: 'var(--sabana-dark-navy)' }}>
+                  <p className="text-sm" style={{ color: 'var(--ink-strong)' }}>
                     {seleccion.descripcion}
                   </p>
                   <p className="text-xs mt-2 text-zinc-500">
@@ -757,7 +764,7 @@ export default function SkillsDemandadasPage() {
                 <button
                   onClick={() => setSeleccion(null)}
                   className="text-sm font-bold px-2"
-                  style={{ color: 'var(--sabana-navy)' }}
+                  style={{ color: 'var(--ink-navy)' }}
                   aria-label="Cerrar"
                 >
                   Cerrar
@@ -773,7 +780,7 @@ export default function SkillsDemandadasPage() {
             qué EXIGE la ocupación según la norma colombiana. */}
         {senaActivo && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mt-8">
-            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
               Requisito oficial — CNO 2025 (SENA)
             </h3>
             {programa === TODOS ? (
@@ -802,9 +809,9 @@ export default function SkillsDemandadasPage() {
                       title={it.descripcion ?? undefined}
                       className="text-sm rounded-lg px-3 py-1.5"
                       style={{
-                        backgroundColor: it.especifica ? 'var(--sabana-sky-blue)' : 'transparent',
-                        border: it.especifica ? 'none' : '1px dashed var(--sabana-light-blue)',
-                        color: 'var(--sabana-dark-navy)',
+                        backgroundColor: it.especifica ? 'var(--tint)' : 'transparent',
+                        border: it.especifica ? 'none' : '1px dashed var(--line)',
+                        color: 'var(--ink-strong)',
                       }}
                     >
                       {it.nombre}
@@ -827,7 +834,7 @@ export default function SkillsDemandadasPage() {
             aparecen en el informe van al final, sin número de índice. */}
         {contraste && contraste.informes.length > 0 && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mt-8">
-            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
               Contraste con informes
             </h3>
             <p className="text-sm text-zinc-500 mb-3">
@@ -842,7 +849,7 @@ export default function SkillsDemandadasPage() {
                 <span
                   key={inf.id}
                   className="text-xs rounded-lg px-3 py-1.5"
-                  style={{ backgroundColor: 'var(--sabana-sky-blue)', color: 'var(--sabana-dark-navy)' }}
+                  style={{ backgroundColor: 'var(--tint)', color: 'var(--ink-strong)' }}
                 >
                   <b>{inf.label}</b>
                   {` · ${inf.anio_referencia}`}
@@ -878,18 +885,18 @@ export default function SkillsDemandadasPage() {
                     const diferencia =
                       enNuestro && posInforme ? idxNuestro + 1 - posInforme : null;
                     return (
-                      <tr key={t.termino} style={{ backgroundColor: i % 2 ? 'var(--sabana-sky-blue)' : 'transparent' }}>
-                        <td className="px-3 py-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+                      <tr key={t.termino} style={{ backgroundColor: i % 2 ? 'var(--tint)' : 'transparent' }}>
+                        <td className="px-3 py-2" style={{ color: 'var(--ink-strong)' }}>
                           {t.termino}
                           {t.termino_original.toLowerCase() !== t.termino.toLowerCase() && (
                             <span className="text-xs text-zinc-400"> ({t.termino_original})</span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-right" style={{ color: 'var(--sabana-dark-navy)' }}>
+                        <td className="px-3 py-2 text-right" style={{ color: 'var(--ink-strong)' }}>
                           {enNuestro ? `${data!.items[idxNuestro].indice} (#${idxNuestro + 1})` : '—'}
                         </td>
                         {contraste.informes.map((inf) => (
-                          <td key={inf.id} className="px-3 py-2 text-right" style={{ color: 'var(--sabana-dark-navy)' }}>
+                          <td key={inf.id} className="px-3 py-2 text-right" style={{ color: 'var(--ink-strong)' }}>
                             {t.por_informe[inf.id]?.posicion != null ? `#${t.por_informe[inf.id].posicion}` : '—'}
                           </td>
                         ))}
@@ -898,7 +905,7 @@ export default function SkillsDemandadasPage() {
                             // Ojo: solo se compara contra el top que se está mostrando.
                             // Que no aparezca aquí no prueba que no exista en nuestros
                             // datos, únicamente que no entró en este top.
-                            <span style={{ color: 'var(--sabana-black-50)' }}>
+                            <span style={{ color: 'var(--ink-muted)' }}>
                               fuera de nuestro top {data?.items.length ?? 0}
                             </span>
                           ) : diferencia === null ? (
@@ -919,7 +926,7 @@ export default function SkillsDemandadasPage() {
             </div>
 
             {contraste.no_mapeados.length > 0 && (
-              <p className="text-xs mt-3" style={{ color: 'var(--sabana-black-50)' }}>
+              <p className="text-xs mt-3" style={{ color: 'var(--ink-muted)' }}>
                 <b>Sin equivalente en nuestra taxonomía:</b>{' '}
                 {contraste.no_mapeados.map((n) => n.termino_original).join(' · ')}. Aparecen en el
                 informe pero no en el diccionario del Observatorio, así que no se pueden comparar.
@@ -931,7 +938,7 @@ export default function SkillsDemandadasPage() {
         {/* ---------------- Evolución temporal ---------------- */}
         {!loading && !error && mostrarEvolucion && (
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow mt-8">
-            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-xl font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
               Evolución de la demanda
             </h3>
             <p className="text-sm text-zinc-500 mb-2">
@@ -959,8 +966,8 @@ export default function SkillsDemandadasPage() {
                     className="px-3 py-1 rounded-full text-xs font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                     style={{
                       backgroundColor: activa ? colorDeSkill(s.nombre) : 'transparent',
-                      color: activa ? 'white' : 'var(--sabana-dark-navy)',
-                      borderColor: activa ? colorDeSkill(s.nombre) : 'var(--sabana-light-blue)',
+                      color: activa ? 'white' : 'var(--ink-strong)',
+                      borderColor: activa ? colorDeSkill(s.nombre) : 'var(--line)',
                     }}
                   >
                     {s.nombre}
@@ -976,21 +983,21 @@ export default function SkillsDemandadasPage() {
             ) : (
             <ResponsiveContainer width="100%" height={380}>
               <LineChart data={datosEvolucion} margin={{ top: 5, right: 20, left: 0, bottom: 40 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
                 <XAxis
                   dataKey="periodo"
-                  tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }}
+                  tick={{ fontSize: 11, fill: 'var(--ink-soft)' }}
                   angle={-40}
                   textAnchor="end"
                   height={60}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: 'var(--sabana-black-70)' }}
+                  tick={{ fontSize: 11, fill: 'var(--ink-soft)' }}
                   label={{
                     value: 'Índice de demanda',
                     angle: -90,
                     position: 'insideLeft',
-                    style: { fontSize: 11, fill: 'var(--sabana-black-70)' },
+                    style: { fontSize: 11, fill: 'var(--ink-soft)' },
                   }}
                 />
                 <Tooltip

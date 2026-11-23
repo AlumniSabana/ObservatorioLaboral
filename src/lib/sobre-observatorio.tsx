@@ -57,15 +57,15 @@ function Tarjeta({
   return (
     <div
       className={`rounded-lg p-6 bg-white dark:bg-zinc-800 shadow border-l-4 ${ancha ? 'xl:col-span-2' : ''}`}
-      style={{ borderColor: 'var(--sabana-light-blue)' }}
+      style={{ borderColor: 'var(--line)' }}
     >
       <div className="flex items-center gap-2 mb-3">
-        <Icono className="w-5 h-5" style={{ color: 'var(--sabana-navy)' }} />
-        <h2 className="text-xl font-bold" style={{ color: 'var(--sabana-dark-navy)' }}>
+        <Icono className="w-5 h-5" style={{ color: 'var(--ink-navy)' }} />
+        <h2 className="text-xl font-bold" style={{ color: 'var(--ink-strong)' }}>
           {titulo}
         </h2>
       </div>
-      <div className="text-base leading-relaxed space-y-3" style={{ color: 'var(--sabana-black-70)' }}>
+      <div className="text-base leading-relaxed space-y-3" style={{ color: 'var(--ink-soft)' }}>
         {children}
       </div>
     </div>
@@ -74,17 +74,17 @@ function Tarjeta({
 
 function Fuente({ nombre, tipo, detalle }: { nombre: string; tipo: string; detalle: string }) {
   return (
-    <li className="flex flex-col gap-0.5 py-2 border-b last:border-b-0" style={{ borderColor: 'var(--sabana-sky-blue)' }}>
+    <li className="flex flex-col gap-0.5 py-2 border-b last:border-b-0" style={{ borderColor: 'var(--line-soft)' }}>
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>{nombre}</span>
+        <span className="font-semibold" style={{ color: 'var(--ink-strong)' }}>{nombre}</span>
         <span
           className="text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
-          style={{ backgroundColor: 'var(--sabana-sky-blue)', color: 'var(--sabana-navy)' }}
+          style={{ backgroundColor: 'var(--tint)', color: 'var(--ink-navy)' }}
         >
           {tipo}
         </span>
       </div>
-      <span className="text-sm" style={{ color: 'var(--sabana-black-50)' }}>{detalle}</span>
+      <span className="text-sm" style={{ color: 'var(--ink-muted)' }}>{detalle}</span>
     </li>
   );
 }
@@ -92,7 +92,7 @@ function Fuente({ nombre, tipo, detalle }: { nombre: string; tipo: string; detal
 export function SobreObservatorio() {
   return (
       <div className="space-y-6">
-        <p className="text-lg leading-relaxed" style={{ color: 'var(--sabana-black-90)' }}>
+        <p className="text-lg leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
           El <strong>Observatorio Laboral</strong> es una plataforma de análisis del mercado
           de trabajo construida por parte de <strong>Alumni Sabana</strong>. Reúne vacantes reales, referencias ocupacionales
           y estudios oficiales, y los organiza por <strong>programa académico</strong> para
@@ -147,7 +147,7 @@ export function SobreObservatorio() {
                 <span
                   key={p}
                   className="text-sm px-2 py-1 rounded-full"
-                  style={{ backgroundColor: 'var(--sabana-sky-blue)', color: 'var(--sabana-navy)' }}
+                  style={{ backgroundColor: 'var(--tint)', color: 'var(--ink-navy)' }}
                 >
                   {p}
                 </span>
@@ -187,7 +187,7 @@ export function SobreObservatorio() {
           </Tarjeta>
         </div>
 
-        <p className="text-sm text-center pt-2" style={{ color: 'var(--sabana-black-50)' }}>
+        <p className="text-sm text-center pt-2" style={{ color: 'var(--ink-muted)' }}>
           Un proyecto de la Dirección de Egresados (Alumni) — Universidad de La Sabana.
         </p>
       </div>

@@ -26,7 +26,7 @@ from ONet.onet_service import competencias_scored, perfil_onet
 from Tendencias.seniority_analisis import seniority_optimo
 from Tendencias.perfil_tendencia import tendencia_programa
 from Tendencias.geografia import ciudad_visible
-from traducciones import agrupar_sector, traducir_sector
+from traducciones import sector_de_vacante
 
 
 def _sectores(jobs_programa: list[dict]) -> list[dict]:
@@ -41,7 +41,7 @@ def _sectores(jobs_programa: list[dict]) -> list[dict]:
     """
     conteo = Counter()
     for j in jobs_programa:
-        cat = agrupar_sector(traducir_sector(j.get("category"))) or "Sin especificar"
+        cat = sector_de_vacante(j.get("category"), j.get("title")) or "Sin especificar"
         conteo[cat] += 1
     return [{"category": c, "count": n} for c, n in conteo.most_common(6)]
 

@@ -100,19 +100,19 @@ export default function CursosPage() {
     <>
       <PageLayout title="Cursos y formación: competencias técnicas y power skills">
         <div className="space-y-8">
-          <p className="text-lg" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <p className="text-lg" style={{ color: 'var(--ink-strong)' }}>
             Escribe un <strong>campo de estudio o rama de interés</strong> y explóralo en Coursera,
             LinkedIn Learning, Google Skills o IBM Training. La plataforma se abrirá en una pestaña nueva.
           </p>
 
           {/* Buscador */}
-          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-            <label htmlFor="campo-input" className="block text-sm font-bold mb-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--line)' }}>
+            <label htmlFor="campo-input" className="block text-sm font-bold mb-2" style={{ color: 'var(--ink-strong)' }}>
               Campo de estudio o rama de interés
             </label>
 
-            <div className="flex items-center gap-2 rounded-lg px-3 py-2 border" style={{ borderColor: 'var(--sabana-light-blue)', backgroundColor: 'var(--sabana-sky-blue)' }}>
-              <Search size={18} style={{ color: 'var(--sabana-navy)' }} />
+            <div className="flex items-center gap-2 rounded-lg px-3 py-2 border" style={{ borderColor: 'var(--line)', backgroundColor: 'var(--tint)' }}>
+              <Search size={18} style={{ color: 'var(--ink-navy)' }} />
               <input
                 id="campo-input"
                 type="text"
@@ -121,7 +121,7 @@ export default function CursosPage() {
                 onKeyDown={(e) => e.key === 'Enter' && abrir(PLATAFORMAS[0].url)}
                 placeholder="Ej. inteligencia artificial, enfermería, finanzas, ciberseguridad…"
                 className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: 'var(--sabana-dark-navy)' }}
+                style={{ color: 'var(--ink-strong)' }}
               />
             </div>
 
@@ -149,11 +149,11 @@ export default function CursosPage() {
 
             {/* Convención de color: qué plataformas cubren solo competencias
                 técnicas frente a las que también tienen power skills. */}
-            <div className="flex items-center gap-2 mt-3 text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+            <div className="flex items-center gap-2 mt-3 text-xs" style={{ color: 'var(--ink-muted)' }}>
               <span className="inline-block w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: 'var(--cat-5)' }} />
               <span>Solo competencias técnicas (sin power skills) — hoy: Google Skills.</span>
             </div>
-            <p className="text-xs mt-1" style={{ color: 'var(--sabana-black-50)' }}>
+            <p className="text-xs mt-1" style={{ color: 'var(--ink-muted)' }}>
               IBM Training no tiene catálogo en español: el término se traduce automáticamente al inglés
               antes de buscar.
             </p>
@@ -165,7 +165,7 @@ export default function CursosPage() {
 
           {/* Descripción de cada plataforma */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--line)' }}>
               <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--sabana-light-blue)' }}>
                 Coursera
               </h3>
@@ -175,7 +175,7 @@ export default function CursosPage() {
                 de auditar el contenido de forma gratuita.
               </p>
             </div>
-            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--line)' }}>
               <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--sabana-light-blue)' }}>
                 LinkedIn Learning
               </h3>
@@ -184,7 +184,7 @@ export default function CursosPage() {
                 blandas. Los certificados se pueden añadir directamente al perfil de LinkedIn.
               </p>
             </div>
-            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--line)' }}>
               <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--sabana-light-blue)' }}>
                 Google Skills
               </h3>
@@ -193,7 +193,7 @@ export default function CursosPage() {
                 (Google Cloud, IA, Grow with Google, Google for Education).
               </p>
             </div>
-            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow border-l-4" style={{ borderColor: 'var(--line)' }}>
               <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--sabana-light-blue)' }}>
                 IBM Training
               </h3>

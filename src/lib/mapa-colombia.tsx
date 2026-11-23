@@ -35,8 +35,8 @@ const ALTO = 620;
 const MARGEN = 8;
 
 /** Tonos de menor a mayor volumen (azules institucionales). */
-const ESCALA = ['#e8eef7', '#c5d5e9', '#93aac9', '#5b7fae', '#2f5a8f', '#002058'];
-const SIN_DATOS = '#f1f1f1';
+const ESCALA = ['var(--mapa-0)', 'var(--mapa-1)', 'var(--mapa-2)', 'var(--mapa-3)', 'var(--mapa-4)', 'var(--mapa-5)'];
+const SIN_DATOS = 'var(--mapa-sin)';
 
 /** Convierte una geometría GeoJSON en la cadena `d` de un <path>. */
 function aPath(
@@ -149,7 +149,7 @@ export function MapaColombia({
     return (
       <div
         className="flex items-center justify-center rounded-lg text-sm p-8"
-        style={{ backgroundColor: 'var(--sabana-sky-blue)', color: 'var(--sabana-navy)', minHeight: 300 }}
+        style={{ backgroundColor: 'var(--tint)', color: 'var(--ink-navy)', minHeight: 300 }}
       >
         No se pudo cargar el mapa. La información por departamento sigue disponible en la lista.
       </div>
@@ -160,7 +160,7 @@ export function MapaColombia({
     return (
       <div
         className="animate-pulse rounded-lg"
-        style={{ backgroundColor: 'var(--sabana-sky-blue)', height: 420 }}
+        style={{ backgroundColor: 'var(--tint)', height: 420 }}
       />
     );
   }
@@ -187,7 +187,7 @@ export function MapaColombia({
               key={p.codigo}
               d={p.d}
               fill={color(p.codigo)}
-              stroke={activo ? 'var(--sabana-dark-navy)' : '#ffffff'}
+              stroke={activo ? 'var(--ink-strong)' : 'var(--surface)'}
               strokeWidth={activo ? 2.5 : 0.7}
               style={{ cursor: conDatos ? 'pointer' : 'default', transition: 'fill .15s' }}
               opacity={hover && hover.codigo !== p.codigo ? 0.82 : 1}
@@ -226,18 +226,18 @@ export function MapaColombia({
 
       {/* Leyenda de la escala. */}
       <div className="flex items-center gap-2 mt-3 justify-center flex-wrap">
-        <span className="text-xs" style={{ color: 'var(--sabana-black-70)' }}>
+        <span className="text-xs" style={{ color: 'var(--ink-soft)' }}>
           Menos vacantes
         </span>
         {ESCALA.map((c) => (
           <span key={c} className="inline-block rounded-sm" style={{ backgroundColor: c, width: 26, height: 12 }} />
         ))}
-        <span className="text-xs" style={{ color: 'var(--sabana-black-70)' }}>
+        <span className="text-xs" style={{ color: 'var(--ink-soft)' }}>
           Más
         </span>
         <span className="inline-flex items-center gap-1 ml-3">
-          <span className="inline-block rounded-sm" style={{ backgroundColor: SIN_DATOS, width: 26, height: 12, border: '1px solid #ddd' }} />
-          <span className="text-xs" style={{ color: 'var(--sabana-black-70)' }}>Sin vacantes</span>
+          <span className="inline-block rounded-sm" style={{ backgroundColor: SIN_DATOS, width: 26, height: 12, border: '1px solid var(--line)' }} />
+          <span className="text-xs" style={{ color: 'var(--ink-soft)' }}>Sin vacantes</span>
         </span>
       </div>
     </div>

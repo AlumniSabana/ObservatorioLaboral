@@ -142,11 +142,11 @@ export function VistaAdmin() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-lg" style={{ color: 'var(--sabana-dark-navy)' }}>
+        <p className="text-lg" style={{ color: 'var(--ink-strong)' }}>
           Sube informes de terceros (por ejemplo, un <i>Job Skills Report</i>) para usarlos como
           fuente de skills junto a las vacantes y O*NET.
         </p>
-        <p className="text-sm mt-1" style={{ color: 'var(--sabana-black-50)' }}>
+        <p className="text-sm mt-1" style={{ color: 'var(--ink-muted)' }}>
           Las cifras de un informe son <b>declaradas por su editor</b>, no medidas por el
           Observatorio: se muestran como contraste, nunca promediadas con las vacantes.
         </p>
@@ -159,25 +159,25 @@ export function VistaAdmin() {
 
       {/* ---------- Paso 3: catálogo y validación ---------- */}
       <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-        <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+        <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
           3. Informes ingeridos
         </h3>
-        <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+        <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
           Un informe solo aparece como fuente seleccionable cuando está <b>validado</b>. Un informe
           <b> retirado</b> se puede volver a subir: el mismo PDF lo reactiva.
         </p>
 
         {catalogoError ? (
-          <div className="text-sm text-center py-6" style={{ color: 'var(--sabana-black-50)' }}>
+          <div className="text-sm text-center py-6" style={{ color: 'var(--ink-muted)' }}>
             <p className="mb-2">No se pudo cargar el catálogo de informes (¿el backend está caído o se reinició?).</p>
             <button onClick={cargarInformes}
               className="text-xs font-semibold underline"
-              style={{ color: 'var(--sabana-navy)', cursor: 'pointer' }}>
+              style={{ color: 'var(--ink-navy)', cursor: 'pointer' }}>
               Reintentar
             </button>
           </div>
         ) : informes.length === 0 ? (
-          <p className="text-sm text-center py-6" style={{ color: 'var(--sabana-black-50)' }}>
+          <p className="text-sm text-center py-6" style={{ color: 'var(--ink-muted)' }}>
             Todavía no hay informes. Sube un PDF para empezar.
           </p>
         ) : (
@@ -185,20 +185,20 @@ export function VistaAdmin() {
             {informes.map((inf) => (
               <div key={inf.id}>
                 <div className="flex flex-wrap items-center gap-3 rounded-lg border p-3"
-                  style={{ borderColor: 'var(--sabana-sky-blue)' }}>
-                  <FileText size={18} style={{ color: 'var(--sabana-navy)' }} />
+                  style={{ borderColor: 'var(--line-soft)' }}>
+                  <FileText size={18} style={{ color: 'var(--ink-navy)' }} />
                   <div className="flex-1 min-w-[14rem]">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--sabana-dark-navy)' }}>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--ink-strong)' }}>
                       {inf.editor} — {inf.titulo} ({inf.anio_referencia})
                     </p>
-                    <p className="text-xs" style={{ color: 'var(--sabana-black-50)' }}>
+                    <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
                       {inf.n_observaciones} skills · {inf.anio_referencia}
                     </p>
                   </div>
                   <span className="text-xs font-semibold px-2 py-1 rounded"
                     style={{
-                      backgroundColor: inf.estado === 'validado' ? 'var(--trend-up)' : 'var(--sabana-cream)',
-                      color: inf.estado === 'validado' ? 'white' : 'var(--sabana-dark-navy)',
+                      backgroundColor: inf.estado === 'validado' ? 'var(--trend-up)' : 'var(--cream)',
+                      color: inf.estado === 'validado' ? 'white' : 'var(--ink-strong)',
                     }}>
                     {inf.estado}
                   </span>
@@ -221,14 +221,14 @@ export function VistaAdmin() {
                     {inf.estado === 'validado' && (
                       <>
                         <label className="flex items-center gap-1.5 text-xs font-semibold px-2 cursor-pointer"
-                          style={{ color: 'var(--sabana-dark-navy)' }}>
+                          style={{ color: 'var(--ink-strong)' }}>
                           <input type="checkbox" checked={seleccionados.includes(inf.id)}
                             onChange={() => toggleSeleccion(inf.id)} className="cursor-pointer" />
                           Para insights
                         </label>
                         <button onClick={() => accion(inf.id, '/retirar')}
                           className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded border"
-                          style={{ borderColor: 'var(--sabana-light-blue)', color: 'var(--sabana-dark-navy)', cursor: 'pointer' }}>
+                          style={{ borderColor: 'var(--line)', color: 'var(--ink-strong)', cursor: 'pointer' }}>
                           <AlertTriangle size={13} /> Retirar
                         </button>
                       </>
@@ -237,13 +237,13 @@ export function VistaAdmin() {
 
                   <button onClick={() => abrirGraficas(inf.id)}
                     className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded border"
-                    style={{ borderColor: 'var(--sabana-navy)', color: 'var(--sabana-navy)', cursor: 'pointer' }}>
+                    style={{ borderColor: 'var(--chart-1)', color: 'var(--ink-navy)', cursor: 'pointer' }}>
                     <BarChart3 size={13} /> {abierto === inf.id ? 'Ocultar' : 'Ver gráficas'}
                   </button>
                 </div>
 
                 {abierto === inf.id && (
-                  <div className="mt-2 rounded-lg border p-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
+                  <div className="mt-2 rounded-lg border p-4" style={{ borderColor: 'var(--line)' }}>
                     <GraficasInforme detalle={detalle} />
                   </div>
                 )}
@@ -257,10 +257,10 @@ export function VistaAdmin() {
       {informes.some((i) => i.estado === 'validado') && (
         <SoloAdmin>
           <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-            <h3 className="text-lg font-semibold mb-1 flex items-center gap-2" style={{ color: 'var(--sabana-dark-navy)' }}>
+            <h3 className="text-lg font-semibold mb-1 flex items-center gap-2" style={{ color: 'var(--ink-strong)' }}>
               <Sparkles size={18} /> Informe de insights (Gemini)
             </h3>
-            <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+            <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
               Marca «Para insights» en uno o más informes validados y genera un análisis narrativo
               a partir de sus skills ya extraídas y verificadas (no vuelve a leer el PDF). Con
               «Insights Conjuntos» la IA propone qué informes conviene analizar juntos.
@@ -277,7 +277,7 @@ export function VistaAdmin() {
               </button>
               <button onClick={() => setConjuntosAbierto((v) => !v)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold border"
-                style={{ borderColor: 'var(--sabana-navy)', color: 'var(--sabana-navy)', cursor: 'pointer' }}>
+                style={{ borderColor: 'var(--chart-1)', color: 'var(--ink-navy)', cursor: 'pointer' }}>
                 <Layers size={16} /> Insights Conjuntos {conjuntosAbierto ? '▲' : '▼'}
               </button>
             </div>
@@ -289,13 +289,13 @@ export function VistaAdmin() {
             )}
 
             {insights && !insightsLoading && (
-              <div className="mt-4 rounded-lg border p-4" style={{ borderColor: 'var(--sabana-light-blue)' }}>
-                <p className="text-xs mb-3" style={{ color: 'var(--sabana-black-50)' }}>
+              <div className="mt-4 rounded-lg border p-4" style={{ borderColor: 'var(--line)' }}>
+                <p className="text-xs mb-3" style={{ color: 'var(--ink-muted)' }}>
                   Basado en: {insights.informes.map((i) => `${i.editor} — ${i.titulo} (${i.anio_referencia})${i.antiguo ? ' ⚠ hace más de 2 años' : ''}`).join(' · ')}
                   {insights.omitidos.length > 0 && ` — se omitieron ${insights.omitidos.length} id(s) por no existir o no estar validados.`}
                 </p>
                 {!insights.persistido && (
-                  <div className="rounded-lg p-2 mb-3 text-xs" style={{ background: 'var(--sabana-cream)', color: 'var(--sabana-dark-navy)' }}>
+                  <div className="rounded-lg p-2 mb-3 text-xs" style={{ background: 'var(--cream)', color: 'var(--ink-strong)' }}>
                     {insights.aviso ?? 'El insight no quedó guardado (pendiente de aplicar migración 012).'}
                   </div>
                 )}
@@ -311,10 +311,10 @@ export function VistaAdmin() {
       {/* ---------- Comparativa entre informes (desde 2 validados) ---------- */}
       {comparativa && comparativa.terminos.length > 0 && (
         <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow">
-          <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--sabana-dark-navy)' }}>
+          <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink-strong)' }}>
             Comparativa entre informes
           </h3>
-          <p className="text-sm mb-4" style={{ color: 'var(--sabana-black-50)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--ink-muted)' }}>
             Qué posición ocupa cada skill en cada informe. Se comparan <b>posiciones</b>, no
             menciones: el conteo depende de la extensión de cada documento.
           </p>
@@ -330,10 +330,10 @@ export function VistaAdmin() {
               </thead>
               <tbody>
                 {comparativa.terminos.map((t, idx) => (
-                  <tr key={t.termino} style={{ backgroundColor: idx % 2 ? 'var(--sabana-sky-blue)' : 'transparent' }}>
-                    <td className="px-3 py-2" style={{ color: 'var(--sabana-dark-navy)' }}>{t.termino}</td>
+                  <tr key={t.termino} style={{ backgroundColor: idx % 2 ? 'var(--tint)' : 'transparent' }}>
+                    <td className="px-3 py-2" style={{ color: 'var(--ink-strong)' }}>{t.termino}</td>
                     {comparativa.informes.map((i) => (
-                      <td key={i.id} className="px-3 py-2 text-right" style={{ color: 'var(--sabana-dark-navy)' }}>
+                      <td key={i.id} className="px-3 py-2 text-right" style={{ color: 'var(--ink-strong)' }}>
                         {t.posiciones[i.id] != null ? `#${t.posiciones[i.id]}` : '—'}
                       </td>
                     ))}

@@ -52,7 +52,7 @@ from LinkedIn.linkedin_service import PAISES_LATAM as _PAISES_LINKEDIN
 from Tendencias.escolaridad import NIVELES as NIVELES_ESCOLARIDAD
 from Tendencias.seniority import NIVELES, detectar_seniority
 from config import es_pertinente, coincide_con_keyword
-from traducciones import agrupar_sector, traducir_sector, traducir_cargo
+from traducciones import sector_de_vacante, traducir_cargo
 
 TABLA_OBS = "tendencias_observaciones"
 
@@ -182,7 +182,7 @@ def _terminos(fila: Dict[str, Any], dimension: str) -> List[str]:
         # Antes esta serie usaba los ~29 sectores finos de Adzuna mientras la
         # otra vista usaba grupos amplios: dos taxonomías para lo mismo, y el
         # usuario veía nombres distintos según la sección.
-        c = agrupar_sector(traducir_sector(fila.get("category")))
+        c = sector_de_vacante(fila.get("category"), fila.get("title"))
         return [c] if c else []
     if dimension == "skill":
         skills = fila.get("skills")
